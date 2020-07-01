@@ -32,6 +32,11 @@ jobs:
 
     - name: Build
       run: go build -v ./...
+      
+    - name: Lint
+      run: |
+        go install golang.org/x/lint/golint
+        golint -set_exit_status ./...
 
     - name: Test
       run: go test -v ./...
