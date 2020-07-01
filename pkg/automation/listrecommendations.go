@@ -2,6 +2,7 @@ package automation
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/recommender/v1"
 	"log"
