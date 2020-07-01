@@ -18,7 +18,7 @@ package automation
 
 import "fmt"
 
-// ExmpleFunc is just an example function, remove it.
-func ExmpleFunc() {
+// ExampleFunc is just an example function, remove it.
+func ExampleFunc() {
 	fmt.Println("Hello world!")
 }
