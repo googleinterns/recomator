@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func listZoneRecommendations(project string, location string, recommenderId string) []*recommender.GoogleCloudRecommenderV1Recommendation {
+func listZoneRecommendations(project string, location string, recommenderID string) []*recommender.GoogleCloudRecommenderV1Recommendation {
 	ctx := context.Background()
 	service, err := recommender.NewService(ctx)
 	if err != nil {
@@ -16,7 +16,7 @@ func listZoneRecommendations(project string, location string, recommenderId stri
 	}
 	recService := recommender.NewProjectsLocationsRecommendersRecommendationsService(service)
 
-	listCall := recService.List(fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", project, location, recommenderId))
+	listCall := recService.List(fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", project, location, recommenderID))
 	var recommendations []*recommender.GoogleCloudRecommenderV1Recommendation
 	addRecommendations := func(response *recommender.GoogleCloudRecommenderV1ListRecommendationsResponse) error {
 		recommendations = append(recommendations, response.Recommendations...)
@@ -55,16 +55,20 @@ func listZonesNames(project string) []string {
 	return zones
 }
 
-func ListRecommendations(project string, recommenderId string) []*recommender.GoogleCloudRecommenderV1Recommendation {
+// ListRecommendations returns the list of recommendations for a Cloud project.
+// Requires the
+// recommender.*.list
+// IAM permission for the specified recommender.
+func ListRecommendations(project string, recommenderID string) []*recommender.GoogleCloudRecommenderV1Recommendation {
 	zones := listZonesNames(project)
 	ch := make(chan []*recommender.GoogleCloudRecommenderV1Recommendation, len(zones))
 	for _, zone := range zones {
 		go func(zoneName string) {
-			ch <- listZoneRecommendations(project, zoneName, recommenderId)
+			ch <- listZoneRecommendations(project, zoneName, recommenderID)
 		}(zone)
 	}
 	var recommendations []*recommender.GoogleCloudRecommenderV1Recommendation
-	for _ = range zones {
+	for range zones {
 		recommendations = append(recommendations, <-ch...)
 	}
 	return recommendations
