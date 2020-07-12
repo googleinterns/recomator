@@ -10,12 +10,12 @@ import (
 
 
 // RecommendationApplyService is used to apply recommendations for VMs
-type struct RecommendationApplyService {
+type RecommendationApplyService struct {
 	compute.InstancesService instansesService;
 }
 
 // NewRecommendationApplyService creates new RecommendationApplyService
-func NewRecommendationApplyService(context.Context ctx) (*RecommendationApplyService, error) {
+func NewRecommendationApplyService(ctx context.Context) (*RecommendationApplyService, error) {
 	computeService, err := compute.NewService(ctx)
 	if err != nil {
 		return nil, err
