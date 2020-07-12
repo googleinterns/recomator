@@ -8,29 +8,31 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func stopInstance(project string, zone string, instance string) {
-	ctx := context.Background()
+type struct RecommendationApplyService {
+	compute.InstancesService instansesService;
+}
+
+func NewRecommendationApplyService(context.Context ctx) (*RecommendationApplyService, error) {
 	computeService, err := compute.NewService(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	instancesService := compute.NewInstancesService(computeService)
-	_, err = instancesService.Stop(project, zone, instance).Do()
+	return RecommendationApplyService {
+		compute.NewInstancesService(computeService)
+	}, nil
+}
+
+func (s *RecommendationApplyService) stopInstance(project string, zone string, instance string) {
+	_, err = s.instancesService.Stop(project, zone, instance).Do()
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func changeMachineType(project string, zone string, instance string, machineType string) {
-	ctx := context.Background()
-	computeService, err := compute.NewService(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	instancesService := compute.NewInstancesService(computeService)
+func s *RecommendationApplyService) changeMachineType(project string, zone string, instance string, machineType string) {
 	machineType = fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
 	request := &compute.InstancesSetMachineTypeRequest{MachineType: machineType}
-	_, err = instancesService.SetMachineType(project, zone, instance, request).Do()
+	_, err = s.instancesService.SetMachineType(project, zone, instance, request).Do()
 	if err != nil {
 		log.Fatal(err)
 	}
