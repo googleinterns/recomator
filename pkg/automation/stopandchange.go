@@ -8,10 +8,9 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-
 // RecommendationApplyService is used to apply recommendations for VMs
 type RecommendationApplyService struct {
-	compute.InstancesService instansesService;
+	instancesService *compute.InstancesService
 }
 
 // NewRecommendationApplyService creates new RecommendationApplyService
@@ -20,13 +19,13 @@ func NewRecommendationApplyService(ctx context.Context) (*RecommendationApplySer
 	if err != nil {
 		return nil, err
 	}
-	return RecommendationApplyService {
-		compute.NewInstancesService(computeService)
+	return &RecommendationApplyService{
+		instancesService: compute.NewInstancesService(computeService),
 	}, nil
 }
 
 func (s *RecommendationApplyService) stopInstance(project string, zone string, instance string) {
-	_, err = s.instancesService.Stop(project, zone, instance).Do()
+	_, err := s.instancesService.Stop(project, zone, instance).Do()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,7 +34,7 @@ func (s *RecommendationApplyService) stopInstance(project string, zone string, i
 func (s *RecommendationApplyService) changeMachineType(project string, zone string, instance string, machineType string) {
 	machineType = fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
 	request := &compute.InstancesSetMachineTypeRequest{MachineType: machineType}
-	_, err = s.instancesService.SetMachineType(project, zone, instance, request).Do()
+	_, err := s.instancesService.SetMachineType(project, zone, instance, request).Do()
 	if err != nil {
 		log.Fatal(err)
 	}
