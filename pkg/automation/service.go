@@ -8,7 +8,7 @@ import (
 )
 
 // GoogleService is the inferface that prodives the following methods:
-// listZoneRecommendations - listing recommendations for specified project, zone and reccommender,
+// listRecommendations - listing recommendations for specified project, zone and recommender,
 // listZonesNames - listing every zone available for the project methods,
 type GoogleService interface {
 	ListRecommendations(project string, location string, recommenderID string) []*recommender.GoogleCloudRecommenderV1Recommendation
@@ -24,16 +24,15 @@ type googleService struct {
 	recommenderService *recommender.ProjectsLocationsRecommendersRecommendationsService
 }
 
-// NewZonesRecommendationsService creates new googleServices.
+// NewGoogleService creates new googleServices.
 // If creation failed the error will be non-nil.
-// numConcurrentCalls should be positive, otherwise would return error.
 func NewGoogleService(ctx context.Context) (*googleService, error) {
 	service, err := recommender.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}
-
 	recommenderService := recommender.NewProjectsLocationsRecommendersRecommendationsService(service)
+
 	computeService, err := compute.NewService(ctx)
 	if err != nil {
 		return nil, err
