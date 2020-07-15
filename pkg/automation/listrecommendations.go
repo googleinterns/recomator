@@ -9,7 +9,7 @@ import (
 )
 
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
-// projects.locations.recommenders.recommendations/list method from Recommender API is used
+// projects.locations.recommenders.recommendations/list method from Recommender API is used.
 func (s *googleService) ListRecommendations(project string, location string, recommenderID string) []*recommender.GoogleCloudRecommenderV1Recommendation {
 	listCall := s.recommenderService.List(fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", project, location, recommenderID))
 	var recommendations []*recommender.GoogleCloudRecommenderV1Recommendation
@@ -25,6 +25,8 @@ func (s *googleService) ListRecommendations(project string, location string, rec
 	return recommendations
 }
 
+// ListZonesNames returns list of zone names for the specified project.
+// Uses zones/list method from Compute API.
 func (s *googleService) ListZonesNames(project string) []string {
 	listCall := s.zonesService.List(project)
 

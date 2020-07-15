@@ -26,7 +26,7 @@ type googleService struct {
 
 // NewGoogleService creates new googleServices.
 // If creation failed the error will be non-nil.
-func NewGoogleService(ctx context.Context) (*googleService, error) {
+func NewGoogleService(ctx context.Context) (GoogleService, error) {
 	service, err := recommender.NewService(ctx)
 	if err != nil {
 		return nil, err
@@ -39,9 +39,11 @@ func NewGoogleService(ctx context.Context) (*googleService, error) {
 	}
 	zonesService := compute.NewZonesService(computeService)
 
-	return &googleService{
+	var serviceInterface GoogleService
+	serviceInterface = &googleService{
 		ctx:                ctx,
 		recommenderService: recommenderService,
 		zonesService:       zonesService,
-	}, nil
+	}
+	return serviceInterface, nil
 }
