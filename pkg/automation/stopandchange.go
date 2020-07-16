@@ -1,41 +1,19 @@
 package automation
 
 import (
-	"context"
 	"fmt"
-	"log"
 
 	"google.golang.org/api/compute/v1"
 )
 
-// RecommendationApplyService is used to apply recommendations for VMs
-type RecommendationApplyService struct {
-	instancesService *compute.InstancesService
-}
-
-// NewRecommendationApplyService creates new RecommendationApplyService
-func NewRecommendationApplyService(ctx context.Context) (*RecommendationApplyService, error) {
-	computeService, err := compute.NewService(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &RecommendationApplyService{
-		instancesService: compute.NewInstancesService(computeService),
-	}, nil
-}
-
-func (s *RecommendationApplyService) stopInstance(project string, zone string, instance string) {
+func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	_, err := s.instancesService.Stop(project, zone, instance).Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
 
-func (s *RecommendationApplyService) changeMachineType(project string, zone string, instance string, machineType string) {
+func (s *googleService) ChangeMachineType(project string, zone string, instance string, machineType string) error {
 	machineType = fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
 	request := &compute.InstancesSetMachineTypeRequest{MachineType: machineType}
 	_, err := s.instancesService.SetMachineType(project, zone, instance, request).Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
