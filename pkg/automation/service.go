@@ -39,11 +39,9 @@ func NewGoogleService(ctx context.Context) (GoogleService, error) {
 	}
 	zonesService := compute.NewZonesService(computeService)
 
-	var serviceInterface GoogleService
-	serviceInterface = &googleService{
+	return &googleService{
 		ctx:                ctx,
 		recommenderService: recommenderService,
 		zonesService:       zonesService,
-	}
-	return serviceInterface, nil
+	}, nil
 }
