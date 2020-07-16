@@ -11,9 +11,10 @@ import (
 )
 
 type MockService struct {
-	zones                                 []string
+	GoogleService
 	mutex                                 sync.Mutex
 	numberOfTimesListRecommendationsCalls int
+	zones                                 []string
 	zonesCalled                           []string
 }
 
@@ -42,6 +43,7 @@ func TestListRecommendations(t *testing.T) {
 }
 
 type BenchmarkService struct {
+	GoogleService
 }
 
 func (s *BenchmarkService) ListRecommendations(project string, location string, recommenderID string) []*recommender.GoogleCloudRecommenderV1Recommendation {

@@ -8,12 +8,18 @@ import (
 )
 
 // GoogleService is the inferface that prodives the following methods:
-// listRecommendations - listing recommendations for specified project, zone and recommender,
-// listZonesNames - listing every zone available for the project methods,
+// ChangeMachineType - changes the machine type of an instance,
+// ListRecommendations - listing recommendations for specified project, zone and recommender,
+// ListZonesNames - listing every zone available for the project methods,
+// StopInstance - stops the specified instance.
 type GoogleService interface {
+	ChangeMachineType(project string, zone string, instance string, machineType string) error
+
 	ListRecommendations(project string, location string, recommenderID string) []*recommender.GoogleCloudRecommenderV1Recommendation
 
 	ListZonesNames(project string) []string
+
+	StopInstance(project string, zone string, instance string) error
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs,
