@@ -61,21 +61,19 @@ class Recommendation {
   }
 }
 
-export default {
-  name: "Mock",
-  data: () => {
-    return {
-      headers1: [
+import { Component, Vue } from "vue-property-decorator";
+
+@Component
+export default class Mock extends Vue {
+  private headers1 = [
         { text: "Type", align: "start", sortable: false, value: "type" },
         { text: "Cost", value: "cost" },
         { text: "VM path", value: "path" },
         { text: "Apply", value: "apply" },
         { text: "Status", value: "status" }
-      ],
-      recommendations1: [new Recommendation("xxx", "xxx", "xxx", "applicable")],
-      headers2: [],
-      recommendations2: []
-    };
-  }
+    ]
+  private recommendations1 = [new Recommendation("xxx", "xxx", "xxx", "applicable")]
+  private headers2 = []
+  private recommendations2 = []
 };
 </script>
