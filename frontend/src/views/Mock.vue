@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 
   <v-app>
-    <v-app-bar app color="primary" dark></v-app-bar>
-    <v-main>
+    <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
+    </v-app-bar>
+    <v-main>
       <v-simple-table>
         <thead>
           <tr>
@@ -34,7 +35,12 @@ limitations under the License. -->
             <td>{{ recommendation.cost }}</td>
             <td>{{ recommendation.path }}</td>
             <td>
-              <v-btn rounded color="primary" :disabled="false" dark x-small
+              <v-btn
+                rounded
+                color="primary"
+                :disabled="!recommendation.applicable()"
+                dark
+                x-small
                 >Apply Recommendation</v-btn
               >
             </td>
@@ -59,6 +65,10 @@ class Recommendation {
     this.path = path;
     this.status = status;
   }
+
+  applicable(): boolean {
+    return this.status == "applicable";
+  }
 }
 
 import { Component, Vue } from "vue-property-decorator";
@@ -66,14 +76,18 @@ import { Component, Vue } from "vue-property-decorator";
 @Component
 export default class Mock extends Vue {
   private headers1 = [
-        { text: "Type", align: "start", sortable: false, value: "type" },
-        { text: "Cost", value: "cost" },
-        { text: "VM path", value: "path" },
-        { text: "Apply", value: "apply" },
-        { text: "Status", value: "status" }
-    ]
-  private recommendations1 = [new Recommendation("xxx", "xxx", "xxx", "applicable")]
-  private headers2 = []
-  private recommendations2 = []
-};
+    { text: "Type", align: "start", sortable: false, value: "type" },
+    { text: "Cost", value: "cost" },
+    { text: "VM path", value: "path" },
+    { text: "Apply", value: "apply" },
+    { text: "Status", value: "status" }
+  ];
+  private recommendations1 = [
+    new Recommendation("xxx", "xxx", "xxx", "applicable"),
+    new Recommendation("xxx", "xxx", "xxx", "not applicable"),
+    new Recommendation("xxx", "xxx", "xxx", "in progress")
+  ];
+  private headers2 = [];
+  private recommendations2 = [];
+}
 </script>
