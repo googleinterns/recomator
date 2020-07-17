@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <h1> {{msg}} </h1>
+    <h1>{{ msg }}</h1>
     <v-row class="text-center">
       <v-col cols="12">
         <v-img
@@ -84,9 +84,9 @@
 
 <script lang="ts">
 import Vue from "vue";
-import Vuetify from "vuetify"
+import Vuetify from "vuetify";
 
-Vue.use(Vuetify)
+Vue.use(Vuetify);
 
 export default Vue.extend({
   name: "HelloWorld",
