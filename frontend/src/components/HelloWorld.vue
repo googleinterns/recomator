@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <h1>{{ msg }}</h1>
     <v-row class="text-center">
       <v-col class="mb-4">
         <h1 class="display-2 font-weight-bold mb-3">
@@ -12,6 +13,9 @@
 
 <script lang="ts">
 import Vue from "vue";
+import Vuetify from "vuetify";
+
+Vue.use(Vuetify);
 
 export default Vue.extend({
   name: "HelloWorld",
