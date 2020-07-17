@@ -18,7 +18,7 @@ limitations under the License. -->
     <v-row class="text-center">
       <v-col class="mb-4">
         <h1 class="display-2 font-weight-bold mb-3">
-          Welcome to the... Recomator!
+          Welcome to the... Recomator! {{ msg }}
         </h1>
       </v-col>
     </v-row>
@@ -33,7 +33,9 @@ Vue.use(Vuetify);
 
 export default Vue.extend({
   name: "HelloWorld",
-
+  props: {
+    msg: String
+  },
   data: () => ({})
 });
 </script>
