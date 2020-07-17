@@ -30,4 +30,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
     - run: npm run build --if-present
+    - run: npm i -g eslint
+    - run: eslint "**/*.{vue,ts}" --max-warnings=0
     - run: npm run test:unit
