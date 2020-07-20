@@ -26,16 +26,13 @@ limitations under the License. -->
 </template>
 
 <script lang="ts">
-import Vue from "vue";
 import Vuetify from "vuetify";
 
+import { Component, Prop, Vue } from "vue-property-decorator";
 Vue.use(Vuetify);
 
-export default Vue.extend({
-  name: "HelloWorld",
-  props: {
-    msg: String
-  },
-  data: () => ({})
-});
+@Component
+export default class HelloWorld extends Vue {
+  @Prop() private msg!: string;
+}
 </script>
