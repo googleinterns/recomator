@@ -38,28 +38,36 @@ limitations under the License. -->
             v-for="(recommendation, index) in recommendations"
             v-bind:key="index"
           >
-            <!-- <td>{{ recommendation.type }}</td>
-            <td>{{ recommendation.cost }}</td> -->
-            <td class="text-left">{{ recommendation.getDescription() }}</td>
+            <td class="text-left">{{ recommendation.project }}</td>
             <td class="text-left">
               <a :href="recommendation.path"> {{ recommendation.name }} </a>
             </td>
-            <td class="text-left">{{ recommendation.project }}</td>
+            <td class="text-left">{{ recommendation.getDescription() }}</td>
             <td class="text-left">
               <v-btn
                 rounded
                 color="primary"
-                :disabled="!recommendation.applicable()"
+                v-if="recommendation.applicable()"
                 dark
                 x-small
                 >Apply Recommendation</v-btn
               >
+              <v-progress-circular
+                color="primary"
+                indeterminate="true"
+                v-if="recommendation.inProgress()"
+              ></v-progress-circular>
+              <div
+                v-if="
+                  !recommendation.applicable() && !recommendation.inProgress()
+                "
+              >
+                {{ recommendation.status }}
+              </div>
             </td>
-            <td class="text-left">{{ recommendation.status }}</td>
           </tr>
         </tbody>
       </v-simple-table>
-      <!-- change to v-data-table -->
     </v-main>
   </v-app>
 </template>
@@ -92,7 +100,11 @@ class Recommendation {
   }
 
   applicable(): boolean {
-    return this.status == "applicable";
+    return this.status == "ACTIVE";
+  }
+
+  inProgress(): boolean {
+    return this.status == "__INPROGRESS";
   }
 
   getDescription(): string {
@@ -169,11 +181,10 @@ class Summary {
 @Component
 export default class Mock extends Vue {
   private headers = [
-    { text: "Description", align: "start", sortable: false, value: "type" },
-    { text: "Name", value: "name" },
     { text: "Project", value: "name" },
-    { text: "Apply", value: "apply" },
-    { text: "Status", value: "status" }
+    { text: "Name", value: "name" },
+    { text: "Description", align: "start", sortable: false, value: "type" },
+    { text: "Apply", value: "apply" }
   ];
 
   private recommendations = [
@@ -183,45 +194,54 @@ export default class Mock extends Vue {
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-test",
-      "A very bored machine",
-      "applicable"
+      "timus-test-for-probers-n2-std-4-bored",
+      "ACTIVE"
     ),
     new Recommendation(
       "REMOVE",
       "10.00$",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "An even more bored machine",
-      "not applicable"
+      "rightsizer-prod",
+      "timus-test-for-probers-n2-std-4-very-bored",
+      "SUCCEEDED"
     ),
     new Recommendation(
       "SECURITY",
-      "13",
+      "Security recommendations don't have a cost",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "Not a secure machine",
-      "in progress"
+      "rightsizer-prod",
+      "shcheshnyak-n2-std-7-unsecure",
+      "__INPROGRESS"
     ),
     new Recommendation(
       "PERFORMANCE",
       "30.00$",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "A busy machine",
-      "failed"
+      "leftsizer-test",
+      "shcheshnyak-test-for-probers-n2-std-4-toobusy",
+      "FAILED"
     ),
     new Recommendation(
-      "SOMETHING STRANGE",
+      "UNSPECIFIED",
       "123$",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "A really odd machine",
-      "not applicable"
-    )
+      "leftsizer-test",
+      "timus-test-for-probers-n2-std-4-unknown",
+      "ACTIVE"
+    ),
+    new Recommendation(
+      "SECURITY",
+      "Security recommendations don't have a cost",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-prod",
+      "shcheshnyak-n2-std-7-unsecure-2",
+      "__INPROGRESS"
+    ),
   ];
 
   private summary = new Summary(this.recommendations);
