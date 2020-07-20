@@ -18,6 +18,7 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
+      <h2> {{summary.toString()}} </h2>
       <v-simple-table>
         <thead>
           <tr>
@@ -178,7 +179,8 @@ export default class Mock extends Vue {
     new Recommendation("RESIZE", "6.50$", "0", "A very bored machine", "applicable"),
     new Recommendation("REMOVE", "10.00$", "0", "An even more bored machine", "not applicable"),
     new Recommendation("SECURITY", "0", "13", "Not a secure machine", "in progress"),
-    new Recommendation("PERFORMANCE", "30.00", "0", "A busy machine", "failed")
+    new Recommendation("PERFORMANCE", "30.00$", "0", "A busy machine", "failed"),
+    new Recommendation("SOMETHING STRANGE", "123$", "13", "A really odd machine", "not applicable")
   ];
 
   private summary = new Summary(this.recommendations);
