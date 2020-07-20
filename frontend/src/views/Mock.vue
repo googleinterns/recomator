@@ -41,7 +41,10 @@ limitations under the License. -->
             <!-- <td>{{ recommendation.type }}</td>
             <td>{{ recommendation.cost }}</td> -->
             <td class="text-left">{{ recommendation.getDescription() }}</td>
-            <td class="text-left">{{ recommendation.path }}</td>
+            <td class="text-left">
+              <a :href="recommendation.path"> {{ recommendation.name }} </a>
+            </td>
+            <td class="text-left">{{ recommendation.project }}</td>
             <td class="text-left">
               <v-btn
                 rounded
@@ -67,21 +70,24 @@ import { Component, Vue } from "vue-property-decorator";
 class Recommendation {
   type: string;
   cost: string;
-  permissionCount: string;
   path: string;
+  project: string;
+  name: string;
   status: string;
 
   constructor(
     type: string,
     cost: string,
-    permissionCount: string,
     path: string,
+    project: string,
+    name: string,
     status: string
   ) {
-    this.type = type; // UPPERCASED, contained in the set {RESIZE, REMOVE, SECURITY, PERFORMANCE} (doing this should be possible)
+    this.type = type; // UPPERCASED, contained in the set {RESIZE, REMOVE, PERFORMANCE} (doing this should be possible)
     this.cost = cost; // monthly cost, parsed to be positive (I assume, that the number would always be negative for resize and delete, and positive for performance)
-    this.permissionCount = permissionCount;
     this.path = path;
+    this.project = project;
+    this.name = name;
     this.status = status;
   }
 
@@ -97,9 +103,6 @@ class Recommendation {
       case "REMOVE": {
         return `Delete the VM to save ${this.cost} a month.`; // Should something be added about saving the machine's state?
       }
-      case "SECURITY": {
-        return `Reduce permissions of ${this.permissionCount} team members to improve security`;
-      }
       case "PERFORMANCE": {
         return `Increase performance of the VM by spending additional ${this.cost} a month.`; // Should we be putting the cost here?
       }
@@ -113,12 +116,10 @@ class Recommendation {
 class Summary {
   private recommendationCount: number;
   private moneySaved: string;
-  private roleChangeCount: number;
 
   constructor(recommendationList: Recommendation[]) {
     this.recommendationCount = recommendationList.length;
     this.moneySaved = Summary.calculateSavings(recommendationList);
-    this.roleChangeCount = Summary.calculateRoleChanges(recommendationList);
   }
 
   private static getCurrency(cost: string): string {
@@ -151,19 +152,6 @@ class Summary {
     return result.toFixed(2) + currency;
   }
 
-  private static calculateRoleChanges(
-    recommendationList: Recommendation[]
-  ): number {
-    let result = 0;
-    for (const recommendation of recommendationList) {
-      if (recommendation.type === "SECURITY") {
-        result += parseInt(recommendation.permissionCount, 10);
-      }
-    }
-
-    return result;
-  }
-
   public toString(): string {
     const moneySavedCount = Summary.costToNumber(this.moneySaved);
     if (moneySavedCount > 0) {
@@ -182,7 +170,8 @@ class Summary {
 export default class Mock extends Vue {
   private headers = [
     { text: "Description", align: "start", sortable: false, value: "type" },
-    { text: "VM path", value: "path" },
+    { text: "Name", value: "name" },
+    { text: "Project", value: "name" },
     { text: "Apply", value: "apply" },
     { text: "Status", value: "status" }
   ];
@@ -191,35 +180,45 @@ export default class Mock extends Vue {
     new Recommendation(
       "RESIZE",
       "6.50$",
-      "0",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-test",
       "A very bored machine",
       "applicable"
     ),
     new Recommendation(
       "REMOVE",
       "10.00$",
-      "0",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-test",
       "An even more bored machine",
       "not applicable"
     ),
     new Recommendation(
       "SECURITY",
-      "0",
       "13",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-test",
       "Not a secure machine",
       "in progress"
     ),
     new Recommendation(
       "PERFORMANCE",
       "30.00$",
-      "0",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-test",
       "A busy machine",
       "failed"
     ),
     new Recommendation(
       "SOMETHING STRANGE",
       "123$",
-      "13",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-test",
       "A really odd machine",
       "not applicable"
     )
@@ -230,7 +229,7 @@ export default class Mock extends Vue {
   private progressPercentage = 0;
 
   private async mounted() {
-    //Simulate fetching recommendations at the beginning
+    // Simulate fetching recommendations at the beginning
     let i = 0;
     const progressBarSteps = 25;
     const totalWaitTimeMs = 3000;
