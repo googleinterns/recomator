@@ -17,44 +17,53 @@ limitations under the License. -->
     <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
     </v-app-bar>
+
     <v-main>
-      <h2> {{summary.toString()}} </h2>
-      <v-simple-table>
-        <thead>
-          <tr>
-            <th v-for="header in headers" v-bind:key="header.value">
-              <span> {{ header.text }} </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(recommendation, index) in recommendations"
-            v-bind:key="index"
-          >
-            <!-- <td>{{ recommendation.type }}</td>
-            <td>{{ recommendation.cost }}</td> -->
-            <td>{{ recommendation.getDescription() }}</td>
-            <td>{{ recommendation.path }}</td>
-            <td>
-              <v-btn
-                rounded
-                color="primary"
-                :disabled="!recommendation.applicable()"
-                dark
-                x-small
-                >Apply Recommendation</v-btn
-              >
-            </td>
-            <td>{{ recommendation.status }}</td>
-          </tr>
-        </tbody>
-      </v-simple-table>
+      <v-progress-linear
+        v-if="!successfullyLoaded" 
+        :value="progressPercentage
+      "> 
+      </v-progress-linear>
+      <v-container v-if="successfullyLoaded">
+        <h2> {{summary.toString()}} </h2>
+        <v-simple-table>
+          <thead>
+            <tr>
+              <th v-for="header in headers" v-bind:key="header.value">
+                <span> {{ header.text }} </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(recommendation, index) in recommendations"
+              v-bind:key="index"
+            >
+              <!-- <td>{{ recommendation.type }}</td>
+              <td>{{ recommendation.cost }}</td> -->
+              <td>{{ recommendation.getDescription() }}</td>
+              <td>{{ recommendation.path }}</td>
+              <td>
+                <v-btn
+                  rounded
+                  color="primary"
+                  :disabled="!recommendation.applicable()"
+                  dark
+                  x-small
+                  >Apply Recommendation</v-btn
+                >
+              </td>
+              <td>{{ recommendation.status }}</td>
+            </tr>
+          </tbody>
+        </v-simple-table>
+      </v-container>
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
+
 import { Component, Vue } from "vue-property-decorator";
 
 class Recommendation {
@@ -184,5 +193,21 @@ export default class Mock extends Vue {
   ];
 
   private summary = new Summary(this.recommendations);
+  private successfullyLoaded = false;
+  private progressPercentage = 0;
+
+  private async mounted() {
+
+    //Simulate fetching recommendations at the beginning
+    let i = 0
+    const progressBarSteps = 25
+    const totalWaitTimeMs = 7000
+    for(;i< progressBarSteps;i++) {
+        const delay = (ms : number) => new Promise(res => setTimeout(res, ms));
+        await delay(totalWaitTimeMs / progressBarSteps * 2 * Math.random());
+        this.progressPercentage += 100 / progressBarSteps
+    }
+    this.successfullyLoaded = true
+  }
 }
 </script>
