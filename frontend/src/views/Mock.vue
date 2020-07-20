@@ -16,22 +16,20 @@ limitations under the License. -->
     <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
     </v-app-bar>
-      <v-progress-linear
-        v-if="!successfullyLoaded" 
-        :value="progressPercentage
-      "> 
-      </v-progress-linear>
+    <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
+    </v-progress-linear>
     <v-main v-if="successfullyLoaded">
       <v-card class="pa-5">
         <h2>{{ summary.toString() }}</h2>
         <v-btn rounded color="primary" dark small
-          >Apply All Recomendations</v-btn>
+          >Apply All Recomendations</v-btn
+        >
       </v-card>
       <v-simple-table>
         <thead>
           <tr>
             <th v-for="header in headers" v-bind:key="header.value">
-              <span> {{ header.text }} </span>
+              {{ header.text }}
             </th>
           </tr>
         </thead>
@@ -42,9 +40,9 @@ limitations under the License. -->
           >
             <!-- <td>{{ recommendation.type }}</td>
             <td>{{ recommendation.cost }}</td> -->
-            <td>{{ recommendation.getDescription() }}</td>
-            <td>{{ recommendation.path }}</td>
-            <td>
+            <td class="text-left">{{ recommendation.getDescription() }}</td>
+            <td class="text-left">{{ recommendation.path }}</td>
+            <td class="text-left">
               <v-btn
                 rounded
                 color="primary"
@@ -54,7 +52,7 @@ limitations under the License. -->
                 >Apply Recommendation</v-btn
               >
             </td>
-            <td>{{ recommendation.status }}</td>
+            <td class="text-left">{{ recommendation.status }}</td>
           </tr>
         </tbody>
       </v-simple-table>
@@ -64,7 +62,6 @@ limitations under the License. -->
 </template>
 
 <script lang="ts">
-
 import { Component, Vue } from "vue-property-decorator";
 
 class Recommendation {
@@ -233,17 +230,16 @@ export default class Mock extends Vue {
   private progressPercentage = 0;
 
   private async mounted() {
-
     //Simulate fetching recommendations at the beginning
-    let i = 0
-    const progressBarSteps = 25
-    const totalWaitTimeMs = 7000
-    for(;i< progressBarSteps;i++) {
-        const delay = (ms : number) => new Promise(res => setTimeout(res, ms));
-        await delay(totalWaitTimeMs / progressBarSteps * 2 * Math.random());
-        this.progressPercentage += 100 / progressBarSteps
+    let i = 0;
+    const progressBarSteps = 25;
+    const totalWaitTimeMs = 3000;
+    for (; i < progressBarSteps; i++) {
+      const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+      await delay((totalWaitTimeMs / progressBarSteps) * 2 * Math.random());
+      this.progressPercentage += 100 / progressBarSteps;
     }
-    this.successfullyLoaded = true
+    this.successfullyLoaded = true;
   }
 }
 </script>
