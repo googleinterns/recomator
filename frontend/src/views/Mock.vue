@@ -16,58 +16,78 @@ limitations under the License. -->
     <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
     </v-app-bar>
-    <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
-    </v-progress-linear>
-    <v-main v-if="successfullyLoaded">
-      <v-card class="pa-5">
-        <h2>{{ summary.toString() }}</h2>
-        <v-btn rounded color="primary" dark small
-          >Apply All Recomendations</v-btn
-        >
-      </v-card>
-      <v-simple-table>
-        <thead>
-          <tr>
-            <th v-for="header in headers" v-bind:key="header.value">
-              {{ header.text }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(recommendation, index) in recommendations"
-            v-bind:key="index"
-          >
-            <td class="text-left">{{ recommendation.project }}</td>
-            <td class="text-left">
-              <a :href="recommendation.path"> {{ recommendation.name }} </a>
-            </td>
-            <td class="text-left">{{ recommendation.getDescription() }}</td>
-            <td class="text-left">
-              <v-btn
-                rounded
-                color="primary"
-                v-if="recommendation.applicable()"
-                dark
-                x-small
-                >Apply Recommendation</v-btn
+    <v-main>
+      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
+      </v-progress-linear>
+      <v-container fluid v-if="successfullyLoaded">
+        <v-row>
+          <v-col>
+            <v-card class="pa-5">
+              <h2>{{ summary.toString() }}</h2>
+              <v-btn rounded color="primary" dark small
+                >Apply All Recomendations</v-btn
               >
-              <v-progress-circular
-                color="primary"
-                indeterminate="true"
-                v-if="recommendation.inProgress()"
-              ></v-progress-circular>
-              <div
-                v-if="
-                  !recommendation.applicable() && !recommendation.inProgress()
-                "
-              >
-                {{ recommendation.status }}
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </v-simple-table>
+            </v-card>
+            <v-simple-table>
+              <thead>
+                <tr>
+                  <th v-for="header in headers" v-bind:key="header.value">
+                    {{ header.text }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(recommendation, index) in recommendations"
+                  v-bind:key="index"
+                >
+                  <td class="text-left">{{ recommendation.project }}</td>
+                  <td class="text-left">
+                    <a :href="recommendation.path">
+                      {{ recommendation.name }}
+                    </a>
+                  </td>
+                  <td class="text-left">
+                    {{ recommendation.getDescription() }}
+                  </td>
+                  <td class="text-left">
+                    <v-btn
+                      rounded
+                      color="primary"
+                      v-if="recommendation.applicable()"
+                      dark
+                      x-small
+                      >Apply Recommendation</v-btn
+                    >
+                    <v-progress-circular
+                      color="primary"
+                      :indeterminate="true"
+                      v-if="recommendation.inProgress()"
+                    ></v-progress-circular>
+                    <div
+                      v-if="
+                        !recommendation.applicable() &&
+                          !recommendation.inProgress()
+                      "
+                    >
+                      {{ recommendation.status }}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </v-simple-table>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-pagination
+              v-model="pageNumber"
+              v-on:input="shuffleRecommendations()"
+              :length="30"
+              :total-visible="8"
+            ></v-pagination> </v-col
+        ></v-row>
+      </v-container>
     </v-main>
   </v-app>
 </template>
@@ -165,23 +185,14 @@ class Summary {
   }
 
   public toString(): string {
-    const moneySavedCount = Summary.costToNumber(this.moneySaved);
-    if (moneySavedCount > 0) {
-      return `Apply ${this.recommendationCount} recommendations to save ${this.moneySaved} every month.`;
-    }
-
-    return `Spend ${this.moneySaved.slice(
-      1
-    )} more each month to increase the performance by applying ${
-      this.recommendationCount
-    } recommendations.`;
+    return `Apply 237 recommendations to save 5432$ every month.`;
   }
 }
 
 @Component
 export default class Mock extends Vue {
   private headers = [
-    { text: "Project", value: "name" },
+    { text: "Project", value: "project" },
     { text: "Name", value: "name" },
     { text: "Description", align: "start", sortable: false, value: "type" },
     { text: "Apply", value: "apply" }
@@ -242,11 +253,36 @@ export default class Mock extends Vue {
       "shcheshnyak-n2-std-7-unsecure-2",
       "__INPROGRESS"
     ),
+    new Recommendation(
+      "RESIZE",
+      "3.50$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "middlesizer-test",
+      "timus-test-for-probers-n2-std-4-bored-2",
+      "ACTIVE"
+    ),
+    new Recommendation(
+      "RESIZE",
+      "11.75$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "middlesizer-test",
+      "timus-test-for-probers-n2-std-4-bored-3",
+      "ACTIVE"
+    )
   ];
+
+  private shuffleRecommendations(): void {
+    this.recommendations.sort(function() {
+      return 0.5 - Math.random();
+    });
+  }
 
   private summary = new Summary(this.recommendations);
   private successfullyLoaded = false;
   private progressPercentage = 0;
+  private pageNumber = 1;
 
   private async mounted() {
     // Simulate fetching recommendations at the beginning
