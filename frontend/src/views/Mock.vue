@@ -16,42 +16,61 @@ limitations under the License. -->
     <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
     </v-app-bar>
-    <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
-    </v-progress-linear>
-    <v-main v-if="successfullyLoaded">
-      <v-card class="pa-5">
-        <h2>{{ summary.toString() }}</h2>
-        <v-btn rounded color="primary" dark small
-          >Apply All Recomendations</v-btn
-        >
-      </v-card>
-      <v-data-table :headers="headers" :items="recommendations">
-        <template v-slot:item="recommendation">
-          <tr>
-            <td class="text-left">
-              {{ recommendation.item.getDescription() }}
-            </td>
-            <td class="text-left">
-              <a :href="recommendation.item.path">
-                {{ recommendation.item.name }}
-              </a>
-            </td>
-            <td class="text-left">{{ recommendation.item.project }}</td>
-            <td class="text-left">
-              <v-btn
-                rounded
-                color="primary"
-                :disabled="!recommendation.item.applicable()"
-                dark
-                x-small
-                >Apply Recommendation</v-btn
+
+    <v-main>
+      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
+      </v-progress-linear>
+      <v-container fluid v-if="successfullyLoaded">
+        <v-row>
+          <v-col>
+            <v-card class="pa-5">
+              <h2>{{ summary.toString() }}</h2>
+              <v-btn rounded color="primary" dark small
+                >Apply All Recomendations</v-btn
               >
-            </td>
-            <td class="text-left">{{ recommendation.item.status }}</td>
-          </tr>
-        </template>
-      </v-data-table>
-      <!-- change to v-data-table -->
+            </v-card>
+
+            <v-data-table :headers="headers" :items="recommendations">
+              <template v-slot:item="recommendation">
+                <tr>
+                  <td class="text-left">
+                    {{ recommendation.item.getDescription() }}
+                  </td>
+                  <td class="text-left">
+                    <a :href="recommendation.item.path">
+                      {{ recommendation.item.name }}
+                    </a>
+                  </td>
+                  <td class="text-left">{{ recommendation.item.project }}</td>
+                  <td class="text-left">
+                    <v-btn
+                      rounded
+                      color="primary"
+                      v-if="recommendation.item.applicable()"
+                      dark
+                      x-small
+                      >Apply Recommendation</v-btn
+                    >
+                    <v-progress-circular
+                      color="primary"
+                      :indeterminate="true"
+                      v-if="recommendation.item.inProgress()"
+                    ></v-progress-circular>
+                    <div
+                      v-if="
+                        !recommendation.item.applicable() &&
+                          !recommendation.item.inProgress()
+                      "
+                    >
+                      {{ recommendation.item.status }}
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
+          </v-col>
+        </v-row>
+      </v-container>
     </v-main>
   </v-app>
 </template>
@@ -84,7 +103,11 @@ class Recommendation {
   }
 
   applicable(): boolean {
-    return this.status == "applicable";
+    return this.status == "ACTIVE";
+  }
+
+  inProgress(): boolean {
+    return this.status == "__INPROGRESS";
   }
 
   getDescription(): string {
@@ -145,32 +168,17 @@ class Summary {
   }
 
   public toString(): string {
-    const moneySavedCount = Summary.costToNumber(this.moneySaved);
-    if (moneySavedCount > 0) {
-      return `Apply ${this.recommendationCount} recommendations to save ${this.moneySaved} every month.`;
-    }
-
-    return `Spend ${this.moneySaved.slice(
-      1
-    )} more each month to increase the performance by applying ${
-      this.recommendationCount
-    } recommendations.`;
+    return `Apply 237 recommendations to save 5432$ every month.`;
   }
 }
 
 @Component
 export default class Mock extends Vue {
   private headers = [
-    {
-      text: "Description",
-      align: "start",
-      sortable: false,
-      value: "Description"
-    },
-    { text: "Name", value: "Name" },
-    { text: "Project", value: "Project" },
-    { text: "Apply", value: "Apply" },
-    { text: "Status", value: "Status" }
+    { text: "Project", value: "project" },
+    { text: "Name", value: "name" },
+    { text: "Description", align: "start", sortable: false, value: "type" },
+    { text: "Apply", value: "apply" }
   ];
 
   private recommendations = [
@@ -180,59 +188,84 @@ export default class Mock extends Vue {
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-test",
-      "A very bored machine",
-      "applicable"
+      "timus-test-for-probers-n2-std-4-bored",
+      "ACTIVE"
     ),
     new Recommendation(
       "REMOVE",
       "10.00$",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "An even more bored machine",
-      "not applicable"
+      "rightsizer-prod",
+      "timus-test-for-probers-n2-std-4-very-bored",
+      "SUCCEEDED"
     ),
     new Recommendation(
       "SECURITY",
-      "13",
+      "Security recommendations don't have a cost",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "Not a secure machine",
-      "in progress"
+      "rightsizer-prod",
+      "shcheshnyak-n2-std-7-unsecure",
+      "__INPROGRESS"
     ),
     new Recommendation(
       "PERFORMANCE",
       "30.00$",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "A busy machine",
-      "failed"
+      "leftsizer-test",
+      "shcheshnyak-test-for-probers-n2-std-4-toobusy",
+      "FAILED"
     ),
     new Recommendation(
-      "SOMETHING STRANGE",
+      "UNSPECIFIED",
       "123$",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "A really odd machine",
-      "not applicable"
+      "leftsizer-test",
+      "timus-test-for-probers-n2-std-4-unknown",
+      "ACTIVE"
     ),
     new Recommendation(
-      "SOMETHING STRANGE",
-      "123$",
+      "SECURITY",
+      "Security recommendations don't have a cost",
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-test",
-      "A really odd machine",
-      "not applicable"
+      "rightsizer-prod",
+      "shcheshnyak-n2-std-7-unsecure-2",
+      "__INPROGRESS"
+    ),
+    new Recommendation(
+      "RESIZE",
+      "3.50$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "middlesizer-test",
+      "timus-test-for-probers-n2-std-4-bored-2",
+      "ACTIVE"
+    ),
+    new Recommendation(
+      "RESIZE",
+      "11.75$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "middlesizer-test",
+      "timus-test-for-probers-n2-std-4-bored-3",
+      "ACTIVE"
     )
   ];
+
+  private shuffleRecommendations(): void {
+    this.recommendations.sort(function() {
+      return 0.5 - Math.random();
+    });
+  }
 
   private summary = new Summary(this.recommendations);
   private successfullyLoaded = false;
   private progressPercentage = 0;
+  private pageNumber = 1;
 
   private async mounted() {
     // Simulate fetching recommendations at the beginning
