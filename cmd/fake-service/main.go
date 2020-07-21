@@ -116,16 +116,23 @@ func (s *mockApplyService) Apply() {
 	}
 }
 
+const (
+	notAppliedStatus = "NOT APPLIED"
+	inProgressStatus = "IN PROGRESS"
+	failedStatus     = "FAILED"
+	succeededStatus  = "SUCCEEDED"
+)
+
 func (s *mockApplyService) GetStatus() string {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if s.callsDone < s.numberOfCalls {
-		return "IN PROGRESS"
+		return inProgressStatus
 	}
 	if s.err != nil {
-		return "FAILED"
+		return failedStatus
 	}
-	return "APPLIED"
+	return succeededStatus
 }
 
 func getFakeRecommendations() []*gcloudRecommendation {
@@ -236,7 +243,7 @@ func main() {
 		service, ok := applyRequestsInProcess[name]
 		if ok {
 			status := service.GetStatus()
-			if status != "RUNNING" && status != "IN PROGRESS" {
+			if status == failedStatus {
 				ok = false
 			}
 		}
@@ -253,7 +260,7 @@ func main() {
 		applyRequestsMutex.Lock()
 		service, ok := applyRequestsInProcess[name]
 		applyRequestsMutex.Unlock()
-		status := "NOT APPLIED"
+		status := notAppliedStatus
 		if ok {
 			status = service.GetStatus()
 		}
