@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Run linter before commit
+
+# For this to work, the command 
+# "git config core.hooksPath <absolute path to the directory containing this file>"
+# must be run
+
+# For this to not be run before the commit it suffices to change the filename
+
+# Exit when some command fails
+# This causes the commit to fail if the linter can't fix the errors/warnings
+
+set -e
+
+# Get the correct path for the frontend folder
+curdir=$(pwd)
+tmpdir=${curdir//recomator*}
+targetdir=${tmpdir}recomator/frontend
+
+cd $targetdir
+
+format_file() {
+  file="${1}"
+  a=${file#*frontend/}
+  if [ -f $a ]; then
+    npm run lint $a
+    git add $a
+  fi
+}
+
+for file in `git diff-index --cached --name-only HEAD | grep -iE '\.(vue|js|ts|json|html)' ` ; do
+      format_file "${file}"
+    done
