@@ -25,40 +25,32 @@ limitations under the License. -->
           >Apply All Recomendations</v-btn
         >
       </v-card>
-      <v-simple-table>
-        <thead>
+      <v-data-table :headers="headers" :items="recommendations">
+        <template v-slot:item="recommendation">
           <tr>
-            <th v-for="header in headers" v-bind:key="header.value">
-              {{ header.text }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(recommendation, index) in recommendations"
-            v-bind:key="index"
-          >
-            <!-- <td>{{ recommendation.type }}</td>
-            <td>{{ recommendation.cost }}</td> -->
-            <td class="text-left">{{ recommendation.getDescription() }}</td>
             <td class="text-left">
-              <a :href="recommendation.path"> {{ recommendation.name }} </a>
+              {{ recommendation.item.getDescription() }}
             </td>
-            <td class="text-left">{{ recommendation.project }}</td>
+            <td class="text-left">
+              <a :href="recommendation.item.path">
+                {{ recommendation.item.name }}
+              </a>
+            </td>
+            <td class="text-left">{{ recommendation.item.project }}</td>
             <td class="text-left">
               <v-btn
                 rounded
                 color="primary"
-                :disabled="!recommendation.applicable()"
+                :disabled="!recommendation.item.applicable()"
                 dark
                 x-small
                 >Apply Recommendation</v-btn
               >
             </td>
-            <td class="text-left">{{ recommendation.status }}</td>
+            <td class="text-left">{{ recommendation.item.status }}</td>
           </tr>
-        </tbody>
-      </v-simple-table>
+        </template>
+      </v-data-table>
       <!-- change to v-data-table -->
     </v-main>
   </v-app>
@@ -169,11 +161,16 @@ class Summary {
 @Component
 export default class Mock extends Vue {
   private headers = [
-    { text: "Description", align: "start", sortable: false, value: "type" },
-    { text: "Name", value: "name" },
-    { text: "Project", value: "name" },
-    { text: "Apply", value: "apply" },
-    { text: "Status", value: "status" }
+    {
+      text: "Description",
+      align: "start",
+      sortable: false,
+      value: "Description"
+    },
+    { text: "Name", value: "Name" },
+    { text: "Project", value: "Project" },
+    { text: "Apply", value: "Apply" },
+    { text: "Status", value: "Status" }
   ];
 
   private recommendations = [
@@ -212,6 +209,15 @@ export default class Mock extends Vue {
       "rightsizer-test",
       "A busy machine",
       "failed"
+    ),
+    new Recommendation(
+      "SOMETHING STRANGE",
+      "123$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-test",
+      "A really odd machine",
+      "not applicable"
     ),
     new Recommendation(
       "SOMETHING STRANGE",
