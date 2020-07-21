@@ -33,15 +33,19 @@ limitations under the License. -->
             <v-data-table :headers="headers" :items="recommendations">
               <template v-slot:item="recommendation">
                 <tr>
-                  <td class="text-left">
-                    {{ recommendation.item.getDescription() }}
-                  </td>
+                  <td class="text-left">{{ recommendation.item.project }}</td>
                   <td class="text-left">
                     <a :href="recommendation.item.path">
                       {{ recommendation.item.name }}
                     </a>
                   </td>
-                  <td class="text-left">{{ recommendation.item.project }}</td>
+                  <td class="text-left">
+                    {{ recommendation.item.description }}
+                  </td>
+                  <td class="text-left">
+                    {{ recommendation.item.cost }}
+                  </td>
+
                   <td class="text-left">
                     <v-btn
                       rounded
@@ -85,6 +89,7 @@ class Recommendation {
   project: string;
   name: string;
   status: string;
+  description: string;
 
   constructor(
     type: string,
@@ -92,7 +97,8 @@ class Recommendation {
     path: string,
     project: string,
     name: string,
-    status: string
+    status: string,
+    description: string
   ) {
     this.type = type; // UPPERCASED, contained in the set {RESIZE, REMOVE, PERFORMANCE} (doing this should be possible)
     this.cost = cost; // monthly cost, parsed to be positive (I assume, that the number would always be negative for resize and delete, and positive for performance)
@@ -100,6 +106,7 @@ class Recommendation {
     this.project = project;
     this.name = name;
     this.status = status;
+    this.description = description;
   }
 
   applicable(): boolean {
@@ -186,7 +193,8 @@ export default class Mock extends Vue {
     { text: "Project", value: "project" },
     { text: "Name", value: "name" },
     { text: "Description", align: "start", sortable: false, value: "type" },
-    { text: "Apply", value: "apply" }
+    { text: "Related cost per month", value: "cost"},
+    { text: "Apply", value: "apply" },
   ];
 
   private recommendations = [
@@ -197,7 +205,8 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-test",
       "timus-test-for-probers-n2-std-4-bored",
-      "ACTIVE"
+      "ACTIVE",
+      "Save cost by changing machine type from n1-highcpu-8 to n1-highcpu-4"
     ),
     new Recommendation(
       "REMOVE",
@@ -206,16 +215,8 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-prod",
       "timus-test-for-probers-n2-std-4-very-bored",
-      "SUCCEEDED"
-    ),
-    new Recommendation(
-      "SECURITY",
-      "Security recommendations don't have a cost",
-      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
-      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-prod",
-      "shcheshnyak-n2-std-7-unsecure",
-      "__INPROGRESS"
+      "SUCCEEDED",
+      "Save cost by removing machine"
     ),
     new Recommendation(
       "PERFORMANCE",
@@ -224,7 +225,8 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
-      "FAILED"
+      "__INPROGRESS",
+      "Increase performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
     ),
     new Recommendation(
       "UNSPECIFIED",
@@ -233,16 +235,8 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
       "timus-test-for-probers-n2-std-4-unknown",
-      "ACTIVE"
-    ),
-    new Recommendation(
-      "SECURITY",
-      "Security recommendations don't have a cost",
-      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
-      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-prod",
-      "shcheshnyak-n2-std-7-unsecure-2",
-      "__INPROGRESS"
+      "ACTIVE",
+      "Save cost by changing machine type from n1-highcpu-8 to n1-highcpu-4"
     ),
     new Recommendation(
       "RESIZE",
@@ -251,7 +245,18 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
       "timus-test-for-probers-n2-std-4-bored-2",
-      "ACTIVE"
+      "__INPROGRESS",
+      "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-8"
+    ),
+    new Recommendation(
+      "REMOVE",
+      "10.00$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "rightsizer-prod",
+      "timus-test-for-probers-n2-std-4-very-bored",
+      "SUCCEEDED",
+      "Save cost by removing machine"
     ),
     new Recommendation(
       "RESIZE",
@@ -260,8 +265,19 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
       "timus-test-for-probers-n2-std-4-bored-3",
-      "ACTIVE"
-    )
+      "__INPROGRESS",
+      "Save cost by changing machine type from n1-highcpu-4 to n1-highcpu-2"
+    ),
+    new Recommendation(
+      "PERFORMANCE",
+      "30.00$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "leftsizer-test",
+      "shcheshnyak-test-for-probers-n2-std-4-toobusy",
+      "FAILED",
+      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+    ),
   ];
 
   private shuffleRecommendations(): void {
