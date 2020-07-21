@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Run linter before commit
+
+# exit when some command fails
+set -e
+
+echo "askdjasj"
+# Get the correct path for the frontend folder
+curdir=$(pwd)
+tmpdir=${curdir//recomator*}
+targetdir=${tmpdir}recomator/frontend
+
+cd $targetdir
+
+format_file() {
+  file="${1}"
+  a=${file#*frontend/}
+  if [ -f $a ]; then
+    npm run lint  $a
+    git add $a
+  fi
+}
+
+for file in `git diff-index --cached --name-only HEAD | grep -iE '\.(vue|js|ts|json|html)' ` ; do
+      format_file "${file}"
+    done
