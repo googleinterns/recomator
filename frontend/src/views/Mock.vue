@@ -18,7 +18,7 @@ limitations under the License. -->
     </v-app-bar>
 
     <v-main>
-      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage"   >
+      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
       </v-progress-linear>
       <v-container fluid v-if="successfullyLoaded">
         <v-row>
