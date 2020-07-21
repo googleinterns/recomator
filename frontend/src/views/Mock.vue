@@ -12,13 +12,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <v-app>
+  <v-app mt-10 mb-10 ml-10 mr-10>
     <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
     </v-app-bar>
 
     <v-main>
-      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
+      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage"   >
       </v-progress-linear>
       <v-container fluid v-if="successfullyLoaded">
         <v-row>
@@ -168,7 +168,15 @@ class Summary {
   }
 
   public toString(): string {
-    return `Apply 237 recommendations to save 5432$ every month.`;
+    const moneySavedCount = Summary.costToNumber(this.moneySaved);
+    if (moneySavedCount > 0) {
+      return `Apply ${this.recommendationCount} recommendations to save ${this.moneySaved} every month.`;
+    }
+    return `Spend ${this.moneySaved.slice(
+      1
+    )} more each month to increase the performance by applying ${
+      this.recommendationCount
+    } recommendations.`;
   }
 }
 
