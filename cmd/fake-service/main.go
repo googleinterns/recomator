@@ -57,21 +57,22 @@ type ListRecommendationsProgressResponse struct {
 	NumberOfBatches  int `json:"numberOfBatches"`
 }
 
-type mockService struct {
+type mockListService struct {
 	anotherPageToken string
 	recommendations  []*gcloudRecommendation
 	callsDone        int
 	numberOfCalls    int
+	token            string
 	mutex            sync.Mutex
 }
 
-func (s *mockService) ListRecommendations() {
+func (s *mockListService) ListRecommendations() {
 	s.mutex.Lock()
 	s.numberOfCalls = rand.Int() % 100
 	s.callsDone = 0
 	s.anotherPageToken = ksuid.New().String()
 	s.mutex.Unlock()
-	for i := 0; i < s.numberOfCalls; i++ {
+	for s.callsDone < s.numberOfCalls {
 		time.Sleep(time.Duration(rand.Int()%200) * time.Millisecond)
 		s.mutex.Lock()
 		s.callsDone++
@@ -79,14 +80,52 @@ func (s *mockService) ListRecommendations() {
 	}
 }
 
-func (s *mockService) GetProgress() (int, int) {
+func (s *mockListService) GetProgress() (int, int) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return s.callsDone, s.numberOfCalls
 }
 
-func (s *mockService) GetResult() ([]*gcloudRecommendation, string) {
+func (s *mockListService) GetResult() ([]*gcloudRecommendation, string) {
 	return s.recommendations, s.anotherPageToken
+}
+
+type mockApplyService struct {
+	name          string
+	err           error
+	callsDone     int
+	numberOfCalls int
+	mutex         sync.Mutex
+}
+
+func (s *mockApplyService) Apply() {
+	s.mutex.Lock()
+	s.numberOfCalls = rand.Int()%2 + 2
+	s.callsDone = 0
+	s.mutex.Unlock()
+	for s.callsDone < s.numberOfCalls {
+		time.Sleep(time.Duration(rand.Int()%2000) * time.Millisecond)
+		s.mutex.Lock()
+		if rand.Int()%10 == 0 {
+			s.err = fmt.Errorf("applying recommendation failed: error happened on step %d", s.callsDone)
+			s.callsDone = s.numberOfCalls
+		} else {
+			s.callsDone++
+		}
+		s.mutex.Unlock()
+	}
+}
+
+func (s *mockApplyService) GetStatus() string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if s.callsDone < s.numberOfCalls {
+		return "IN PROGRESS"
+	}
+	if s.err != nil {
+		return "FAILED"
+	}
+	return "APPLIED"
 }
 
 func getFakeRecommendations() []*gcloudRecommendation {
@@ -113,26 +152,24 @@ func getFakeRecommendations() []*gcloudRecommendation {
 	return result
 }
 
-type request struct {
-	AccessToken string
-	service     *mockService
-}
-
 func main() {
 	var cachedCallsMutex sync.Mutex
 	cachedCalls := make(map[string][]*gcloudRecommendation) // the key is anotherPageToken
-	var requestsInProcessMutex sync.Mutex
-	requestsInProcess := make(map[string]*mockService) // the key is AccessToken, but in this version, token is always ""
-	newRequests := make(chan request)
+	var listRequestsMutex sync.Mutex
+	listRequestsInProcess := make(map[string]*mockListService) // the key is AccessToken, but in this version, token is always ""
+	newListRequests := make(chan *mockListService)
 
-	go func() { // one goroutine proccessing ListRecommendations in background
+	var applyRequestsMutex sync.Mutex
+	applyRequestsInProcess := make(map[string]*mockApplyService) // the key is recommendation name
+	newApplyRequests := make(chan *mockApplyService)
+
+	go func() { // one goroutine proccessing requests in background
 		for {
 			select {
-			case r := <-newRequests:
-				requestsInProcessMutex.Lock()
-				requestsInProcess[r.AccessToken] = r.service
-				requestsInProcessMutex.Unlock()
-				r.service.ListRecommendations()
+			case s := <-newListRequests:
+				s.ListRecommendations()
+			case s := <-newApplyRequests:
+				s.Apply()
 			default:
 				break
 			}
@@ -157,8 +194,8 @@ func main() {
 		anotherPageToken := c.Query("pageToken")
 		if anotherPageToken != "" {
 			cachedCallsMutex.Lock()
-			defer cachedCallsMutex.Unlock()
 			result, ok := cachedCalls[anotherPageToken]
+			cachedCallsMutex.Unlock()
 			if ok {
 				c.JSON(http.StatusOK, NewListRecommendationsResponse(
 					anotherPageToken, pageIndex, pageSize, result))
@@ -167,19 +204,22 @@ func main() {
 		}
 
 		token := "" // no authentication in this fake service
-		requestsInProcessMutex.Lock()
-		defer requestsInProcessMutex.Unlock()
-		service, ok := requestsInProcess[token]
+		listRequestsMutex.Lock()
+		service, ok := listRequestsInProcess[token]
 		if !ok {
-			service = &mockService{recommendations: recommendations, callsDone: 0, numberOfCalls: 1}
-			newRequests <- request{token, service}
+			service = &mockListService{token: token, recommendations: recommendations, callsDone: 0, numberOfCalls: 1}
+			newListRequests <- service
+			listRequestsInProcess[token] = service
 		}
+		listRequestsMutex.Unlock()
 		done, all := service.GetProgress()
 		if done < all {
 			c.JSON(http.StatusOK, ListRecommendationsProgressResponse{done, all})
 		} else {
 			result, anotherPageToken := service.GetResult()
-			delete(requestsInProcess, token)
+			listRequestsMutex.Lock()
+			delete(listRequestsInProcess, token)
+			listRequestsMutex.Unlock()
 			cachedCallsMutex.Lock()
 			cachedCalls[anotherPageToken] = result
 			cachedCallsMutex.Unlock()
@@ -188,6 +228,38 @@ func main() {
 		}
 		return
 	})
+
+	router.POST("/recommendations/:name/apply", func(c *gin.Context) {
+		name := c.Param("name")
+		applyRequestsMutex.Lock()
+		defer applyRequestsMutex.Unlock()
+		service, ok := applyRequestsInProcess[name]
+		if ok {
+			status := service.GetStatus()
+			if status != "RUNNING" && status != "IN PROGRESS" {
+				ok = false
+			}
+		}
+		if !ok {
+			service := &mockApplyService{name: name, callsDone: 0, numberOfCalls: 1}
+			newApplyRequests <- service
+			applyRequestsInProcess[name] = service
+		}
+		return
+	})
+
+	router.GET("/recommendations/:name/checkStatus", func(c *gin.Context) {
+		name := c.Param("name")
+		applyRequestsMutex.Lock()
+		service, ok := applyRequestsInProcess[name]
+		applyRequestsMutex.Unlock()
+		status := "NOT APPLIED"
+		if ok {
+			status = service.GetStatus()
+		}
+		c.JSON(http.StatusOK, gin.H{"status": status})
+	})
+
 	router.Run(":8080")
 
 }
