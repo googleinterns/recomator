@@ -31,16 +31,12 @@ interface Impact {
 
 interface CostProjection {
   cost: Money;
-  duration: Duration;
+  duration: string;
 }
 
 interface Money {
   currencyCode: string;
-  units: number;
-}
-
-interface Duration {
-  seconds: number; // originally int64
+  units: string;
 }
 
 interface RecommendationStateInfo {
