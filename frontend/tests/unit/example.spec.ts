@@ -68,8 +68,8 @@ describe("Store tests", () => {
       }
     });
 
-	store.commit("ADD_RECOMMENDATION", sampleRecommendation);
-	// For some very weird reason, using expect().toHaveProperty() only works if the name is short
+    store.commit("ADD_RECOMMENDATION", sampleRecommendation);
+    // For some very weird reason, using expect().toHaveProperty() only works if the name is short
     expect(
       sampleRecommendation.name in
         store.state.recommendationsStore.recommendations
