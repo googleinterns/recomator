@@ -32,9 +32,9 @@ export default class extends VuexModule {
   }
 
   @Action
-  getRecommendation(recommendationName: string) : Recommendation {
+  getRecommendation(recommendationName: string): Recommendation {
     console.assert(
-      (recommendationName in this.recommendations),
+      recommendationName in this.recommendations,
       "recommendation name %s is not present in the store",
       recommendationName
     );

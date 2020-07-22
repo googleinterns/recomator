@@ -75,12 +75,16 @@ function getRecommendationResourceName(recommendation: Recommendation): string {
   return "timus-test-for-probers-n2-std-4-idling";
 }*/
 
+// TODO: remove ignoring Eslint, once these methods are actually used somewhere
+
 // Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getRecomendationDescription(recommendation: Recommendation): string {
   return recommendation.description;
 }
 
 // "3.5$ per week"
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getRecommendationCostString(recommendation: Recommendation): string {
   console.assert(
     recommendation.primaryImpact.costProjection.cost.currencyCode === "USD",
@@ -95,9 +99,7 @@ function getRecommendationCostString(recommendation: Recommendation): string {
     recommendation.primaryImpact.costProjection.duration.slice(0, -1)
   );
   // example units: "-73"
-  const cost = parseInt(
-    recommendation.primaryImpact.costProjection.cost.units
-  );
+  const cost = parseInt(recommendation.primaryImpact.costProjection.cost.units);
 
   const costPerWeek = (cost * 60 * 60 * 24 * 7) / secs;
 
