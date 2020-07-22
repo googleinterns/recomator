@@ -37,7 +37,7 @@ import (
 const (
 	numberOfFakeRecommendations = 60
 	expectedListTime            = time.Second * 10
-	expectedApplyTime           = time.Second * 2
+	expectedApplyTime           = time.Second * 10
 )
 
 type gcloudRecommendation recommender.GoogleCloudRecommenderV1Recommendation
@@ -256,27 +256,8 @@ func (m *applyRequestsMap) LoadOrStore(name string, service *mockApplyService) (
 func main() {
 	cachedCalls := recommendationsMap{data: make(map[string][]*gcloudRecommendation)} // the key is anotherPageToken
 	listRequestsInProcess := listRequestsMap{data: make(map[string]*mockListService)} // the key is AccessToken, but in this version, token is always ""
-	bufferSize := 100
-	newListRequests := make(chan *mockListService, bufferSize)
 
-	applyRequestsInProcess := applyRequestsMap{data: make(map[string]*mockApplyService)} // the key is recommendation name
-	newApplyRequests := make(chan *mockApplyService, bufferSize)
-
-	numWorkers := 10
-	for i := 0; i < numWorkers; i++ { // goroutines proccessing requests in background
-		go func() {
-			for {
-				select {
-				case s := <-newListRequests:
-					s.ListRecommendations()
-				case s := <-newApplyRequests:
-					s.Apply()
-				default:
-					break
-				}
-			}
-		}()
-	}
+	applyRequestsInProcess := applyRequestsMap{data: make(map[string]*mockApplyService)} // the key is recommendation names
 
 	recommendations := getFakeRecommendations()
 
@@ -306,7 +287,7 @@ func main() {
 		token := "" // no authentication in this fake service
 		service, loaded := listRequestsInProcess.LoadOrStore(token, &mockListService{token: token, recommendations: recommendations, callsDone: 0, numberOfCalls: 1})
 		if !loaded {
-			newListRequests <- service
+			go service.ListRecommendations()
 		}
 		done, all := service.GetProgress()
 		if done < all {
@@ -325,7 +306,7 @@ func main() {
 		name := c.Param("name")
 		service, loaded := applyRequestsInProcess.LoadOrStore(name, &mockApplyService{name: name, callsDone: 0, numberOfCalls: 1})
 		if !loaded {
-			newApplyRequests <- service
+			go service.Apply()
 		}
 		return
 	})
