@@ -12,15 +12,67 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { shallowMount } from "@vue/test-utils";
-import HelloWorld from "@/components/HelloWorld.vue";
+import "@/data-model/model.ts";
+import RecommendationStore from "@/store/recommendations";
+import Vue from "vue";
+import Vuex from "vuex";
 
-describe("HelloWorld.vue", () => {
-  it("renders props.msg when passed", () => {
-    const msg = "new message";
-    const wrapper = shallowMount(HelloWorld, {
-      propsData: { msg }
+Vue.use(Vuex);
+
+const sampleRecommendation: Recommendation = {
+  content: {
+    operationGroups: [
+      {
+        operations: [
+          {
+            path: "/machineType",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
+            resourceType: "compute.googleapis.com/Instance"
+          },
+          {
+            path: "/machineType",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
+            resourceType: "compute.googleapis.com/Instance"
+          }
+        ]
+      }
+    ]
+  },
+  description:
+    "Save cost by changing machine type from n1-standard-4 to custom-2-5120.",
+  name:
+    "projects/323016592286/locations/us-east1-b/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/6dfd692f-14b7-499a-be95-a09fe0893911",
+  primaryImpact: {
+    category: "COST",
+    costProjection: {
+      cost: {
+        currencyCode: "USD",
+        units: "-73"
+      },
+      duration: "2592000s"
+    }
+  },
+  recommenderSubtype: "CHANGE_MACHINE_TYPE",
+  stateInfo: {
+    state: "CLAIMED"
+  }
+};
+
+describe("Store tests", () => {
+  test("ADD_RECOMMENDATION", () => {
+    const store = new Vuex.Store({
+      modules: {
+        recommendationsStore: RecommendationStore
+      }
     });
-    expect(wrapper.text()).toContain(msg);
+
+	store.commit("ADD_RECOMMENDATION", sampleRecommendation);
+	// For some very weird reason, using expect().toHaveProperty() only works if the name is short
+    expect(
+      sampleRecommendation.name in
+        store.state.recommendationsStore.recommendations
+    ).toBe(true);
   });
 });
