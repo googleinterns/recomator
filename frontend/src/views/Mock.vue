@@ -223,7 +223,7 @@ export default class Mock extends Vue {
     { text: "", value: "apply" }
   ];
 
-  private recommendations = [
+  private recommendations_core = [
     new Recommendation(
       "RESIZE",
       "6.50$",
@@ -326,6 +326,13 @@ export default class Mock extends Vue {
     )
   ];
 
+  private recommendations = Array(10)
+    .fill(this.recommendations_core)
+    .flat()
+    .sort(function() {
+      return 0.5 - Math.random();
+    });
+
   private shuffleRecommendations(): void {
     this.recommendations.sort(function() {
       return 0.5 - Math.random();
@@ -343,7 +350,7 @@ export default class Mock extends Vue {
     if (Math.random() < 0.33) recommendation.status = "FAILED";
     else {
       await new Promise(res => setTimeout(res, 5000));
-      recommendation.status = "SUCCEDED";
+      recommendation.status = "SUCCEEDED";
     }
   }
 
