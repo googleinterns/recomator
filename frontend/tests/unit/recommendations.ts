@@ -74,5 +74,6 @@ describe("Store tests", () => {
       sampleRecommendation.name in
         store.state.recommendationsStore.recommendations
     ).toBe(true);
+    // TODO add recommendation content checks as well
   });
 });
