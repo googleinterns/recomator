@@ -32,9 +32,21 @@ limitations under the License. -->
               <v-btn rounded color="primary" dark small
                 >Apply All Recomendations</v-btn
               >
+              <v-text-field
+                v-model="search"
+                append-icon="mdi-magnify"
+                label="Search"
+                single-line
+                hide-details
+              ></v-text-field>
             </v-card>
 
-            <v-data-table :headers="headers" :items="recommendations" show-group-by search>
+            <v-data-table
+              :headers="headers"
+              :items="recommendations"
+              show-group-by
+              :search="search"
+            >
               <template v-slot:item="recommendation">
                 <tr>
                   <td class="text-left">{{ recommendation.item.project }}</td>
@@ -128,7 +140,15 @@ class Recommendation {
   }
 
   copy(): Recommendation {
-    return new Recommendation(this.type, this.cost, this.path, this.project, this.name, this.status, this.description) 
+    return new Recommendation(
+      this.type,
+      this.cost,
+      this.path,
+      this.project,
+      this.name,
+      this.status,
+      this.description
+    );
   }
 
   applicable(): boolean {
@@ -219,12 +239,19 @@ class Summary {
 
 @Component
 export default class Mock extends Vue {
+  private search = "";
   private headers = [
-    { text: "Project", value: "project", filterable: true, },
-    { text: "Name", value: "name", groupable: false},
-    { text: "Description", align: "start", sortable: false, value: "type", groupable: false},
+    { text: "Project", value: "project", filterable: true },
+    { text: "Name", value: "name", groupable: false },
+    {
+      text: "Description",
+      align: "start",
+      sortable: false,
+      value: "type",
+      groupable: false
+    },
     { text: "Related cost per month", value: "cost", groupable: false },
-    { text: "", value: "apply" , groupable: false}
+    { text: "", value: "apply", groupable: false }
   ];
 
   private recommendations_core = [
@@ -330,15 +357,17 @@ export default class Mock extends Vue {
     )
   ];
 
-  private generateRecommendations() : void {
+  private generateRecommendations(): void {
     this.recommendations = Array(10)
-    .fill(this.recommendations_core)
-    .flat()
-    .sort(function() {
-      return 0.5 - Math.random();
-    })
-    .map(rec => rec.copy());
-    this.recommendations.forEach((rec, index) => {rec.name += index})
+      .fill(this.recommendations_core)
+      .flat()
+      .sort(function() {
+        return 0.5 - Math.random();
+      })
+      .map(rec => rec.copy());
+    this.recommendations.forEach((rec, index) => {
+      rec.name += index;
+    });
   }
 
   private recommendations = [];
@@ -375,7 +404,7 @@ export default class Mock extends Vue {
       this.progressPercentage += 100 / progressBarSteps;
     }
     this.successfullyLoaded = true;
-    this.generateRecommendations()
+    this.generateRecommendations();
   }
 }
 </script>
