@@ -24,7 +24,11 @@ limitations under the License. -->
         <v-row>
           <v-col>
             <v-card class="pa-5">
-              <h2>{{ summary.toString() }}</h2>
+              <!-- <h2>{{ summary.toString() }}</h2> -->
+              <h3>
+                Spend 1234$ more and save 2314$ per week by applying all
+                recommendations
+              </h3>
               <v-btn rounded color="primary" dark small
                 >Apply All Recomendations</v-btn
               >
@@ -51,19 +55,33 @@ limitations under the License. -->
                       rounded
                       color="primary"
                       v-if="recommendation.item.applicable()"
+                      v-on:click="runRecommendation(recommendation.item)"
                       dark
                       x-small
-                      >Apply Recommendation</v-btn
+                      >Apply</v-btn
                     >
                     <v-progress-circular
                       color="primary"
                       :indeterminate="true"
                       v-if="recommendation.item.inProgress()"
                     ></v-progress-circular>
+
+                    <v-icon
+                      color="green darken-2"
+                      v-if="recommendation.item.succeded()"
+                      >mdi-check-circle</v-icon
+                    >
+                    <v-icon
+                      color="red darken-2"
+                      v-if="recommendation.item.failed()"
+                      >mdi-close-circle</v-icon
+                    >
                     <div
                       v-if="
                         !recommendation.item.applicable() &&
-                          !recommendation.item.inProgress()
+                          !recommendation.item.inProgress() &&
+                          !recommendation.item.failed() &&
+                          !recommendation.item.succeded()
                       "
                     >
                       {{ recommendation.item.status }}
@@ -115,6 +133,14 @@ class Recommendation {
 
   inProgress(): boolean {
     return this.status == "__INPROGRESS";
+  }
+
+  succeded(): boolean {
+    return this.status == "SUCCEEDED";
+  }
+
+  failed(): boolean {
+    return this.status == "FAILED";
   }
 
   getDescription(): string {
@@ -193,8 +219,8 @@ export default class Mock extends Vue {
     { text: "Project", value: "project" },
     { text: "Name", value: "name" },
     { text: "Description", align: "start", sortable: false, value: "type" },
-    { text: "Related cost per month", value: "cost"},
-    { text: "Apply", value: "apply" },
+    { text: "Related cost per month", value: "cost" },
+    { text: "", value: "apply" }
   ];
 
   private recommendations = [
@@ -215,7 +241,7 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-prod",
       "timus-test-for-probers-n2-std-4-very-bored",
-      "SUCCEEDED",
+      "ACTIVE",
       "Save cost by removing machine"
     ),
     new Recommendation(
@@ -225,7 +251,7 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
-      "__INPROGRESS",
+      "ACTIVE",
       "Increase performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
     ),
     new Recommendation(
@@ -245,7 +271,7 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
       "timus-test-for-probers-n2-std-4-bored-2",
-      "__INPROGRESS",
+      "ACTIVE",
       "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-8"
     ),
     new Recommendation(
@@ -265,7 +291,7 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
       "timus-test-for-probers-n2-std-4-bored-3",
-      "__INPROGRESS",
+      "ACTIVE",
       "Save cost by changing machine type from n1-highcpu-4 to n1-highcpu-2"
     ),
     new Recommendation(
@@ -275,9 +301,29 @@ export default class Mock extends Vue {
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
-      "FAILED",
+      "ACTIVE",
       "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
     ),
+    new Recommendation(
+      "PERFORMANCE",
+      "40.00$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "search",
+      "shcheshnyak-test-for-probers-n2-std-4-toobusy",
+      "ACTIVE",
+      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+    ),
+    new Recommendation(
+      "PERFORMANCE",
+      "50.00$",
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "search",
+      "shcheshnyak-test-for-probers-n2-std-4-toobusy",
+      "ACTIVE",
+      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+    )
   ];
 
   private shuffleRecommendations(): void {
@@ -290,6 +336,16 @@ export default class Mock extends Vue {
   private successfullyLoaded = false;
   private progressPercentage = 0;
   private pageNumber = 1;
+
+  private async runRecommendation(recommendation: Recommendation) {
+    recommendation.status = "__INPROGRESS";
+    await new Promise(res => setTimeout(res, 2500));
+    if (Math.random() < 0.33) recommendation.status = "FAILED";
+    else {
+      await new Promise(res => setTimeout(res, 5000));
+      recommendation.status = "SUCCEDED";
+    }
+  }
 
   private async mounted() {
     // Simulate fetching recommendations at the beginning
