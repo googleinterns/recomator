@@ -34,7 +34,7 @@ limitations under the License. -->
               >
             </v-card>
 
-            <v-data-table :headers="headers" :items="recommendations">
+            <v-data-table :headers="headers" :items="recommendations" show-group-by search>
               <template v-slot:item="recommendation">
                 <tr>
                   <td class="text-left">{{ recommendation.item.project }}</td>
@@ -127,6 +127,10 @@ class Recommendation {
     this.description = description;
   }
 
+  copy(): Recommendation {
+    return new Recommendation(this.type, this.cost, this.path, this.project, this.name, this.status, this.description) 
+  }
+
   applicable(): boolean {
     return this.status == "ACTIVE";
   }
@@ -216,11 +220,11 @@ class Summary {
 @Component
 export default class Mock extends Vue {
   private headers = [
-    { text: "Project", value: "project" },
-    { text: "Name", value: "name" },
-    { text: "Description", align: "start", sortable: false, value: "type" },
-    { text: "Related cost per month", value: "cost" },
-    { text: "", value: "apply" }
+    { text: "Project", value: "project", filterable: true, },
+    { text: "Name", value: "name", groupable: false},
+    { text: "Description", align: "start", sortable: false, value: "type", groupable: false},
+    { text: "Related cost per month", value: "cost", groupable: false },
+    { text: "", value: "apply" , groupable: false}
   ];
 
   private recommendations_core = [
@@ -326,12 +330,18 @@ export default class Mock extends Vue {
     )
   ];
 
-  private recommendations = Array(10)
+  private generateRecommendations() : void {
+    this.recommendations = Array(10)
     .fill(this.recommendations_core)
     .flat()
     .sort(function() {
       return 0.5 - Math.random();
-    });
+    })
+    .map(rec => rec.copy());
+    this.recommendations.forEach((rec, index) => {rec.name += index})
+  }
+
+  private recommendations = [];
 
   private shuffleRecommendations(): void {
     this.recommendations.sort(function() {
@@ -365,6 +375,7 @@ export default class Mock extends Vue {
       this.progressPercentage += 100 / progressBarSteps;
     }
     this.successfullyLoaded = true;
+    this.generateRecommendations()
   }
 }
 </script>
