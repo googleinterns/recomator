@@ -42,15 +42,14 @@ type GoogleService interface {
 // using projects.locations.recommenders.recommendations/list and zones/list methods.
 type googleService struct {
 	ctx                context.Context
-	instancesService   *compute.InstancesService
-	zonesService       *compute.ZonesService
-	recommenderService *recommender.ProjectsLocationsRecommendersRecommendationsService
+	computeService     *compute.Service
+	recommenderService *recommender.Service
 }
 
 // NewGoogleService creates new googleServices.
 // If creation failed the error will be non-nil.
 func NewGoogleService(ctx context.Context) (GoogleService, error) {
-	recService, err := recommender.NewService(ctx)
+	recommenderService, err := recommender.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +61,7 @@ func NewGoogleService(ctx context.Context) (GoogleService, error) {
 
 	return &googleService{
 		ctx:                ctx,
-		instancesService:   compute.NewInstancesService(computeService),
-		recommenderService: recommender.NewProjectsLocationsRecommendersRecommendationsService(recService),
-		zonesService:       compute.NewZonesService(computeService),
+		computeService:     computeService,
+		recommenderService: recommenderService,
 	}, nil
 }

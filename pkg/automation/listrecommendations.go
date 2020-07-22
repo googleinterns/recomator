@@ -30,7 +30,8 @@ type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 // projects.locations.recommenders.recommendations/list method from Recommender API is used.
 // If the error occurred the returned error is not nil.
 func (s *googleService) ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error) {
-	listCall := s.recommenderService.List(fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", project, location, recommenderID))
+	recommendationsService := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
+	listCall := recommendationsService.List(fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", project, location, recommenderID))
 	var recommendations []*gcloudRecommendation
 	addRecommendations := func(response *recommender.GoogleCloudRecommenderV1ListRecommendationsResponse) error {
 		recommendations = append(recommendations, response.Recommendations...)
@@ -48,7 +49,8 @@ func (s *googleService) ListRecommendations(project string, location string, rec
 // Uses zones/list method from Compute API.
 // If the error occurred the returned error is not nil.
 func (s *googleService) ListZonesNames(project string) ([]string, error) {
-	listCall := s.zonesService.List(project)
+	zonesService := compute.NewZonesService(s.computeService)
+	listCall := zonesService.List(project)
 
 	var zones []string
 	addZones := func(zoneList *compute.ZoneList) error {
@@ -62,6 +64,11 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 		return []string{}, err
 	}
 	return zones, nil
+}
+
+type result struct {
+	recommendations []*gcloudRecommendation
+	err             error
 }
 
 // ListRecommendations returns the list of recommendations for a Cloud project.
@@ -81,26 +88,14 @@ func ListRecommendations(service GoogleService, project string, recommenderID st
 		numWorkers = defaultNumWorkers
 	}
 
-	results := make(chan []*gcloudRecommendation, numberOfZones)
+	results := make(chan result, numberOfZones)
 	zonesJobs := make(chan string, numberOfZones)
-	errors := make(chan error)
-	quit := make(chan bool)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			for zone := range zonesJobs {
-				select {
-				case <-quit:
-					break
-				default:
-					result, err := service.ListRecommendations(project, zone, recommenderID)
-					if err != nil {
-						errors <- err
-						close(quit)
-						break
-					}
-					results <- result
-				}
+				recs, err := service.ListRecommendations(project, zone, recommenderID)
+				results <- result{recs, err}
 			}
 		}()
 	}
@@ -111,13 +106,17 @@ func ListRecommendations(service GoogleService, project string, recommenderID st
 	close(zonesJobs)
 
 	var recommendations []*gcloudRecommendation
+	err = nil
 	for range zones {
-		select {
-		case err := <-errors:
-			return []*gcloudRecommendation{}, err
-		case result := <-results:
-			recommendations = append(recommendations, result...)
+		zoneResult := <-results
+		if zoneResult.err != nil {
+			err = zoneResult.err
+		} else {
+			recommendations = append(recommendations, zoneResult.recommendations...)
 		}
+	}
+	if err != nil {
+		return []*gcloudRecommendation{}, err
 	}
 	return recommendations, nil
 }

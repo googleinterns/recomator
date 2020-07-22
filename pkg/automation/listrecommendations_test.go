@@ -76,10 +76,11 @@ func TestErrorInListZones(t *testing.T) {
 
 type ErrorRecommendationService struct {
 	GoogleService
-	err       error
-	errorZone string
-	mutex     sync.Mutex
-	zones     []string
+	err                 error
+	errorZone           string
+	mutex               sync.Mutex
+	numberOfTimesCalled int
+	zones               []string
 }
 
 func (s *ErrorRecommendationService) ListZonesNames(project string) ([]string, error) {
@@ -88,7 +89,8 @@ func (s *ErrorRecommendationService) ListZonesNames(project string) ([]string, e
 
 func (s *ErrorRecommendationService) ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error) {
 	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.numberOfTimesCalled++
+	s.mutex.Unlock()
 
 	if location == s.errorZone {
 		return []*gcloudRecommendation{}, s.err
@@ -99,18 +101,19 @@ func (s *ErrorRecommendationService) ListRecommendations(project string, locatio
 func TestErrorInRecommendations(t *testing.T) {
 	errorMessage := "error listing recommendations"
 	zones := []string{}
-	for i := 1; i < 5; i++ {
+	for i := 1; i <= 5; i++ {
 		zones = append(zones, fmt.Sprintf("zone %d", i))
 	}
 
 	for _, zone := range zones {
 		for numConcurrentCalls := 1; numConcurrentCalls <= 10; numConcurrentCalls++ {
-			_, err := ListRecommendations(
-				&ErrorRecommendationService{
-					err:       fmt.Errorf(errorMessage),
-					zones:     zones,
-					errorZone: zone}, "", "", numConcurrentCalls)
+			service := &ErrorRecommendationService{
+				err:       fmt.Errorf(errorMessage),
+				zones:     zones,
+				errorZone: zone}
+			_, err := ListRecommendations(service, "", "", numConcurrentCalls)
 			assert.EqualError(t, err, errorMessage, "Expected error calling ListRecommendations")
+			assert.Equal(t, len(zones), service.numberOfTimesCalled, "ListRecommendations called wrong number of times")
 		}
 	}
 }
