@@ -25,52 +25,20 @@ export default class extends VuexModule {
     // prevent overwriting
     console.assert(
       !(recommendation.name in this.recommendations),
-      "the key %s is present in the store already",
+      "recommendation name %s is present in the store already",
       recommendation.name
     );
     this.recommendations[recommendation.name] = recommendation;
   }
 
-  /*
-  TODO: To be implemented  
   @Action
-  getRecommendationProject(recommendationName: string): string {
-    return "rightsizer-test";
-  }
-
-  @Action
-  getRecommendationResourceName(recommendationName: string): string {
-    return "timus-test-for-probers-n2-std-4-idling";
-  }*/
-
-  @Action
-  getRecomendationDescription(recommendationName: string): string {
-    return this.recommendations[recommendationName].description;
-  }
-
-  // "3.5$ per week"
-  @Action
-  getRecommendationCostString(recommendationName: string): string {
-    const recommendation = this.recommendations[recommendationName];
-
+  getRecommendation(recommendationName: string) : Recommendation {
     console.assert(
-      recommendation.primaryImpact.costProjection.cost.currencyCode === "USD",
-      "Only USD supported, got %s",
-      recommendation.primaryImpact.costProjection.cost.currencyCode
+      (recommendationName in this.recommendations),
+      "recommendation name %s is not present in the store",
+      recommendationName
     );
-
-    // As a month doesn't have a fixed number of seconds, weekly cost is used
-    // "2592000s"
-    const secs = parseInt(
-      recommendation.primaryImpact.costProjection.duration.slice(0, -1)
-    );
-    // "-73"
-    const cost = parseInt(
-      recommendation.primaryImpact.costProjection.cost.units
-    );
-    const costPerWeek = (cost * 60 * 60 * 24 * 7) / secs;
-
-    return `${costPerWeek.toFixed(2)} USD per week`;
+    return this.recommendations[recommendationName];
   }
 
   @Action
