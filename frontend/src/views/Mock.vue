@@ -127,7 +127,11 @@ limitations under the License. -->
                 Spend 1234$ more and save 2314$ per week by applying all
                 recommendations
               </h3>
-              <v-btn rounded color="primary" dark small
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
                 v-on:click="applyAllRecommendations"
                 >Apply All Recomendations</v-btn
               >
@@ -163,7 +167,8 @@ limitations under the License. -->
                   </td>
                   <td>
                     <v-chip :color="recommendation.item.getCostColour()" dark>
-                      {{ Math.abs(recommendation.item.cost) }}$</v-chip>
+                      {{ Math.abs(recommendation.item.cost) }}$</v-chip
+                    >
                   </td>
 
                   <td class="text-left">
@@ -260,11 +265,11 @@ class Recommendation {
   }
 
   smallerCost(cost: number) {
-    return this.cost < cost;
+    return (this.cost < 0 ? -this.cost : this.cost) < cost;
   }
 
   biggerCost(cost: number) {
-    return this.cost > cost;
+    return (this.cost < 0 ? -this.cost : this.cost) > cost;
   }
 
   applicable(): boolean {
@@ -299,7 +304,7 @@ class Recommendation {
       }
     }
   }
-  
+
   private getCostColour(): string {
     return this.cost > 0 ? "green" : "orange";
   }
@@ -632,8 +637,7 @@ export default class Mock extends Vue {
 
   private applyAllRecommendations() {
     this.recommendations.forEach((rec: Recommendation) => {
-      if(rec.applicable())
-        this.runRecommendation(rec);
+      if (rec.applicable()) this.runRecommendation(rec);
     });
   }
 
