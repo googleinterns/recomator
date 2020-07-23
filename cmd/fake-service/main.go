@@ -145,11 +145,12 @@ func (s *mockApplyService) Apply() {
 	s.numberOfCalls = rand.Int()%2 + 2
 	s.callsDone = 0
 	s.mutex.Unlock()
+	willFail := rand.Float64() <= probablityOfErrorApply
 	for s.callsDone < s.numberOfCalls {
 		sleep := randomTime(expectedApplyTime) / time.Duration(s.numberOfCalls)
 		time.Sleep(sleep)
 		s.mutex.Lock()
-		if rand.Float64() <= probablityOfErrorApply/float64(s.numberOfCalls) {
+		if willFail && rand.Int()%(s.numberOfCalls-s.callsDone) == 0 {
 			s.err = fmt.Errorf("applying recommendation failed: error happened on step %d", s.callsDone)
 			s.callsDone = s.numberOfCalls
 		} else {
