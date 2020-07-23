@@ -54,19 +54,23 @@ limitations under the License. -->
       </v-list-item>
       <v-list-item>
             <v-form ref="formProject">
-              <v-select
+              <v-combobox
+                v-model="projectsSelected"
                 :items="summary.getProjectList()"
-                label="Select project"
-                v-on:input="filterRecommendation.setProject($event)"
+                label="Select projects"
+                multiple
+                reverse
+                dense
+                v-on:input="filterRecommendation.setProjects(projectsSelected)"
               >
-              </v-select>
+              </v-combobox>
 
               <v-btn
                 rounded
                 color="primary"
                 dark
                 small
-                @click="() => this.$refs.formProject.reset()"
+                @click="projectsSelected=[]; filterRecommendation.setProjects([])"
                 >Clear</v-btn
               >
             </v-form>
@@ -325,7 +329,7 @@ class Recommendation {
 class FilterRecommendation {
   private minimalPrice = -Infinity;
   private maximalPrice = Infinity;
-  private project: string | undefined = undefined;
+  private projects: Array<string> = [];
   private type: string | undefined = undefined;
   private status: string | undefined = undefined;
 
@@ -347,13 +351,8 @@ class FilterRecommendation {
     this.minimalPrice = parseFloat(cost);
   }
 
-  public setProject(project: string) {
-    if (project === "") {
-      this.project = undefined;
-      return;
-    }
-
-    this.project = project;
+  public setProjects(projects: Array<string>) {
+    this.projects = projects;
   }
 
   public setType(type: string) {
@@ -383,7 +382,7 @@ class FilterRecommendation {
 
   private projectPredicate(recommendation: Recommendation): boolean {
     return (
-      this.project === undefined || recommendation.project === this.project
+      this.projects.length === 0 || this.projects.includes(recommendation.project)
     );
   }
 
@@ -486,7 +485,7 @@ class Summary {
 export default class Mock extends Vue {
   private showNavgDrawer = false;
   private filterRecommendation = new FilterRecommendation();
-
+  private projectsSelected: Array<string> = []
   private search = "";
   private headers = [
     { text: "Project", value: "project", filterable: true },
