@@ -61,14 +61,14 @@ const sampleRecommendation: Model.Recommendation = {
 };
 
 describe("Store tests", () => {
-  test("ADD_RECOMMENDATION", () => {
+  test("addRecommendation", () => {
     const store = new Vuex.Store({
       modules: {
         recommendationsStore: RecommendationStore
       }
     });
 
-    store.commit("ADD_RECOMMENDATION", sampleRecommendation);
+    store.commit("addRecommendation", sampleRecommendation);
     // For some very weird reason, using expect().toHaveProperty() only works if the name is short
     expect(
       sampleRecommendation.name in

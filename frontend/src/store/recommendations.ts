@@ -20,7 +20,7 @@ export default class extends VuexModule {
   recommendations: Record<string, Recommendation> = {};
 
   @Mutation
-  ADD_RECOMMENDATION(recommendation: Recommendation) {
+  addRecommendation(recommendation: Recommendation) {
     // prevent overwriting
     console.assert(
       !(recommendation.name in this.recommendations),
