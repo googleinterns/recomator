@@ -14,120 +14,122 @@ limitations under the License. -->
 <template>
   <v-app mt-10 mb-10 ml-10 mr-10>
     <v-app-bar app color="primary" dark>
-      <v-icon v-on:click="showNavgDrawer=!showNavgDrawer" large>mdi-menu</v-icon>
-      <h1> Recomator</h1>
+      <v-icon v-on:click="showNavgDrawer = !showNavgDrawer" large
+        >mdi-menu</v-icon
+      >
+      <h1>Recomator</h1>
     </v-app-bar>
     <v-navigation-drawer absolute :v-model="true" :value="showNavgDrawer">
-      <v-list
-        dense>
-      <v-list-item>
-        <h2>Filters</h2>
-      </v-list-item>
-      <v-list-item>
-              <h3>Savings</h3>
-      </v-list-item>
-      <v-list-item>
-              <v-form ref="formCost">
-                <v-text-field
-                  type="number"
-                  label="Minimal savings"
-                  v-on:input="filterRecommendation.setMinimalPrice($event)"
-                ></v-text-field>
-                <v-text-field
-                  type="number"
-                  label="Maximal savings"
-                  v-on:input="filterRecommendation.setMaximalPrice($event)"
-                ></v-text-field>
+      <v-list dense>
+        <v-list-item>
+          <h2>Filters</h2>
+        </v-list-item>
+        <v-list-item>
+          <h3>Savings</h3>
+        </v-list-item>
+        <v-list-item>
+          <v-form ref="formCost">
+            <v-text-field
+              type="number"
+              label="Minimal savings"
+              v-on:input="filterRecommendation.setMinimalPrice($event)"
+            ></v-text-field>
+            <v-text-field
+              type="number"
+              label="Maximal savings"
+              v-on:input="filterRecommendation.setMaximalPrice($event)"
+            ></v-text-field>
 
-                <v-btn
-                  rounded
-                  color="primary"
-                  dark
-                  small
-                  @click="() => this.$refs.formCost.reset()"
-                  >Clear</v-btn
-                >
-              </v-form>
-      </v-list-item>
-      <v-list-item>
-            <h3>Project</h3>
-      </v-list-item>
-      <v-list-item>
-            <v-form ref="formProject">
-              <v-combobox
-                v-model="projectsSelected"
-                :items="summary.getProjectList()"
-                label="Select projects"
-                multiple
-                reverse
-                dense
-                v-on:input="filterRecommendation.setProjects(projectsSelected)"
-              >
-              </v-combobox>
+            <v-btn
+              rounded
+              color="primary"
+              dark
+              small
+              @click="() => this.$refs.formCost.reset()"
+              >Clear</v-btn
+            >
+          </v-form>
+        </v-list-item>
+        <v-list-item>
+          <h3>Project</h3>
+        </v-list-item>
+        <v-list-item>
+          <v-form ref="formProject">
+            <v-combobox
+              v-model="projectsSelected"
+              :items="summary.getProjectList()"
+              label="Select projects"
+              multiple
+              reverse
+              dense
+              v-on:input="filterRecommendation.setProjects(projectsSelected)"
+            >
+            </v-combobox>
 
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                @click="projectsSelected=[]; filterRecommendation.setProjects([])"
-                >Clear</v-btn
-              >
-            </v-form>
-      </v-list-item>
-         <v-list-item>
-      
-              <h3>Type</h3>
-         </v-list-item>
-         <v-list-item>
-              <v-form ref="formType">
-                <v-radio-group>
-                  <v-radio
-                    v-on:change="filterRecommendation.setType(value)"
-                    v-for="(value, index) in recommendationTypes"
-                    :key="index"
-                    :label="value"
-                    :value="value"
-                  ></v-radio>
-                </v-radio-group>
+            <v-btn
+              rounded
+              color="primary"
+              dark
+              small
+              @click="
+                projectsSelected = [];
+                filterRecommendation.setProjects([]);
+              "
+              >Clear</v-btn
+            >
+          </v-form>
+        </v-list-item>
+        <v-list-item>
+          <h3>Type</h3>
+        </v-list-item>
+        <v-list-item>
+          <v-form ref="formType">
+            <v-radio-group>
+              <v-radio
+                v-on:change="filterRecommendation.setType(value)"
+                v-for="(value, index) in recommendationTypes"
+                :key="index"
+                :label="value"
+                :value="value"
+              ></v-radio>
+            </v-radio-group>
 
-                <v-btn
-                  rounded
-                  color="primary"
-                  dark
-                  small
-                  @click="() => this.$refs.formType.reset()"
-                  >Clear</v-btn
-                >
-              </v-form>
-      </v-list-item>
+            <v-btn
+              rounded
+              color="primary"
+              dark
+              small
+              @click="() => this.$refs.formType.reset()"
+              >Clear</v-btn
+            >
+          </v-form>
+        </v-list-item>
 
-      <v-list-item>
-              <h3>Status</h3>
-                    </v-list-item>
-      <v-list-item>
+        <v-list-item>
+          <h3>Status</h3>
+        </v-list-item>
+        <v-list-item>
+          <v-form ref="formStatus">
+            <v-radio-group>
+              <v-radio
+                v-on:change="filterRecommendation.setStatus(value)"
+                v-for="(value, index) in recommendationStatuses"
+                :key="index"
+                :label="value"
+                :value="value"
+              ></v-radio>
+            </v-radio-group>
 
-              <v-form ref="formStatus">
-                <v-radio-group>
-                  <v-radio
-                    v-on:change="filterRecommendation.setStatus(value)"
-                    v-for="(value, index) in recommendationStatuses"
-                    :key="index"
-                    :label="value"
-                    :value="value"
-                  ></v-radio>
-                </v-radio-group>
-
-                <v-btn
-                  rounded
-                  color="primary"
-                  dark
-                  small
-                  @click="() => this.$refs.formStatus.reset()"
-                  >Clear</v-btn
-                >
-              </v-form>
-      </v-list-item>
+            <v-btn
+              rounded
+              color="primary"
+              dark
+              small
+              @click="() => this.$refs.formStatus.reset()"
+              >Clear</v-btn
+            >
+          </v-form>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -382,7 +384,8 @@ class FilterRecommendation {
 
   private projectPredicate(recommendation: Recommendation): boolean {
     return (
-      this.projects.length === 0 || this.projects.includes(recommendation.project)
+      this.projects.length === 0 ||
+      this.projects.includes(recommendation.project)
     );
   }
 
@@ -485,7 +488,7 @@ class Summary {
 export default class Mock extends Vue {
   private showNavgDrawer = false;
   private filterRecommendation = new FilterRecommendation();
-  private projectsSelected: Array<string> = []
+  private projectsSelected: Array<string> = [];
   private search = "";
   private headers = [
     { text: "Project", value: "project", filterable: true },
