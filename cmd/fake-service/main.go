@@ -38,6 +38,7 @@ const (
 	numberOfFakeRecommendations = 60
 	expectedListTime            = time.Second * 10
 	expectedApplyTime           = time.Second * 10
+	probablityOfErrorApply      = 0.3
 )
 
 type gcloudRecommendation recommender.GoogleCloudRecommenderV1Recommendation
@@ -125,6 +126,12 @@ const (
 	succeededStatus  = "SUCCEEDED"
 )
 
+// CheckStatusResponse is the response to recommendations/name/checkStatus method
+type CheckStatusResponse struct {
+	Status       string `json:"status"`
+	ErrorMessage string `json:"errorMessage,omitempty"`
+}
+
 type mockApplyService struct {
 	name          string
 	err           error
@@ -142,7 +149,7 @@ func (s *mockApplyService) Apply() {
 		sleep := randomTime(expectedApplyTime) / time.Duration(s.numberOfCalls)
 		time.Sleep(sleep)
 		s.mutex.Lock()
-		if rand.Int()%10 == 0 {
+		if rand.Float64() <= probablityOfErrorApply/float64(s.numberOfCalls) {
 			s.err = fmt.Errorf("applying recommendation failed: error happened on step %d", s.callsDone)
 			s.callsDone = s.numberOfCalls
 		} else {
@@ -162,6 +169,10 @@ func (s *mockApplyService) GetStatus() string {
 		return failedStatus
 	}
 	return succeededStatus
+}
+
+func (s *mockApplyService) GetErrorMessage() string {
+	return s.err.Error()
 }
 
 func getFakeRecommendations() []*gcloudRecommendation {
@@ -318,7 +329,11 @@ func main() {
 		if ok {
 			status = service.GetStatus()
 		}
-		c.JSON(http.StatusOK, gin.H{"status": status})
+		response := CheckStatusResponse{Status: status}
+		if status == failedStatus {
+			response.ErrorMessage = service.GetErrorMessage()
+		}
+		c.JSON(http.StatusOK, response)
 	})
 
 	router.Run(":8080")
