@@ -25,18 +25,18 @@ limitations under the License. -->
           <h2>Filters</h2>
         </v-list-item>
         <v-list-item>
-          <h3>Savings</h3>
+          <h3>Costs/Savings</h3>
         </v-list-item>
         <v-list-item>
           <v-form ref="formCost">
             <v-text-field
               type="number"
-              label="Minimal savings"
+              label="Min absolute value"
               v-on:input="filterRecommendation.setMinimalPrice($event)"
             ></v-text-field>
             <v-text-field
               type="number"
-              label="Maximal savings"
+              label="Max absolute value"
               v-on:input="filterRecommendation.setMaximalPrice($event)"
             ></v-text-field>
 
