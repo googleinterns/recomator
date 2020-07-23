@@ -22,6 +22,43 @@ limitations under the License. -->
       </v-progress-linear>
       <v-container fluid v-if="successfullyLoaded">
         <v-row>
+          <v-col :cols="3">
+            <v-card>
+              <h2>Filters</h2>
+            </v-card>
+            <v-card class="ma-2 pa-2">
+              <h3>Cost</h3>
+              <v-text-field
+                type="number"
+                label="Minimal cost"
+                v-on:input="filterRecommendation.setMinimalPrice($event)"
+              ></v-text-field>
+              <v-text-field
+                type="number"
+                label="Maximal cost"
+                v-on:input="filterRecommendation.setMaximalPrice($event)"
+              ></v-text-field>
+            </v-card>
+
+            <v-card class="ma-2 pa-2">
+              <h3>Project</h3>
+              <v-select
+                :items="summary.getProjectList()"
+                label="Select project"
+                v-on:input="filterRecommendation.setProject($event)"
+              >
+              </v-select>
+
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                v-on:click="filterRecommendation.setProject(undefined)"
+                >Clear</v-btn
+              >
+            </v-card>
+          </v-col>
           <v-col>
             <v-card class="pa-5">
               <!-- <h2>{{ summary.toString() }}</h2> -->
@@ -43,7 +80,11 @@ limitations under the License. -->
 
             <v-data-table
               :headers="headers"
-              :items="recommendations"
+              :items="
+                recommendations.filter(recommendation =>
+                  filterRecommendation.predicate(recommendation)
+                )
+              "
               show-group-by
               :search="search"
             >
@@ -151,6 +192,18 @@ class Recommendation {
     );
   }
 
+  private costToNumber(cost: string): number {
+    return parseFloat(cost.slice(0, -1));
+  }
+
+  smallerCost(cost: number) {
+    return this.costToNumber(this.cost) < cost;
+  }
+
+  biggerCost(cost: number) {
+    return this.costToNumber(this.cost) > cost;
+  }
+
   applicable(): boolean {
     return this.status == "ACTIVE";
   }
@@ -185,21 +238,89 @@ class Recommendation {
   }
 }
 
+class FilterRecommendation {
+  private minimalPrice = -Infinity;
+  private maximalPrice = Infinity;
+  private project: string | undefined = undefined;
+
+  public setMaximalPrice(cost: string) {
+    if (cost === "") {
+      this.maximalPrice = Infinity;
+      return;
+    }
+
+    this.maximalPrice = parseFloat(cost);
+  }
+
+  public setMinimalPrice(cost: string) {
+    if (cost === "") {
+      this.minimalPrice = -Infinity;
+      return;
+    }
+
+    this.minimalPrice = parseFloat(cost);
+  }
+
+  public setProject(project: string | undefined) {
+    if (project === "") {
+      this.project = undefined;
+      return;
+    }
+
+    this.project = project;
+  }
+
+  private pricePredicate(recommendation: Recommendation): boolean {
+    return (
+      recommendation.smallerCost(this.maximalPrice) &&
+      recommendation.biggerCost(this.minimalPrice)
+    );
+  }
+
+  private projectPredicate(recommendation: Recommendation): boolean {
+    return (
+      this.project === undefined || recommendation.project === this.project
+    );
+  }
+
+  public predicate(recommendation: Recommendation): boolean {
+    return (
+      this.pricePredicate(recommendation) &&
+      this.projectPredicate(recommendation)
+    );
+  }
+}
+
 class Summary {
   private recommendationCount: number;
   private moneySaved: string;
+  private projectList = new Array<string>();
 
   constructor(recommendationList: Recommendation[]) {
+    console.log(recommendationList);
     this.recommendationCount = recommendationList.length;
     this.moneySaved = Summary.calculateSavings(recommendationList);
+
+    for (const recommendation of recommendationList) {
+      console.log(recommendation.project);
+      if (!this.projectList.includes(recommendation.project)) {
+        this.projectList.push(recommendation.project);
+      }
+    }
+
+    console.log(this.projectList);
   }
 
   private static getCurrency(cost: string): string {
     return cost.slice(-1); //TODO take all the not numeric characters from the end? It would be good to write some regex.
   }
 
-  private static costToNumber(cost: string): number {
+  public static costToNumber(cost: string): number {
     return parseFloat(cost.slice(0, -1));
+  }
+
+  public getProjectList(): string[] {
+    return this.projectList;
   }
 
   private static calculateSavings(
@@ -239,6 +360,8 @@ class Summary {
 
 @Component
 export default class Mock extends Vue {
+  private filterRecommendation = new FilterRecommendation();
+
   private search = "";
   private headers = [
     { text: "Project", value: "project", filterable: true },
@@ -378,10 +501,9 @@ export default class Mock extends Vue {
     });
   }
 
-  private summary = new Summary(this.recommendations);
   private successfullyLoaded = false;
   private progressPercentage = 0;
-  private pageNumber = 1;
+  private summary = new Summary(this.recommendations_core);
 
   private async runRecommendation(recommendation: Recommendation) {
     recommendation.status = "__INPROGRESS";
