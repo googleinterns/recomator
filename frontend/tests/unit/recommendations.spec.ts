@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import "@/data-model/model.ts";
+import "@/store/model";
 import RecommendationStore from "@/store/recommendations";
 import Vue from "vue";
 import Vuex from "vuex";
@@ -68,12 +68,13 @@ describe("Store tests", () => {
       }
     });
 
-	store.commit("ADD_RECOMMENDATION", sampleRecommendation);
-	// For some very weird reason, using expect().toHaveProperty() only works if the name is short
+    store.commit("ADD_RECOMMENDATION", sampleRecommendation);
+    // For some very weird reason, using expect().toHaveProperty() only works if the name is short
     expect(
       sampleRecommendation.name in
         store.state.recommendationsStore.recommendations
     ).toBe(true);
+    // TODO add recommendation content checks as well
   });
 
   test("Getting the project that the recommendation references", async () => {
@@ -83,7 +84,12 @@ describe("Store tests", () => {
       }
     });
 
-    expect(await store.dispatch("getRecommendationProject", sampleRecommendation.name)).toEqual("rightsizer-test");
+    expect(
+      await store.dispatch(
+        "getRecommendationProject",
+        sampleRecommendation.name
+      )
+    ).toEqual("rightsizer-test");
   });
 
   test("Getting the instance that the recommendation references", async () => {
@@ -93,6 +99,11 @@ describe("Store tests", () => {
       }
     });
 
-    expect(await store.dispatch("getRecommendationInstance", sampleRecommendation.name)).toEqual("alicja-test");
+    expect(
+      await store.dispatch(
+        "getRecommendationInstance",
+        sampleRecommendation.name
+      )
+    ).toEqual("alicja-test");
   });
 });
