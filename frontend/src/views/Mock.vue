@@ -28,35 +28,96 @@ limitations under the License. -->
             </v-card>
             <v-card class="ma-2 pa-2">
               <h3>Cost</h3>
-              <v-text-field
-                type="number"
-                label="Minimal cost"
-                v-on:input="filterRecommendation.setMinimalPrice($event)"
-              ></v-text-field>
-              <v-text-field
-                type="number"
-                label="Maximal cost"
-                v-on:input="filterRecommendation.setMaximalPrice($event)"
-              ></v-text-field>
+              <v-form ref="formCost">
+                <v-text-field
+                  type="number"
+                  label="Minimal cost"
+                  v-on:input="filterRecommendation.setMinimalPrice($event)"
+                ></v-text-field>
+                <v-text-field
+                  type="number"
+                  label="Maximal cost"
+                  v-on:input="filterRecommendation.setMaximalPrice($event)"
+                ></v-text-field>
+
+                <v-btn
+                  rounded
+                  color="primary"
+                  dark
+                  small
+                  @click="() => this.$refs.formCost.reset()"
+                  >Clear</v-btn
+                >
+              </v-form>
             </v-card>
 
             <v-card class="ma-2 pa-2">
               <h3>Project</h3>
-              <v-select
-                :items="summary.getProjectList()"
-                label="Select project"
-                v-on:input="filterRecommendation.setProject($event)"
-              >
-              </v-select>
+              <v-form ref="formProject">
+                <v-select
+                  :items="summary.getProjectList()"
+                  label="Select project"
+                  v-on:input="filterRecommendation.setProject($event)"
+                >
+                </v-select>
 
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                v-on:click="filterRecommendation.setProject(undefined)"
-                >Clear</v-btn
-              >
+                <v-btn
+                  rounded
+                  color="primary"
+                  dark
+                  small
+                  @click="() => this.$refs.formProject.reset()"
+                  >Clear</v-btn
+                >
+              </v-form>
+            </v-card>
+
+            <v-card class="ma-2 pa-2">
+              <h3>Type</h3>
+              <v-form ref="formType">
+                <v-radio-group>
+                  <v-radio
+                    v-on:change="filterRecommendation.setType(value)"
+                    v-for="(value, index) in recommendationTypes"
+                    :key="index"
+                    :label="value"
+                    :value="value"
+                  ></v-radio>
+                </v-radio-group>
+
+                <v-btn
+                  rounded
+                  color="primary"
+                  dark
+                  small
+                  @click="() => this.$refs.formType.reset()"
+                  >Clear</v-btn
+                >
+              </v-form>
+            </v-card>
+
+            <v-card class="ma-2 pa-2">
+              <h3>Status</h3>
+              <v-form ref="formStatus">
+                <v-radio-group>
+                  <v-radio
+                    v-on:change="filterRecommendation.setStatus(value)"
+                    v-for="(value, index) in recommendationStatuses"
+                    :key="index"
+                    :label="value"
+                    :value="value"
+                  ></v-radio>
+                </v-radio-group>
+
+                <v-btn
+                  rounded
+                  color="primary"
+                  dark
+                  small
+                  @click="() => this.$refs.formStatus.reset()"
+                  >Clear</v-btn
+                >
+              </v-form>
             </v-card>
           </v-col>
           <v-col>
@@ -242,9 +303,11 @@ class FilterRecommendation {
   private minimalPrice = -Infinity;
   private maximalPrice = Infinity;
   private project: string | undefined = undefined;
+  private type: string | undefined = undefined;
+  private status: string | undefined = undefined;
 
   public setMaximalPrice(cost: string) {
-    if (cost === "") {
+    if (cost === "" || cost === undefined) {
       this.maximalPrice = Infinity;
       return;
     }
@@ -253,7 +316,7 @@ class FilterRecommendation {
   }
 
   public setMinimalPrice(cost: string) {
-    if (cost === "") {
+    if (cost === "" || cost === undefined) {
       this.minimalPrice = -Infinity;
       return;
     }
@@ -261,13 +324,31 @@ class FilterRecommendation {
     this.minimalPrice = parseFloat(cost);
   }
 
-  public setProject(project: string | undefined) {
+  public setProject(project: string) {
     if (project === "") {
       this.project = undefined;
       return;
     }
 
     this.project = project;
+  }
+
+  public setType(type: string) {
+    if (type === "") {
+      this.type = undefined;
+      return;
+    }
+
+    this.type = type;
+  }
+
+  public setStatus(status: string) {
+    if (status === "") {
+      this.status = undefined;
+      return;
+    }
+
+    this.status = status;
   }
 
   private pricePredicate(recommendation: Recommendation): boolean {
@@ -283,10 +364,41 @@ class FilterRecommendation {
     );
   }
 
+  private typePredicate(recommendation: Recommendation): boolean {
+    return (
+      this.type === undefined ||
+      recommendation.type.toUpperCase() === this.type.toUpperCase()
+    );
+  }
+
+  private statusPredicate(recommendation: Recommendation): boolean {
+    switch (this.status) {
+      case undefined:
+        return true;
+
+      case "Applicable":
+        return recommendation.status === "ACTIVE";
+
+      case "In progress":
+        return recommendation.status === "__INPROGRESS";
+
+      case "Succeeded":
+        return recommendation.status === "SUCCEEDED";
+
+      case "Failed":
+        return recommendation.status === "FAILED";
+
+      default:
+        return false;
+    }
+  }
+
   public predicate(recommendation: Recommendation): boolean {
     return (
       this.pricePredicate(recommendation) &&
-      this.projectPredicate(recommendation)
+      this.projectPredicate(recommendation) &&
+      this.typePredicate(recommendation) &&
+      this.statusPredicate(recommendation)
     );
   }
 }
@@ -297,18 +409,14 @@ class Summary {
   private projectList = new Array<string>();
 
   constructor(recommendationList: Recommendation[]) {
-    console.log(recommendationList);
     this.recommendationCount = recommendationList.length;
     this.moneySaved = Summary.calculateSavings(recommendationList);
 
     for (const recommendation of recommendationList) {
-      console.log(recommendation.project);
       if (!this.projectList.includes(recommendation.project)) {
         this.projectList.push(recommendation.project);
       }
     }
-
-    console.log(this.projectList);
   }
 
   private static getCurrency(cost: string): string {
@@ -375,6 +483,14 @@ export default class Mock extends Vue {
     },
     { text: "Related cost per month", value: "cost", groupable: false },
     { text: "", value: "apply", groupable: false }
+  ];
+
+  private recommendationTypes = ["Resize", "Remove", "Performance"];
+  private recommendationStatuses = [
+    "Applicable",
+    "In progress",
+    "Succeeded",
+    "Failed"
   ];
 
   private recommendations_core = [
