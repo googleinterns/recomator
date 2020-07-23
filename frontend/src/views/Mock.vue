@@ -14,29 +14,28 @@ limitations under the License. -->
 <template>
   <v-app mt-10 mb-10 ml-10 mr-10>
     <v-app-bar app color="primary" dark>
-      <h1>Recomator</h1>
+      <v-icon v-on:click="showNavgDrawer=!showNavgDrawer" large>mdi-menu</v-icon>
+      <h1> Recomator</h1>
     </v-app-bar>
-
-    <v-main>
-      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
-      </v-progress-linear>
-      <v-container fluid v-if="successfullyLoaded">
-        <v-row>
-          <v-col :cols="3">
-            <v-card>
-              <h2>Filters</h2>
-            </v-card>
-            <v-card class="ma-2 pa-2">
-              <h3>Cost</h3>
+    <v-navigation-drawer absolute :v-model="true" :value="showNavgDrawer">
+      <v-list
+        dense>
+      <v-list-item>
+        <h2>Filters</h2>
+      </v-list-item>
+      <v-list-item>
+              <h3>Savings</h3>
+      </v-list-item>
+      <v-list-item>
               <v-form ref="formCost">
                 <v-text-field
                   type="number"
-                  label="Minimal cost"
+                  label="Minimal savings"
                   v-on:input="filterRecommendation.setMinimalPrice($event)"
                 ></v-text-field>
                 <v-text-field
                   type="number"
-                  label="Maximal cost"
+                  label="Maximal savings"
                   v-on:input="filterRecommendation.setMaximalPrice($event)"
                 ></v-text-field>
 
@@ -49,31 +48,34 @@ limitations under the License. -->
                   >Clear</v-btn
                 >
               </v-form>
-            </v-card>
+      </v-list-item>
+      <v-list-item>
+            <h3>Project</h3>
+      </v-list-item>
+      <v-list-item>
+            <v-form ref="formProject">
+              <v-select
+                :items="summary.getProjectList()"
+                label="Select project"
+                v-on:input="filterRecommendation.setProject($event)"
+              >
+              </v-select>
 
-            <v-card class="ma-2 pa-2">
-              <h3>Project</h3>
-              <v-form ref="formProject">
-                <v-select
-                  :items="summary.getProjectList()"
-                  label="Select project"
-                  v-on:input="filterRecommendation.setProject($event)"
-                >
-                </v-select>
-
-                <v-btn
-                  rounded
-                  color="primary"
-                  dark
-                  small
-                  @click="() => this.$refs.formProject.reset()"
-                  >Clear</v-btn
-                >
-              </v-form>
-            </v-card>
-
-            <v-card class="ma-2 pa-2">
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                @click="() => this.$refs.formProject.reset()"
+                >Clear</v-btn
+              >
+            </v-form>
+      </v-list-item>
+         <v-list-item>
+      
               <h3>Type</h3>
+         </v-list-item>
+         <v-list-item>
               <v-form ref="formType">
                 <v-radio-group>
                   <v-radio
@@ -94,10 +96,13 @@ limitations under the License. -->
                   >Clear</v-btn
                 >
               </v-form>
-            </v-card>
+      </v-list-item>
 
-            <v-card class="ma-2 pa-2">
+      <v-list-item>
               <h3>Status</h3>
+                    </v-list-item>
+      <v-list-item>
+
               <v-form ref="formStatus">
                 <v-radio-group>
                   <v-radio
@@ -118,8 +123,15 @@ limitations under the License. -->
                   >Clear</v-btn
                 >
               </v-form>
-            </v-card>
-          </v-col>
+      </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
+    <v-main>
+      <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
+      </v-progress-linear>
+      <v-container fluid v-if="successfullyLoaded">
+        <v-row>
           <v-col>
             <v-card class="pa-5">
               <!-- <h2>{{ summary.toString() }}</h2> -->
@@ -472,6 +484,7 @@ class Summary {
 
 @Component
 export default class Mock extends Vue {
+  private showNavgDrawer = false;
   private filterRecommendation = new FilterRecommendation();
 
   private search = "";
