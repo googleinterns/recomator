@@ -12,10 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
+import { extractFromResource } from "./utils";
+
 // Follows data model from:
 //    https://cloud.google.com/recommender/docs/reference/rest/v1beta1/projects.locations.recommenders.recommendations
 
-interface Recommendation {
+export interface Recommendation {
   name: string;
   description: string;
   recommenderSubtype: string;
@@ -24,68 +26,85 @@ interface Recommendation {
   stateInfo: RecommendationStateInfo;
 }
 
-interface Impact {
+export interface Impact {
   category: string; // originally enum
   costProjection: CostProjection;
 }
 
-interface CostProjection {
+export interface CostProjection {
   cost: Money;
   duration: string;
 }
 
-interface Money {
+export interface Money {
   currencyCode: string;
   units: string;
 }
 
-interface RecommendationStateInfo {
+export interface RecommendationStateInfo {
   state: string; // originally enum
 }
 
-interface RecommendationContent {
+export interface RecommendationContent {
   operationGroups: OperationGroupsList;
 }
 
-interface OperationGroupsList {
+export interface OperationGroupsList {
   [index: number]: OperationGroup;
 }
 
-interface OperationGroup {
+export interface OperationGroup {
   operations: OperationsList;
 }
 
-interface OperationsList {
+export interface OperationsList {
   [index: number]: Operation;
 }
 
-interface Operation {
+export interface Operation {
   resource: string;
   resourceType: string;
   path: string;
 }
 
-/* TODO: remove the placeholders and implement these
-
-function getRecommendationProject(recommendation: Recommendation): string {
-  return "rightsizer-test";
+// -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
+export function getRecommendationResource(
+  recommendation: Recommendation
+): string {
+  return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
-function getRecommendationResourceName(recommendation: Recommendation): string {
-  return "timus-test-for-probers-n2-std-4-idling";
-}*/
+// -> "timus-test-for-probers-n2-std-4-idling"
+export function getRecommendationResourceShortName(
+  recommendation: Recommendation
+): string {
+  const resource = getRecommendationResource(recommendation);
+  return extractFromResource("instances", resource);
+}
+
+// -> "rightsizer-test"
+export function getRecommendationProject(
+  recommendation: Recommendation
+): string {
+  const resource = getRecommendationResource(recommendation);
+  return extractFromResource("projects", resource);
+}
 
 // TODO: remove ignoring Eslint, once these methods are actually used somewhere
 
 // Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getRecomendationDescription(recommendation: Recommendation): string {
+export function getRecomendationDescription(
+  recommendation: Recommendation
+): string {
   return recommendation.description;
 }
 
 // "3.5$ per week"
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getRecommendationCostString(recommendation: Recommendation): string {
+export function getRecommendationCostString(
+  recommendation: Recommendation
+): string {
   console.assert(
     recommendation.primaryImpact.costProjection.cost.currencyCode === "USD",
     "Only USD supported, got %s",
@@ -93,7 +112,6 @@ function getRecommendationCostString(recommendation: Recommendation): string {
   );
 
   // As a month doesn't have a fixed number of seconds, weekly cost is used
-
   // example duration: "2592000s"
   const secs = parseInt(
     recommendation.primaryImpact.costProjection.duration.slice(0, -1)

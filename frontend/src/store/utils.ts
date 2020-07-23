@@ -7,12 +7,8 @@ export function extractFromResource(
   const regex = new RegExp(pattern);
 
   const found = regex.exec(resource);
-  if (found === null) {
-    return "";
-  }
+  if (found === null) throw `couldn't parse resource identifier: ${resource}`;
 
   const result = found[0].slice(sliceLen);
-  console.log(result);
-
   return result;
 }

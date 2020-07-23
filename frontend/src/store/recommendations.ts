@@ -12,9 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import "@/store/model";
-import { extractFromResource } from "./utility";
-
+import { Recommendation } from "@/store/model";
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 
 @Module
@@ -30,40 +28,6 @@ export default class extends VuexModule {
     );
     this.recommendations[recommendation.name] = recommendation;
   }
-
-  @Action
-  getRecommendationResource(recommendationName: string): string {
-    return this.recommendations[recommendationName].content.operationGroups[0]
-      .operations[0].resource;
-  }
-
-  @Action
-  getRecommendationInstance(recommendationName: string): string {
-    const resource = this.recommendations[recommendationName].content
-      .operationGroups[0].operations[0].resource;
-
-    return extractFromResource("instances", resource);
-  }
-
-  @Action
-  getRecommendationProject(recommendationName: string): string {
-    const resource = this.recommendations[recommendationName].content
-      .operationGroups[0].operations[0].resource;
-
-    return extractFromResource("projects", resource);
-  }
-
-  @Action
-  getRecomendationDescription(recommendationName: string): string {
-    return this.recommendations[recommendationName].description;
-  }
-
-  /* "3.5$ per week"
-  @Action
-  getRecommendationCostString(recommendationName: string): string {
-    const recommendation = this.recommendations[recommendationName];
-  }
-  */
 
   @Action
   getRecommendation(recommendationName: string): Recommendation {
