@@ -12,14 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { Recommendation } from "@/store/model";
+import * as Model from "@/store/model";
 import RecommendationStore from "@/store/recommendations";
 import Vue from "vue";
 import Vuex from "vuex";
 
 Vue.use(Vuex);
 
-const sampleRecommendation: Recommendation = {
+const sampleRecommendation: Model.Recommendation = {
   content: {
     operationGroups: [
       {
@@ -78,32 +78,14 @@ describe("Store tests", () => {
   });
 
   test("Getting the project that the recommendation references", async () => {
-    const store = new Vuex.Store({
-      modules: {
-        recommendationsStore: RecommendationStore
-      }
-    });
-
-    expect(
-      await store.dispatch(
-        "getRecommendationProject",
-        sampleRecommendation.name
-      )
-    ).toEqual("rightsizer-test");
+    expect(Model.getRecommendationProject(sampleRecommendation)).toEqual(
+      "rightsizer-test"
+    );
   });
 
   test("Getting the instance that the recommendation references", async () => {
-    const store = new Vuex.Store({
-      modules: {
-        recommendationsStore: RecommendationStore
-      }
-    });
-
     expect(
-      await store.dispatch(
-        "getRecommendationInstance",
-        sampleRecommendation.name
-      )
+      Model.getRecommendationResourceShortName(sampleRecommendation)
     ).toEqual("alicja-test");
   });
 });
