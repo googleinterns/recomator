@@ -128,6 +128,7 @@ limitations under the License. -->
                 recommendations
               </h3>
               <v-btn rounded color="primary" dark small
+                v-on:click="applyAllRecommendations"
                 >Apply All Recomendations</v-btn
               >
               <v-text-field
@@ -160,8 +161,9 @@ limitations under the License. -->
                   <td class="text-left">
                     {{ recommendation.item.description }}
                   </td>
-                  <td class="text-left">
-                    {{ recommendation.item.cost }}
+                  <td>
+                    <v-chip :color="recommendation.item.getCostColour()" dark>
+                      {{ Math.abs(recommendation.item.cost) }}$</v-chip>
                   </td>
 
                   <td class="text-left">
@@ -216,7 +218,7 @@ import { Component, Vue } from "vue-property-decorator";
 
 class Recommendation {
   type: string;
-  cost: string;
+  cost: number;
   path: string;
   project: string;
   name: string;
@@ -225,7 +227,7 @@ class Recommendation {
 
   constructor(
     type: string,
-    cost: string,
+    cost: number,
     path: string,
     project: string,
     name: string,
@@ -258,11 +260,11 @@ class Recommendation {
   }
 
   smallerCost(cost: number) {
-    return this.costToNumber(this.cost) < cost;
+    return this.cost < cost;
   }
 
   biggerCost(cost: number) {
-    return this.costToNumber(this.cost) > cost;
+    return this.cost > cost;
   }
 
   applicable(): boolean {
@@ -296,6 +298,10 @@ class Recommendation {
         return `Unknown recommendation.`;
       }
     }
+  }
+  
+  private getCostColour(): string {
+    return this.cost > 0 ? "green" : "orange";
   }
 }
 
@@ -435,22 +441,15 @@ class Summary {
     recommendationList: Recommendation[]
   ): string {
     let result = 0;
-    let currency = "";
 
     for (const recommendation of recommendationList) {
       if (["RESIZE", "REMOVE", "PERFORMANCE"].includes(recommendation.type)) {
-        const cost: number = Summary.costToNumber(recommendation.cost);
-        currency = Summary.getCurrency(recommendation.cost);
-
-        if (["RESIZE", "REMOVE"].includes(recommendation.type)) {
-          result += cost;
-        } else {
-          result -= cost;
-        }
+        const cost: number = recommendation.cost;
+        result += cost;
       }
     }
 
-    return result.toFixed(2) + currency;
+    return result.toFixed(2) + " $";
   }
 
   public toString(): string {
@@ -481,7 +480,7 @@ export default class Mock extends Vue {
       value: "type",
       groupable: false
     },
-    { text: "Related cost per month", value: "cost", groupable: false },
+    { text: "Savings/cost per week", value: "cost", groupable: false },
     { text: "", value: "apply", groupable: false }
   ];
 
@@ -496,7 +495,7 @@ export default class Mock extends Vue {
   private recommendations_core = [
     new Recommendation(
       "RESIZE",
-      "6.50$",
+      6.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-test",
@@ -506,7 +505,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "REMOVE",
-      "10.00$",
+      10.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-prod",
@@ -516,7 +515,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "PERFORMANCE",
-      "30.00$",
+      -30.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
@@ -526,7 +525,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "UNSPECIFIED",
-      "123$",
+      123,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
@@ -536,7 +535,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      "3.50$",
+      3.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
@@ -546,7 +545,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "REMOVE",
-      "10.00$",
+      10.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-prod",
@@ -556,7 +555,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      "11.75$",
+      11.75,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
@@ -566,7 +565,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "PERFORMANCE",
-      "30.00$",
+      -70.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
@@ -575,36 +574,36 @@ export default class Mock extends Vue {
       "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
     ),
     new Recommendation(
-      "PERFORMANCE",
-      "40.00$",
+      "RESIZE",
+      -11.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "search",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
-      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+      "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-2"
     ),
     new Recommendation(
-      "PERFORMANCE",
-      "50.00$",
+      "RESIZE",
+      -7.8,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "search",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
-      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+      "Save cost by changing machine type from n1-highcpu-6 to n1-highcpu-2"
     )
   ];
 
   private generateRecommendations(): void {
     this.recommendations = Array(10)
       .fill(this.recommendations_core)
-      .flat()
+      .reduce((agg, arr) => agg.concat(arr), [])
       .sort(function() {
         return 0.5 - Math.random();
       })
-      .map(rec => rec.copy());
-    this.recommendations.forEach((rec, index) => {
+      .map((rec: Recommendation) => rec.copy());
+    this.recommendations.forEach((rec: Recommendation, index) => {
       rec.name += index;
     });
   }
@@ -629,6 +628,13 @@ export default class Mock extends Vue {
       await new Promise(res => setTimeout(res, 5000));
       recommendation.status = "SUCCEEDED";
     }
+  }
+
+  private applyAllRecommendations() {
+    this.recommendations.forEach((rec: Recommendation) => {
+      if(rec.applicable())
+        this.runRecommendation(rec);
+    });
   }
 
   private async mounted() {
