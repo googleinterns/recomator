@@ -12,15 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { shallowMount } from "@vue/test-utils";
-import HelloWorld from "@/components/HelloWorld.vue";
+import Vue from "vue";
+import Vuex from "vuex";
+import RecommendationStore from "./recommendations";
 
-describe("HelloWorld.vue", () => {
-  it("renders props.msg when passed", () => {
-    const msg = "new message";
-    const wrapper = shallowMount(HelloWorld, {
-      propsData: { msg }
-    });
-    expect(wrapper.text()).toContain(msg);
-  });
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+  modules: {
+    recommendationsStore: RecommendationStore
+  }
 });
