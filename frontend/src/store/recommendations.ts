@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import "@/data-model/model.ts";
+import {extractFromResource} from "./utility";
 
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 
@@ -31,17 +32,24 @@ export default class extends VuexModule {
     this.recommendations[recommendation.name] = recommendation;
   }
 
-  /*
-  TODO: To be implemented  
   @Action
-  getRecommendationProject(recommendationName: string): string {
-    return "rightsizer-test";
+  getRecommendationResource(recommendationName: string): string {
+    return this.recommendations[recommendationName].content.operationGroups[0].operations[0].resource;
+  }  
+
+  @Action
+  getRecommendationInstance(recommendationName: string): string {
+    const resource = this.recommendations[recommendationName].content.operationGroups[0].operations[0].resource;
+
+    return extractFromResource("instances", resource);
   }
 
   @Action
-  getRecommendationResourceName(recommendationName: string): string {
-    return "timus-test-for-probers-n2-std-4-idling";
-  }*/
+  getRecommendationProject(recommendationName: string): string {
+    const resource = this.recommendations[recommendationName].content.operationGroups[0].operations[0].resource;
+
+    return extractFromResource("projects", resource);  
+  }
 
   @Action
   getRecomendationDescription(recommendationName: string): string {

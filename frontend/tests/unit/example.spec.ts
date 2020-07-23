@@ -75,4 +75,24 @@ describe("Store tests", () => {
         store.state.recommendationsStore.recommendations
     ).toBe(true);
   });
+
+  test("Getting the project that the recommendation references", async () => {
+    const store = new Vuex.Store({
+      modules: {
+        recommendationsStore: RecommendationStore
+      }
+    });
+
+    expect(await store.dispatch("getRecommendationProject", sampleRecommendation.name)).toEqual("rightsizer-test");
+  });
+
+  test("Getting the instance that the recommendation references", async () => {
+    const store = new Vuex.Store({
+      modules: {
+        recommendationsStore: RecommendationStore
+      }
+    });
+
+    expect(await store.dispatch("getRecommendationInstance", sampleRecommendation.name)).toEqual("alicja-test");
+  });
 });
