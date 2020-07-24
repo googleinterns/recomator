@@ -193,7 +193,42 @@ limitations under the License. -->
                       {{ recommendation.item.name }}
                     </a>
                   </td>
-                  <td> </td>
+                  <td class="text-left">
+                    <v-chip class="ma-2" label>
+                      <v-icon
+                        left
+                        v-if="
+                          recommendation.item.recommenderSubtype ==
+                            'CHANGE_MACHINE_TYPE'
+                        "
+                        >mdi-move-resize-variant</v-icon
+                      >
+                      <v-icon
+                        left
+                        v-if="
+                          recommendation.item.recommenderSubtype == 'STOP_VM'
+                        "
+                        >mdi-monitor-off</v-icon
+                      >
+                      <v-icon
+                        left
+                        v-if="
+                          recommendation.item.recommenderSubtype ==
+                            'INCREASE_PERFORMANCE'
+                        "
+                        >mdi-monitor-screenshot</v-icon
+                      >
+                      <v-icon
+                        left
+                        v-if="
+                          recommendation.item.recommenderSubtype ==
+                            'SNAPSHOT_AND_DELETE_DISK'
+                        "
+                        >mdi-harddisk-remove</v-icon
+                      >
+                      {{ recommendation.item.recommenderSubtype }}
+                    </v-chip>
+                  </td>
                   <td class="text-left">
                     {{ recommendation.item.description }}
                   </td>
@@ -206,7 +241,10 @@ limitations under the License. -->
                           v-bind="attrs"
                           v-on="on"
                         >
-                          {{ Math.abs(recommendation.item.cost) }}$</v-chip
+                          {{
+                            (recommendation.item.cost >= 0 ? "+" : "") +
+                              Math.abs(recommendation.item.cost)
+                          }}$</v-chip
                         >
                       </template>
                       <span>{{
@@ -239,12 +277,12 @@ limitations under the License. -->
                       v-if="recommendation.item.succeded()"
                       >mdi-check-circle</v-icon
                     >
-                    
+
                     <!--<v-icon
                       color="red darken-2"
                       v-if="recommendation.item.failed()"
                       >mdi-close-circle</v-icon
-                    >-->             
+                    >-->
                     <div
                       v-if="
                         !recommendation.item.applicable() &&
@@ -255,17 +293,33 @@ limitations under the License. -->
                     >
                       {{ recommendation.item.status }}
                     </div>
-                    <v-dialog max-width="600px" v-if="recommendation.item.failed()">
+                    <v-dialog
+                      max-width="600px"
+                      v-if="recommendation.item.failed()"
+                    >
                       <template v-slot:activator="{ on }">
-                      <v-btn x-small color="red darken-2" v-on="on">
-                        <v-icon left dark color="white">mdi-close-circle</v-icon>
-                        See Error
-                      </v-btn>
+                        <v-btn x-small color="red darken-2" v-on="on">
+                          <v-icon left dark color="white"
+                            >mdi-close-circle</v-icon
+                          >
+                          See Error
+                        </v-btn>
                       </template>
                       <v-card>
-                        <v-card-title class="headline"> Applying recommendation failed </v-card-title>
+                        <v-card-title class="headline">
+                          Applying recommendation failed
+                        </v-card-title>
                         <v-card-text>
-                          A cookie associated with a cross-site resource at https://www.google.com/ was set without the `SameSite` attribute. It has been blocked, as Chrome now only delivers cookies with cross-site requests if they are set with `SameSite=None` and `Secure`. You can review cookies in developer tools under Application>Storage>Cookies and see more details at https://www.chromestatus.com/feature/5088147346030592 and https://www.chromestatus.com/feature/5633521622188032.
+                          A cookie associated with a cross-site resource at
+                          https://www.google.com/ was set without the `SameSite`
+                          attribute. It has been blocked, as Chrome now only
+                          delivers cookies with cross-site requests if they are
+                          set with `SameSite=None` and `Secure`. You can review
+                          cookies in developer tools under
+                          Application>Storage>Cookies and see more details at
+                          https://www.chromestatus.com/feature/5088147346030592
+                          and
+                          https://www.chromestatus.com/feature/5633521622188032.
                         </v-card-text>
                         <v-card-actions>
                           <v-spacer></v-spacer>
@@ -276,11 +330,8 @@ limitations under the License. -->
                           >
                             Retry
                           </v-btn>
-                          <v-btn
-                            color="primary"
-                            dark
-                          >
-                          Close
+                          <v-btn color="primary" dark>
+                            Close
                           </v-btn>
                         </v-card-actions>
                       </v-card>
@@ -307,6 +358,7 @@ class Recommendation {
   name: string;
   status: string;
   description: string;
+  recommenderSubtype: string;
 
   constructor(
     type: string,
@@ -315,7 +367,8 @@ class Recommendation {
     project: string,
     name: string,
     status: string,
-    description: string
+    description: string,
+    recommenderSubtype: string
   ) {
     this.type = type; // UPPERCASED, contained in the set {RESIZE, REMOVE, PERFORMANCE} (doing this should be possible)
     this.cost = cost; // monthly cost, parsed to be positive (I assume, that the number would always be negative for resize and delete, and positive for performance)
@@ -324,6 +377,7 @@ class Recommendation {
     this.name = name;
     this.status = status;
     this.description = description;
+    this.recommenderSubtype = recommenderSubtype;
   }
 
   copy(): Recommendation {
@@ -334,7 +388,8 @@ class Recommendation {
       this.project,
       this.name,
       this.status,
-      this.description
+      this.description,
+      this.recommenderSubtype
     );
   }
 
@@ -551,9 +606,9 @@ export default class Mock extends Vue {
   private projectsSelected: Array<string> = [];
   private search = "";
   private headers = [
-    { text: "Project", value: "project", sortable: true},
-    { text: "Name", value: "name", groupable: false, sortable: true},
-    { text: "Type", value: "recommender_subtype", sortable: false},
+    { text: "Project", value: "project", sortable: true },
+    { text: "Name", value: "name", groupable: false, sortable: true },
+    { text: "Type", value: "recommenderSubtype", sortable: true },
     {
       text: "Description",
       align: "start",
@@ -562,7 +617,7 @@ export default class Mock extends Vue {
       groupable: false
     },
     { text: "Savings/cost per week", value: "cost", groupable: false },
-    { text: "", value: "apply", groupable: false, sortable: false}
+    { text: "", value: "apply", groupable: false, sortable: false }
   ];
 
   private recommendationTypes = ["Resize", "Remove", "Performance"];
@@ -582,7 +637,8 @@ export default class Mock extends Vue {
       "rightsizer-test",
       "timus-test-for-probers-n2-std-4-bored",
       "ACTIVE",
-      "Save cost by changing machine type from n1-highcpu-8 to n1-highcpu-4"
+      "Save cost by changing machine type from n1-highcpu-8 to n1-highcpu-4",
+      "CHANGE_MACHINE_TYPE"
     ),
     new Recommendation(
       "REMOVE",
@@ -592,7 +648,8 @@ export default class Mock extends Vue {
       "rightsizer-prod",
       "timus-test-for-probers-n2-std-4-very-bored",
       "ACTIVE",
-      "Save cost by removing machine"
+      "Save cost by stopping Idle VM 'timus-test-for-probers-n2-std-4-verybored",
+      "STOP_VM"
     ),
     new Recommendation(
       "PERFORMANCE",
@@ -602,7 +659,8 @@ export default class Mock extends Vue {
       "leftsizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
-      "Increase performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+      "Increase performance by changing machine type from n1-highcpu-4 to n1-highcpu-8",
+      "INCREASE_PERFORMANCE"
     ),
     new Recommendation(
       "UNSPECIFIED",
@@ -612,7 +670,8 @@ export default class Mock extends Vue {
       "leftsizer-test",
       "timus-test-for-probers-n2-std-4-unknown",
       "ACTIVE",
-      "Save cost by changing machine type from n1-highcpu-8 to n1-highcpu-4"
+      "Save cost by changing machine type from n1-highcpu-8 to n1-highcpu-4",
+      "CHANGE_MACHINE_TYPE"
     ),
     new Recommendation(
       "RESIZE",
@@ -622,7 +681,8 @@ export default class Mock extends Vue {
       "middlesizer-test",
       "vertical-scaling-krzysztofk-wordpress",
       "ACTIVE",
-      "Save cost by snapshotting and then deleting idle persistent disk 'vertical-scaling-krzysztofk-wordpress'"
+      "Save cost by snapshotting and then deleting idle persistent disk 'vertical-scaling-krzysztofk-wordpress'",
+      "SNAPSHOT_AND_DELETE_DISK"
     ),
     new Recommendation(
       "REMOVE",
@@ -632,7 +692,8 @@ export default class Mock extends Vue {
       "rightsizer-prod",
       "timus-test-for-probers-n2-std-4-very-bored",
       "SUCCEEDED",
-      "Save cost by removing machine"
+      "Save cost by removing machine",
+      "STOP_VM"
     ),
     new Recommendation(
       "RESIZE",
@@ -642,7 +703,8 @@ export default class Mock extends Vue {
       "middlesizer-test",
       "timus-test-for-probers-n2-std-4-bored-3",
       "ACTIVE",
-      "Save cost by changing machine type from n1-highcpu-4 to n1-highcpu-2"
+      "Save cost by changing machine type from n1-highcpu-4 to n1-highcpu-2",
+      "CHANGE_MACHINE_TYPE"
     ),
     new Recommendation(
       "PERFORMANCE",
@@ -652,7 +714,8 @@ export default class Mock extends Vue {
       "leftsizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
-      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8"
+      "Improve performance by changing machine type from n1-highcpu-4 to n1-highcpu-8",
+      "INCREASE_PERFORMANCE"
     ),
     new Recommendation(
       "RESIZE",
@@ -662,7 +725,8 @@ export default class Mock extends Vue {
       "search",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
-      "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-2"
+      "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-2",
+      "CHANGE_MACHINE_TYPE"
     ),
     new Recommendation(
       "RESIZE",
@@ -672,7 +736,8 @@ export default class Mock extends Vue {
       "search",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
-      "Save cost by changing machine type from n1-highcpu-6 to n1-highcpu-2"
+      "Save cost by changing machine type from n1-highcpu-6 to n1-highcpu-2",
+      "CHANGE_MACHINE_TYPE"
     )
   ];
 
