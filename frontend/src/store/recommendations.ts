@@ -15,6 +15,8 @@ limitations under the License. */
 import { Recommendation } from "@/store/model";
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 
+const ServerAddress = "http://localhost:8082/recommendations";
+
 @Module
 export default class extends VuexModule {
   recommendations: Record<string, Recommendation> = {};
@@ -39,7 +41,25 @@ export default class extends VuexModule {
   }
 
   @Action
-  fetchRecommendations() {
-    //TODO
+  async fetchRecommendations() {
+    let response;
+    let responseJson;
+
+    for (;;) {
+      response = await fetch(ServerAddress);
+      responseJson = await response.json();
+
+      if (responseJson.recommendations !== undefined) {
+        break;
+      }
+
+      console.log(`${responseJson.batchesProcessed} batches of ${responseJson.numberOfBatches} were processed.`);
+    }
+
+    for (const recommendation of responseJson.recommendations) {
+      this.context.commit("addRecommendation", recommendation);
+    }
+
+    console.log(this.recommendations);
   }
 }
