@@ -151,41 +151,61 @@ limitations under the License. -->
       <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
       </v-progress-linear>
       <v-container fluid v-if="successfullyLoaded">
-        <v-row> <v-col>
-            <h2>Summary</h2>
-        </v-col></v-row>
         <v-row>
           <v-col>
-            Group by: 
+            <h2>Summary</h2>
+          </v-col></v-row
+        >
+        <v-row>
+          <v-col>
+            Group by:
             <v-btn-toggle multiple mandatory>
-            <v-btn rounded small>Project</v-btn>
-            <v-btn rounded small>Recommender Type</v-btn>
+              <v-btn rounded small>Project</v-btn>
+              <v-btn rounded small>Recommender Type</v-btn>
             </v-btn-toggle>
           </v-col>
         </v-row>
-        <v-row><v-col>
-          <v-data-table height="150" dense disable-pagination hide-default-footer sort-by="savings" :headers="summaryHeaders" :items="summaryData">
-            <template v-slot:item="proj_summary">
-              <tr class="text-left">
-                <td> {{proj_summary.item.project}} </td>
-                <td> <v-chip dark color="green" small> +{{proj_summary.item.savings}}$ </v-chip></td>
-                <td> <v-chip dark color="orange" small> {{proj_summary.item.cost}}$ </v-chip> </td>
-                <td> {{proj_summary.item.q}} </td>
-                
-        
-            </tr></template>
-          </v-data-table>
-        </v-col></v-row>
+        <v-row
+          ><v-col>
+            <v-data-table
+              height="150"
+              dense
+              disable-pagination
+              hide-default-footer
+              sort-by="savings"
+              :headers="summaryHeaders"
+              :items="summaryData"
+            >
+              <template v-slot:item="proj_summary">
+                <tr class="text-left">
+                  <td>{{ proj_summary.item.project }}</td>
+                  <td>
+                    <v-chip dark color="green" small>
+                      +{{ proj_summary.item.savings }}$
+                    </v-chip>
+                  </td>
+                  <td>
+                    <v-chip dark color="orange" small>
+                      {{ proj_summary.item.cost }}$
+                    </v-chip>
+                  </td>
+                  <td>{{ proj_summary.item.q }}</td>
+                </tr></template
+              >
+            </v-data-table>
+          </v-col></v-row
+        >
 
         <v-row>
           <v-col>
             <v-card class="pa-5">
               <!-- <h2>{{ summary.toString() }}</h2> -->
               <h3 class="text-left">
-                Save <span style="color:green">2314$</span> per week by applying all selected
-                recommendations. <br/>
-                Because we detected that some resources have been using nearly all their capacity, 
-                it is recommended to resize them which will cost
+                Save <span style="color:green">2314$</span> per week by applying
+                all selected recommendations. <br />
+                Because we detected that some resources have been using nearly
+                all their capacity, it is recommended to resize them which will
+                cost
                 <span style="color:orange">123$</span> per week.
               </h3>
               <v-btn
@@ -651,25 +671,25 @@ export default class Mock extends Vue {
   ];
 
   private summaryHeaders = [
-          { text: 'Project', value: 'project' },
-          { text: 'Total savings', value: 'savings' },
-          { text: 'Total cost', value: 'cost' },
-          { text: 'Quantity', value: 'q' }];
+    { text: "Project", value: "project" },
+    { text: "Total savings", value: "savings" },
+    { text: "Total cost", value: "cost" },
+    { text: "Quantity", value: "q" }
+  ];
 
   private summaryData = [
-    {project:"youtube", savings: 1234, cost: 321, q: 25},
-  {project:"search",savings: 1233, cost: 0, q: 235},
-  {project:"cloud",savings: 1223, cost: 0, q: 251},
-  {project:"assistant",savings: 1237, cost: 23, q: 125},
-  {project:"plus", savings: 1237, cost: 3421, q: 15},
-  {project:"android",savings: 7123, cost: 223, q: 2},
-  {project:"store",savings: 17234, cost: 33, q: 20},
-  {project:"maps",savings: 1534, cost: 2, q: 1000},
-  {project:"gmail", savings: 1234, cost: 12311, q: 123},
-  {project:"calendar",savings: 1934, cost: 23, q: 22},
-  {project:"ads",savings: 9123, cost: 12, q: 23},
-  {project:"oil",savings: 2134, cost: 32221, q: 25},
-  
+    { project: "youtube", savings: 1234, cost: 321, q: 25 },
+    { project: "search", savings: 1233, cost: 0, q: 235 },
+    { project: "cloud", savings: 1223, cost: 0, q: 251 },
+    { project: "assistant", savings: 1237, cost: 23, q: 125 },
+    { project: "plus", savings: 1237, cost: 3421, q: 15 },
+    { project: "android", savings: 7123, cost: 223, q: 2 },
+    { project: "store", savings: 17234, cost: 33, q: 20 },
+    { project: "maps", savings: 1534, cost: 2, q: 1000 },
+    { project: "gmail", savings: 1234, cost: 12311, q: 123 },
+    { project: "calendar", savings: 1934, cost: 23, q: 22 },
+    { project: "ads", savings: 9123, cost: 12, q: 23 },
+    { project: "oil", savings: 2134, cost: 32221, q: 25 }
   ];
 
   private recommendationTypes = ["Resize", "Remove", "Performance"];
