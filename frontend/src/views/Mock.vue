@@ -332,7 +332,7 @@ limitations under the License. -->
                           <v-icon left dark color="white"
                             >mdi-close-circle</v-icon
                           >
-                          See Error
+                          Show Error
                         </v-btn>
                       </template>
                       <v-card>
