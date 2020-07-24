@@ -197,9 +197,24 @@ limitations under the License. -->
                     {{ recommendation.item.description }}
                   </td>
                   <td>
-                    <v-chip :color="recommendation.item.getCostColour()" dark>
-                      {{ Math.abs(recommendation.item.cost) }}$</v-chip
-                    >
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-chip
+                          :color="recommendation.item.getCostColour()"
+                          dark
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          {{ Math.abs(recommendation.item.cost) }}$</v-chip
+                        >
+                      </template>
+                      <span>{{
+                        recommendation.item.cost >= 0
+                          ? `Save ${recommendation.item.cost}$ per week by applying this recommendation`
+                          : `Applying this recommendation will cost an additional ${-recommendation
+                              .item.cost}$ per week`
+                      }}</span>
+                    </v-tooltip>
                   </td>
 
                   <td class="text-left">
@@ -528,7 +543,7 @@ export default class Mock extends Vue {
   private recommendations_core = [
     new Recommendation(
       "RESIZE",
-      6.5,
+      60.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-test",
@@ -538,7 +553,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "REMOVE",
-      10.0,
+      100.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-prod",
@@ -568,7 +583,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      3.5,
+      30.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
@@ -578,7 +593,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "REMOVE",
-      10.0,
+      100.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "rightsizer-prod",
@@ -588,7 +603,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      11.75,
+      110.75,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
@@ -598,7 +613,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "PERFORMANCE",
-      -70.0,
+      -180.7,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "leftsizer-test",
@@ -608,7 +623,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      -11.5,
+      110.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "search",
@@ -618,7 +633,7 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      -7.8,
+      70.8,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "search",
