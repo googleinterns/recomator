@@ -26,18 +26,17 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import HelloWorld from "@/components/HelloWorld.vue";
 import RecommendationStore from "@/store/recommendations";
-import Vuex from 'vuex'
+import Vuex from "vuex";
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
 const store = new Vuex.Store({
-      modules: {
-        recommendationsStore: RecommendationStore
-      }
-    });
+  modules: {
+    recommendationsStore: RecommendationStore
+  }
+});
 
 store.dispatch("fetchRecommendations");
-
 
 @Component({
   components: {

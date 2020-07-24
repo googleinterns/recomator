@@ -14,7 +14,7 @@ limitations under the License. */
 
 import { Recommendation } from "@/store/model";
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
-import {delay} from "./utils";
+import { delay } from "./utils";
 
 const ServerAddress = "http://localhost:8082";
 const RequestDelay = 100;
