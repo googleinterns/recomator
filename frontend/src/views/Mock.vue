@@ -193,6 +193,7 @@ limitations under the License. -->
                       {{ recommendation.item.name }}
                     </a>
                   </td>
+                  <td> </td>
                   <td class="text-left">
                     {{ recommendation.item.description }}
                   </td>
@@ -238,24 +239,12 @@ limitations under the License. -->
                       v-if="recommendation.item.succeded()"
                       >mdi-check-circle</v-icon
                     >
-                    <v-icon
+                    
+                    <!--<v-icon
                       color="red darken-2"
                       v-if="recommendation.item.failed()"
                       >mdi-close-circle</v-icon
-                    >
-                    <v-dialog v-if="recommendation.item.failed()" max-width="600px">
-                      <template v-slot:activator="{ on }">
-                      <v-btn x-small color="primary" v-on="on">
-                        See error
-                      </v-btn>
-                      </template>
-                      <v-card>
-                        <v-card-title class="headline"> Applying recommendation failed </v-card-title>
-                        <v-card-text>
-                          A cookie associated with a cross-site resource at https://www.google.com/ was set without the `SameSite` attribute. It has been blocked, as Chrome now only delivers cookies with cross-site requests if they are set with `SameSite=None` and `Secure`. You can review cookies in developer tools under Application>Storage>Cookies and see more details at https://www.chromestatus.com/feature/5088147346030592 and https://www.chromestatus.com/feature/5633521622188032.
-                        </v-card-text>
-                      </v-card>
-                    </v-dialog>
+                    >-->             
                     <div
                       v-if="
                         !recommendation.item.applicable() &&
@@ -266,6 +255,36 @@ limitations under the License. -->
                     >
                       {{ recommendation.item.status }}
                     </div>
+                    <v-dialog max-width="600px" v-if="recommendation.item.failed()">
+                      <template v-slot:activator="{ on }">
+                      <v-btn x-small color="red darken-2" v-on="on">
+                        <v-icon left dark color="white">mdi-close-circle</v-icon>
+                        See Error
+                      </v-btn>
+                      </template>
+                      <v-card>
+                        <v-card-title class="headline"> Applying recommendation failed </v-card-title>
+                        <v-card-text>
+                          A cookie associated with a cross-site resource at https://www.google.com/ was set without the `SameSite` attribute. It has been blocked, as Chrome now only delivers cookies with cross-site requests if they are set with `SameSite=None` and `Secure`. You can review cookies in developer tools under Application>Storage>Cookies and see more details at https://www.chromestatus.com/feature/5088147346030592 and https://www.chromestatus.com/feature/5633521622188032.
+                        </v-card-text>
+                        <v-card-actions>
+                          <v-spacer></v-spacer>
+                          <v-btn
+                            color="primary"
+                            dark
+                            v-on:click="runRecommendation(recommendation.item)"
+                          >
+                            Retry
+                          </v-btn>
+                          <v-btn
+                            color="primary"
+                            dark
+                          >
+                          Close
+                          </v-btn>
+                        </v-card-actions>
+                      </v-card>
+                    </v-dialog>
                   </td>
                 </tr>
               </template>
@@ -532,17 +551,18 @@ export default class Mock extends Vue {
   private projectsSelected: Array<string> = [];
   private search = "";
   private headers = [
-    { text: "Project", value: "project", filterable: true },
-    { text: "Name", value: "name", groupable: false },
+    { text: "Project", value: "project", sortable: true},
+    { text: "Name", value: "name", groupable: false, sortable: true},
+    { text: "Type", value: "recommender_subtype", sortable: false},
     {
       text: "Description",
       align: "start",
       sortable: false,
-      value: "type",
+      value: "description",
       groupable: false
     },
     { text: "Savings/cost per week", value: "cost", groupable: false },
-    { text: "", value: "apply", groupable: false }
+    { text: "", value: "apply", groupable: false, sortable: false}
   ];
 
   private recommendationTypes = ["Resize", "Remove", "Performance"];
@@ -600,9 +620,9 @@ export default class Mock extends Vue {
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
-      "timus-test-for-probers-n2-std-4-bored-2",
+      "vertical-scaling-krzysztofk-wordpress",
       "ACTIVE",
-      "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-8"
+      "Save cost by snapshotting and then deleting idle persistent disk 'vertical-scaling-krzysztofk-wordpress'"
     ),
     new Recommendation(
       "REMOVE",
