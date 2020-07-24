@@ -645,7 +645,7 @@ export default class Mock extends Vue {
       100.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-prod",
+      "rightsizer-test",
       "timus-test-for-probers-n2-std-4-very-bored",
       "ACTIVE",
       "Save cost by stopping Idle VM 'timus-test-for-probers-n2-std-4-verybored",
@@ -675,10 +675,21 @@ export default class Mock extends Vue {
     ),
     new Recommendation(
       "RESIZE",
-      30.5,
+      15.75,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
       "middlesizer-test",
+      "vertical-scaling-krzysztofk-wordpress",
+      "ACTIVE",
+      "Save cost by snapshotting and then deleting idle persistent disk 'vertical-scaling-krzysztofk-wordpress'",
+      "SNAPSHOT_AND_DELETE_DISK"
+    ),
+    new Recommendation(
+      "RESIZE",
+      11.25,
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
+      instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
+      "leftsizer-test",
       "vertical-scaling-krzysztofk-wordpress",
       "ACTIVE",
       "Save cost by snapshotting and then deleting idle persistent disk 'vertical-scaling-krzysztofk-wordpress'",
@@ -689,7 +700,7 @@ export default class Mock extends Vue {
       100.0,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "rightsizer-prod",
+      "rightsizer-test",
       "timus-test-for-probers-n2-std-4-very-bored",
       "SUCCEEDED",
       "Save cost by removing machine",
@@ -722,7 +733,7 @@ export default class Mock extends Vue {
       110.5,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "search",
+      "middlesizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
       "Save cost by changing machine type from n1-highcpu-16 to n1-highcpu-2",
@@ -733,7 +744,7 @@ export default class Mock extends Vue {
       70.8,
       "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/\
       instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test&supportedpurview=project",
-      "search",
+      "middlesizer-test",
       "shcheshnyak-test-for-probers-n2-std-4-toobusy",
       "ACTIVE",
       "Save cost by changing machine type from n1-highcpu-6 to n1-highcpu-2",
