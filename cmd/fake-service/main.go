@@ -265,6 +265,22 @@ func (m *applyRequestsMap) LoadOrStore(name string, service *mockApplyService) (
 	return s, ok
 }
 
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func main() {
 	cachedCalls := recommendationsMap{data: make(map[string][]*gcloudRecommendation)} // the key is anotherPageToken
 	listRequestsInProcess := listRequestsMap{data: make(map[string]*mockListService)} // the key is AccessToken, but in this version, token is always ""
@@ -274,6 +290,7 @@ func main() {
 	recommendations := getFakeRecommendations()
 
 	router := gin.Default()
+	router.Use(corsMiddleware())
 
 	router.GET("/recommendations", func(c *gin.Context) {
 		defaultPageSize := 50
