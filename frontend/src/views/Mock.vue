@@ -243,6 +243,19 @@ limitations under the License. -->
                       v-if="recommendation.item.failed()"
                       >mdi-close-circle</v-icon
                     >
+                    <v-dialog v-if="recommendation.item.failed()" max-width="600px">
+                      <template v-slot:activator="{ on }">
+                      <v-btn x-small color="primary" v-on="on">
+                        See error
+                      </v-btn>
+                      </template>
+                      <v-card>
+                        <v-card-title class="headline"> Applying recommendation failed </v-card-title>
+                        <v-card-text>
+                          A cookie associated with a cross-site resource at https://www.google.com/ was set without the `SameSite` attribute. It has been blocked, as Chrome now only delivers cookies with cross-site requests if they are set with `SameSite=None` and `Secure`. You can review cookies in developer tools under Application>Storage>Cookies and see more details at https://www.chromestatus.com/feature/5088147346030592 and https://www.chromestatus.com/feature/5633521622188032.
+                        </v-card-text>
+                      </v-card>
+                    </v-dialog>
                     <div
                       v-if="
                         !recommendation.item.applicable() &&
