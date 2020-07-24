@@ -281,13 +281,11 @@ func main() {
 		if err != nil {
 			pageSize = defaultPageSize
 		}
-
 		defaultPageIndex := 0
 		pageIndex, err := strconv.Atoi(c.DefaultQuery("pageIndex", fmt.Sprint(defaultPageIndex)))
 		if err != nil {
 			pageIndex = defaultPageIndex
 		}
-
 		anotherPageToken := c.Query("pageToken")
 		if anotherPageToken != "" {
 			result, ok := cachedCalls.Load(anotherPageToken)
@@ -303,7 +301,6 @@ func main() {
 		if !loaded {
 			go service.ListRecommendations()
 		}
-
 		done, all := service.GetProgress()
 		if done < all {
 			c.JSON(http.StatusOK, ListRecommendationsProgressResponse{done, all})
@@ -314,7 +311,6 @@ func main() {
 			c.JSON(http.StatusOK, NewListRecommendationsResponse(
 				anotherPageToken, pageIndex, pageSize, result))
 		}
-		
 		return
 	})
 

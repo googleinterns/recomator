@@ -12,3 +12,7 @@ export function extractFromResource(
   const result = found[0].slice(sliceLen);
   return result;
 }
+
+export function delay(miliseconds: number) {
+  return new Promise( resolve => setTimeout(resolve, miliseconds) );
+}
