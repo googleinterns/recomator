@@ -20,117 +20,130 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-navigation-drawer absolute :v-model="true" :value="showNavgDrawer">
-      <v-list dense>
-        <v-list-item>
-          <h2>Filters</h2>
-        </v-list-item>
-        <v-list-item>
-          <h3>Costs/Savings</h3>
-        </v-list-item>
-        <v-list-item>
-          <v-form ref="formCost">
-            <v-text-field
-              type="number"
-              label="Min absolute value"
-              v-on:input="filterRecommendation.setMinimalPrice($event)"
-            ></v-text-field>
-            <v-text-field
-              type="number"
-              label="Max absolute value"
-              v-on:input="filterRecommendation.setMaximalPrice($event)"
-            ></v-text-field>
+      <v-container dense>
+        <v-row>
+          <v-col>
+            <h2>Filters</h2>
+          </v-col></v-row
+        >
+        <v-row
+          ><v-col>
+            <v-form ref="formProject">
+              <v-combobox
+                v-model="projectsSelected"
+                :items="summary.getProjectList()"
+                label="Select projects"
+                multiple
+                reverse
+                dense
+                v-on:input="filterRecommendation.setProjects(projectsSelected)"
+              >
+              </v-combobox>
 
-            <v-btn
-              rounded
-              color="primary"
-              dark
-              small
-              @click="() => this.$refs.formCost.reset()"
-              >Clear</v-btn
-            >
-          </v-form>
-        </v-list-item>
-        <v-list-item>
-          <h3>Project</h3>
-        </v-list-item>
-        <v-list-item>
-          <v-form ref="formProject">
-            <v-combobox
-              v-model="projectsSelected"
-              :items="summary.getProjectList()"
-              label="Select projects"
-              multiple
-              reverse
-              dense
-              v-on:input="filterRecommendation.setProjects(projectsSelected)"
-            >
-            </v-combobox>
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                @click="
+                  projectsSelected = [];
+                  filterRecommendation.setProjects([]);
+                "
+                >Clear</v-btn
+              >
+            </v-form>
+          </v-col></v-row
+        >
+        <v-row
+          ><v-col>
+            <h3>Type</h3>
+          </v-col></v-row
+        >
+        <v-row
+          ><v-col>
+            <v-form ref="formType">
+              <v-radio-group>
+                <v-radio
+                  v-on:change="filterRecommendation.setType(value)"
+                  v-for="(value, index) in recommendationTypes"
+                  :key="index"
+                  :label="value"
+                  :value="value"
+                ></v-radio>
+              </v-radio-group>
 
-            <v-btn
-              rounded
-              color="primary"
-              dark
-              small
-              @click="
-                projectsSelected = [];
-                filterRecommendation.setProjects([]);
-              "
-              >Clear</v-btn
-            >
-          </v-form>
-        </v-list-item>
-        <v-list-item>
-          <h3>Type</h3>
-        </v-list-item>
-        <v-list-item>
-          <v-form ref="formType">
-            <v-radio-group>
-              <v-radio
-                v-on:change="filterRecommendation.setType(value)"
-                v-for="(value, index) in recommendationTypes"
-                :key="index"
-                :label="value"
-                :value="value"
-              ></v-radio>
-            </v-radio-group>
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                @click="() => this.$refs.formType.reset()"
+                >Clear</v-btn
+              >
+            </v-form>
+          </v-col></v-row
+        >
 
-            <v-btn
-              rounded
-              color="primary"
-              dark
-              small
-              @click="() => this.$refs.formType.reset()"
-              >Clear</v-btn
-            >
-          </v-form>
-        </v-list-item>
+        <v-row
+          ><v-col>
+            <h3>Status</h3>
+          </v-col></v-row
+        >
+        <v-row
+          ><v-col>
+            <v-form ref="formStatus">
+              <v-radio-group>
+                <v-radio
+                  v-on:change="filterRecommendation.setStatus(value)"
+                  v-for="(value, index) in recommendationStatuses"
+                  :key="index"
+                  :label="value"
+                  :value="value"
+                ></v-radio>
+              </v-radio-group>
 
-        <v-list-item>
-          <h3>Status</h3>
-        </v-list-item>
-        <v-list-item>
-          <v-form ref="formStatus">
-            <v-radio-group>
-              <v-radio
-                v-on:change="filterRecommendation.setStatus(value)"
-                v-for="(value, index) in recommendationStatuses"
-                :key="index"
-                :label="value"
-                :value="value"
-              ></v-radio>
-            </v-radio-group>
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                @click="() => this.$refs.formStatus.reset()"
+                >Clear</v-btn
+              >
+            </v-form>
+          </v-col></v-row
+        >
+        <v-row
+          ><v-col>
+            <h3>Costs/Savings</h3>
+          </v-col></v-row
+        >
+        <v-row
+          ><v-col>
+            <v-form ref="formCost">
+              <v-text-field
+                type="number"
+                label="Min absolute value"
+                v-on:input="filterRecommendation.setMinimalPrice($event)"
+              ></v-text-field>
+              <v-text-field
+                type="number"
+                label="Max absolute value"
+                v-on:input="filterRecommendation.setMaximalPrice($event)"
+              ></v-text-field>
 
-            <v-btn
-              rounded
-              color="primary"
-              dark
-              small
-              @click="() => this.$refs.formStatus.reset()"
-              >Clear</v-btn
-            >
-          </v-form>
-        </v-list-item>
-      </v-list>
+              <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                @click="() => this.$refs.formCost.reset()"
+                >Clear</v-btn
+              >
+            </v-form>
+          </v-col></v-row
+        >
+      </v-container>
     </v-navigation-drawer>
 
     <v-main>
