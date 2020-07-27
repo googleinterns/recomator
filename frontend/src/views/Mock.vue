@@ -159,10 +159,15 @@ limitations under the License. -->
         <v-row>
           <v-col>
             Group by:
-            <v-btn-toggle multiple mandatory>
-              <v-btn rounded small>Project</v-btn>
-              <v-btn rounded small>Recommender Type</v-btn>
-            </v-btn-toggle>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn-toggle multiple mandatory >
+                  <v-btn rounded small v-bind="attrs" v-on="on">Project</v-btn>
+                  <v-btn rounded small v-bind="attrs" v-on="on">Recommender Type</v-btn>
+                </v-btn-toggle>
+              </template>
+              Select at least one
+            </v-tooltip>
           </v-col>
         </v-row>
         <v-row
@@ -195,6 +200,45 @@ limitations under the License. -->
             </v-data-table>
           </v-col></v-row
         >
+        <v-row><v-col>
+          <v-dialog v-model="dialog" max-width="900px">
+          <template v-slot:activator="{on, attrs}">
+            <v-btn rounded small v-bind="attrs" v-on="on">Show All</v-btn>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">Summary</span>
+            </v-card-title>
+            <v-card-text>
+                 <v-data-table
+              dense
+              disable-pagination
+              hide-default-footer
+              sort-by="savings"
+              :headers="summaryHeaders"
+              :items="summaryData"
+            >
+              <template v-slot:item="proj_summary">
+                <tr class="text-left">
+                  <td>{{ proj_summary.item.project }}</td>
+                  <td>
+                    <v-chip dark color="green" small>
+                      +{{ proj_summary.item.savings }}$
+                    </v-chip>
+                  </td>
+                  <td>
+                    <v-chip dark color="orange" small>
+                      {{ proj_summary.item.cost }}$
+                    </v-chip>
+                  </td>
+                  <td>{{ proj_summary.item.q }}</td>
+                </tr></template
+              >
+            </v-data-table>
+            </v-card-text>
+          </v-card>
+          </v-dialog>
+        </v-col></v-row>
 
         <v-row>
           <v-col>
@@ -216,6 +260,17 @@ limitations under the License. -->
                 v-on:click="applyAllRecommendations"
                 >Apply Selected Recomendations</v-btn
               >
+            </v-card>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <h4 class="text-left"> Showing {{recommendations.filter(recommendation =>
+                  filterRecommendation.predicate(recommendation)
+                ).length}} out of {{recommendations.length}} recommendations </h4>
+          </v-col>
+        </v-row>
+        <v-row><v-col>
               <v-text-field
                 v-model="search"
                 append-icon="mdi-magnify"
@@ -223,8 +278,9 @@ limitations under the License. -->
                 single-line
                 hide-details
               ></v-text-field>
-            </v-card>
-
+        </v-col></v-row>
+        <v-row>
+          <v-col>
             <v-data-table
               :headers="headers"
               :items="
@@ -297,12 +353,12 @@ limitations under the License. -->
                           }}$</v-chip
                         >
                       </template>
-                      <span>{{
+                      {{
                         recommendation.item.cost >= 0
                           ? `Save ${recommendation.item.cost}$ per week by applying this recommendation`
                           : `Applying this recommendation will cost an additional ${-recommendation
                               .item.cost}$ per week`
-                      }}</span>
+                      }}
                     </v-tooltip>
                   </td>
 
@@ -322,11 +378,15 @@ limitations under the License. -->
                       v-if="recommendation.item.inProgress()"
                     ></v-progress-circular>
 
-                    <v-icon
-                      color="green darken-2"
-                      v-if="recommendation.item.succeded()"
-                      >mdi-check-circle</v-icon
-                    >
+                    <v-btn x-small label v-if="recommendation.item.succeded()" color="green">
+                      <v-icon
+                        color="white"
+                        left dark
+                        v-if="recommendation.item.succeded()"
+                        >mdi-check-circle</v-icon
+                      >
+                      Succeded
+                    </v-btn>
 
                     <!--<v-icon
                       color="red darken-2"
