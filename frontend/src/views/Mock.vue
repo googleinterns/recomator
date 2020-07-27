@@ -29,30 +29,28 @@ limitations under the License. -->
         >
         <v-row
           ><v-col>
-            <v-form ref="formProject">
-              <v-combobox
-                v-model="projectsSelected"
-                :items="summary.getProjectList()"
-                label="Select projects"
-                multiple
-                reverse
-                dense
-                v-on:input="filterRecommendation.setProjects(projectsSelected)"
-              >
-              </v-combobox>
+            <v-combobox
+              v-model="projectsSelected"
+              :items="summary.getProjectList()"
+              label="Select projects"
+              multiple
+              reverse
+              dense
+              v-on:input="filterRecommendation.setProjects(projectsSelected)"
+            >
+            </v-combobox>
 
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                @click="
-                  projectsSelected = [];
-                  filterRecommendation.setProjects([]);
-                "
-                >Clear</v-btn
-              >
-            </v-form>
+            <v-btn
+              rounded
+              color="primary"
+              dark
+              small
+              @click="
+                projectsSelected = [];
+                filterRecommendation.setProjects([]);
+              "
+              >Clear</v-btn
+            >
           </v-col></v-row
         >
         <v-row
@@ -161,9 +159,11 @@ limitations under the License. -->
             Group by:
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
-                <v-btn-toggle multiple mandatory >
+                <v-btn-toggle multiple mandatory>
                   <v-btn rounded small v-bind="attrs" v-on="on">Project</v-btn>
-                  <v-btn rounded small v-bind="attrs" v-on="on">Recommender Type</v-btn>
+                  <v-btn rounded small v-bind="attrs" v-on="on"
+                    >Recommender Type</v-btn
+                  >
                 </v-btn-toggle>
               </template>
               Select at least one
@@ -200,45 +200,47 @@ limitations under the License. -->
             </v-data-table>
           </v-col></v-row
         >
-        <v-row><v-col>
-          <v-dialog v-model="dialog" max-width="900px">
-          <template v-slot:activator="{on, attrs}">
-            <v-btn rounded small v-bind="attrs" v-on="on">Show All</v-btn>
-          </template>
-          <v-card>
-            <v-card-title>
-              <span class="headline">Summary</span>
-            </v-card-title>
-            <v-card-text>
-                 <v-data-table
-              dense
-              disable-pagination
-              hide-default-footer
-              sort-by="savings"
-              :headers="summaryHeaders"
-              :items="summaryData"
-            >
-              <template v-slot:item="proj_summary">
-                <tr class="text-left">
-                  <td>{{ proj_summary.item.project }}</td>
-                  <td>
-                    <v-chip dark color="green" small>
-                      +{{ proj_summary.item.savings }}$
-                    </v-chip>
-                  </td>
-                  <td>
-                    <v-chip dark color="orange" small>
-                      {{ proj_summary.item.cost }}$
-                    </v-chip>
-                  </td>
-                  <td>{{ proj_summary.item.q }}</td>
-                </tr></template
-              >
-            </v-data-table>
-            </v-card-text>
-          </v-card>
-          </v-dialog>
-        </v-col></v-row>
+        <v-row
+          ><v-col>
+            <v-dialog max-width="900px">
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn rounded small v-bind="attrs" v-on="on">Show All</v-btn>
+              </template>
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Summary</span>
+                </v-card-title>
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    disable-pagination
+                    hide-default-footer
+                    sort-by="savings"
+                    :headers="summaryHeaders"
+                    :items="summaryData"
+                  >
+                    <template v-slot:item="proj_summary">
+                      <tr class="text-left">
+                        <td>{{ proj_summary.item.project }}</td>
+                        <td>
+                          <v-chip dark color="green" small>
+                            +{{ proj_summary.item.savings }}$
+                          </v-chip>
+                        </td>
+                        <td>
+                          <v-chip dark color="orange" small>
+                            {{ proj_summary.item.cost }}$
+                          </v-chip>
+                        </td>
+                        <td>{{ proj_summary.item.q }}</td>
+                      </tr></template
+                    >
+                  </v-data-table>
+                </v-card-text>
+              </v-card>
+            </v-dialog>
+          </v-col></v-row
+        >
 
         <v-row>
           <v-col>
@@ -265,23 +267,31 @@ limitations under the License. -->
         </v-row>
         <v-row>
           <v-col>
-            <h4 class="text-left"> Showing {{recommendations.filter(recommendation =>
+            <h4 class="text-left">
+              Showing
+              {{
+                recommendations.filter(recommendation =>
                   filterRecommendation.predicate(recommendation)
-                ).length}} out of {{recommendations.length}} recommendations </h4>
+                ).length
+              }}
+              out of {{ recommendations.length }} recommendations
+            </h4>
           </v-col>
         </v-row>
-        <v-row><v-col>
-              <v-text-field
-                v-model="search"
-                append-icon="mdi-magnify"
-                label="Search"
-                single-line
-                hide-details
-              ></v-text-field>
-        </v-col></v-row>
+        <v-row
+          ><v-col>
+            <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search"
+              single-line
+              hide-details
+            ></v-text-field> </v-col
+        ></v-row>
         <v-row>
           <v-col>
             <v-data-table
+              dense
               :headers="headers"
               :items="
                 recommendations.filter(recommendation =>
@@ -289,18 +299,31 @@ limitations under the License. -->
                 )
               "
               show-group-by
+              v-on:update:group-by="groupByUpdated()"
               :search="search"
             >
+              <template v-slot:group.summary="gsprops">
+                <td class="text-left" colspan="2">
+                  Total savings:
+                  <v-chip dark color="green" small> +{{ 123 }}$ </v-chip> Total
+                  cost: <v-chip dark color="orange" small> {{ 33 }}$ </v-chip>
+                </td>
+                {{ closeIfOpenedFirstTime(gsprops.group, gsprops.toggle) }}
+              </template>
               <template v-slot:item="recommendation">
                 <tr>
-                  <td class="text-left">{{ recommendation.item.project }}</td>
+                  <td>
+                    <v-simple-checkbox small> </v-simple-checkbox>
+                  </td>
                   <td class="text-left">
                     <a :href="recommendation.item.path">
                       {{ recommendation.item.name }}
                     </a>
                   </td>
+                  <td class="text-left">{{ recommendation.item.project }}</td>
+
                   <td class="text-left">
-                    <v-chip class="ma-2" label>
+                    <v-chip class="ma-2" color="white" label>
                       <v-icon
                         left
                         v-if="
@@ -378,10 +401,16 @@ limitations under the License. -->
                       v-if="recommendation.item.inProgress()"
                     ></v-progress-circular>
 
-                    <v-btn x-small label v-if="recommendation.item.succeded()" color="green">
+                    <v-btn
+                      x-small
+                      label
+                      v-if="recommendation.item.succeded()"
+                      color="green"
+                    >
                       <v-icon
                         color="white"
-                        left dark
+                        left
+                        dark
                         v-if="recommendation.item.succeded()"
                         >mdi-check-circle</v-icon
                       >
@@ -716,8 +745,9 @@ export default class Mock extends Vue {
   private projectsSelected: Array<string> = [];
   private search = "";
   private headers = [
-    { text: "Project", value: "project", sortable: true },
+    { text: "", value: "selected", groupable: false, sortable: true },
     { text: "Name", value: "name", groupable: false, sortable: true },
+    { text: "Project", value: "project", sortable: true },
     { text: "Type", value: "recommenderSubtype", sortable: true },
     {
       text: "Description",
@@ -937,6 +967,21 @@ export default class Mock extends Vue {
     }
     this.successfullyLoaded = true;
     this.generateRecommendations();
+  }
+
+  private groupsToggledAlready: string[] = [];
+
+  // A bit of a sneaky way not to have expanded groups at default
+  private groupByUpdated(): void {
+    console.log("cleaning");
+    this.groupsToggledAlready.length = 0;
+  }
+
+  private closeIfOpenedFirstTime(groupName: string, toggler: () => void): void {
+    if (!this.groupsToggledAlready.includes(groupName)) {
+      this.groupsToggledAlready.push(groupName);
+      toggler();
+    }
   }
 }
 </script>
