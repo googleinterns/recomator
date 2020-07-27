@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <v-app mt-10 mb-10 ml-10 mr-10>
+  <v-app>
     <v-app-bar app color="primary" dark>
       <v-icon v-on:click="showNavgDrawer = !showNavgDrawer" large
         >mdi-menu</v-icon
@@ -160,20 +160,25 @@ limitations under the License. -->
                 cost
                 <span style="color:orange">123$</span> per week.
               </h3>
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                v-on:click="applyAllRecommendations"
-                >Apply Selected Recomendations</v-btn
-              >
             </v-card>
           </v-col>
         </v-row>
+        
         <v-row>
           <v-col>
-            <h4 class="text-left">
+            <v-banner single-line @click:icon="alert">
+                <v-icon
+                  color="primary"
+                >
+                  mdi-lightbulb-on-outline
+               </v-icon>
+               Hint: You can group recommendations by project or type by clicking "group" next to the column.
+            </v-banner>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col>
               Showing
               {{
                 recommendations.filter(recommendation =>
@@ -181,11 +186,9 @@ limitations under the License. -->
                 ).length
               }}
               out of {{ recommendations.length }} recommendations
-            </h4>
           </v-col>
-        </v-row>
-        <v-row
-          ><v-col>
+          
+          <v-col>
             <v-text-field
               v-model="search"
               append-icon="mdi-magnify"
@@ -193,7 +196,8 @@ limitations under the License. -->
               single-line
               hide-details
             ></v-text-field> </v-col
-        ></v-row>
+        >
+        </v-row>
         <v-row>
           <v-col>
             <v-data-table
@@ -209,20 +213,30 @@ limitations under the License. -->
               :search="search"
               :items-per-page="itemsPerPage"
             >
-
+              
+              <template v-slot:header.apply>
+                <v-btn
+                rounded
+                color="primary"
+                dark
+                small
+                v-on:click="applyAllRecommendations"
+                >Apply <br/> Selected</v-btn
+              >
+              </template>
               <template v-slot:group.summary="gsprops">
-                <td class="text-left" colspan="5">
+                <td class="text-left" colspan="6">
                   Total savings:
                   <v-chip dark color="green" small> +{{ 123 }}$ </v-chip> Total
                   cost: <v-chip dark color="orange" small> {{ 33 }}$ </v-chip>
-                  Quantity: 1234
+                  Quantity: 1234 
                 </td>
                 {{ closeIfOpenedFirstTime(gsprops.group, gsprops.toggle) }}
               </template>
               <template v-slot:item="recommendation">
                 <tr>
                   <td>
-                    <v-simple-checkbox small> </v-simple-checkbox>
+                    <v-simple-checkbox small v-model="recommendation.item.selected"> </v-simple-checkbox>
                   </td>
                   <td class="text-left">
                     <a :href="recommendation.item.path">
@@ -294,7 +308,7 @@ limitations under the License. -->
                     </v-tooltip>
                   </td>
 
-                  <td class="text-left">
+                  <td>
                     <v-btn
                       rounded
                       color="primary"
@@ -407,6 +421,7 @@ class Recommendation {
   status: string;
   description: string;
   recommenderSubtype: string;
+  selected: boolean;
 
   constructor(
     type: string,
@@ -426,6 +441,7 @@ class Recommendation {
     this.status = status;
     this.description = description;
     this.recommenderSubtype = recommenderSubtype;
+    this.selected = false;
   }
 
   copy(): Recommendation {
