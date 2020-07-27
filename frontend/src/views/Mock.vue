@@ -151,101 +151,7 @@ limitations under the License. -->
       <v-container fluid v-if="successfullyLoaded">
         <v-row>
           <v-col>
-            <h2>Summary</h2>
-          </v-col></v-row
-        >
-        <v-row>
-          <v-col>
-            Group by:
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn-toggle multiple mandatory>
-                  <v-btn rounded small v-bind="attrs" v-on="on">Project</v-btn>
-                  <v-btn rounded small v-bind="attrs" v-on="on"
-                    >Recommender Type</v-btn
-                  >
-                </v-btn-toggle>
-              </template>
-              Select at least one
-            </v-tooltip>
-          </v-col>
-        </v-row>
-        <v-row
-          ><v-col>
-            <v-data-table
-              height="150"
-              dense
-              disable-pagination
-              hide-default-footer
-              sort-by="savings"
-              :headers="summaryHeaders"
-              :items="summaryData"
-            >
-              <template v-slot:item="proj_summary">
-                <tr class="text-left">
-                  <td>{{ proj_summary.item.project }}</td>
-                  <td>
-                    <v-chip dark color="green" small>
-                      +{{ proj_summary.item.savings }}$
-                    </v-chip>
-                  </td>
-                  <td>
-                    <v-chip dark color="orange" small>
-                      {{ proj_summary.item.cost }}$
-                    </v-chip>
-                  </td>
-                  <td>{{ proj_summary.item.q }}</td>
-                </tr></template
-              >
-            </v-data-table>
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <v-dialog max-width="900px">
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn rounded small v-bind="attrs" v-on="on">Show All</v-btn>
-              </template>
-              <v-card>
-                <v-card-title>
-                  <span class="headline">Summary</span>
-                </v-card-title>
-                <v-card-text>
-                  <v-data-table
-                    dense
-                    disable-pagination
-                    hide-default-footer
-                    sort-by="savings"
-                    :headers="summaryHeaders"
-                    :items="summaryData"
-                  >
-                    <template v-slot:item="proj_summary">
-                      <tr class="text-left">
-                        <td>{{ proj_summary.item.project }}</td>
-                        <td>
-                          <v-chip dark color="green" small>
-                            +{{ proj_summary.item.savings }}$
-                          </v-chip>
-                        </td>
-                        <td>
-                          <v-chip dark color="orange" small>
-                            {{ proj_summary.item.cost }}$
-                          </v-chip>
-                        </td>
-                        <td>{{ proj_summary.item.q }}</td>
-                      </tr></template
-                    >
-                  </v-data-table>
-                </v-card-text>
-              </v-card>
-            </v-dialog>
-          </v-col></v-row
-        >
-
-        <v-row>
-          <v-col>
             <v-card class="pa-5">
-              <!-- <h2>{{ summary.toString() }}</h2> -->
               <h3 class="text-left">
                 Save <span style="color:green">2314$</span> per week by applying
                 all selected recommendations. <br />
@@ -299,11 +205,13 @@ limitations under the License. -->
                 )
               "
               show-group-by
-              v-on:update:group-by="groupByUpdated()"
+              v-on:update:group-by="groupByUpdated"
               :search="search"
+              :items-per-page="itemsPerPage"
             >
+
               <template v-slot:group.summary="gsprops">
-                <td class="text-left" colspan="3">
+                <td class="text-left" colspan="5">
                   Total savings:
                   <v-chip dark color="green" small> +{{ 123 }}$ </v-chip> Total
                   cost: <v-chip dark color="orange" small> {{ 33 }}$ </v-chip>
@@ -973,7 +881,11 @@ export default class Mock extends Vue {
   private groupsToggledAlready: string[] = [];
 
   // A bit of a sneaky way not to have expanded groups at default
-  private groupByUpdated(): void {
+  private groupByUpdated(groupCategories : string[]): void {
+    if(groupCategories.length != 0)
+      this.itemsPerPage = 1000*1000*1000
+    else
+      this.itemsPerPage = 10
     this.groupsToggledAlready.length = 0;
   }
 
@@ -983,5 +895,7 @@ export default class Mock extends Vue {
       toggler();
     }
   }
+
+  private itemsPerPage = 10;
 }
 </script>
