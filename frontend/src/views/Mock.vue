@@ -166,7 +166,7 @@ limitations under the License. -->
         
         <v-row>
           <v-col>
-            <v-banner single-line @click:icon="alert">
+            <v-banner single-line>
                 <v-icon
                   color="primary"
                 >
@@ -231,7 +231,7 @@ limitations under the License. -->
                   cost: <v-chip dark color="orange" small> {{ 33 }}$ </v-chip>
                   Quantity: 1234 
                 </td>
-                {{ closeIfOpenedFirstTime(gsprops.group, gsprops.toggle) }}
+                {{ gsprops.isOpen ? closeIfOpenedFirstTime(gsprops.group, gsprops.toggle) : null }}
               </template>
               <template v-slot:item="recommendation">
                 <tr>
@@ -898,11 +898,11 @@ export default class Mock extends Vue {
 
   // A bit of a sneaky way not to have expanded groups at default
   private groupByUpdated(groupCategories : string[]): void {
+    this.groupsToggledAlready.length = 0;
     if(groupCategories.length != 0)
       this.itemsPerPage = 1000*1000*1000
     else
       this.itemsPerPage = 10
-    this.groupsToggledAlready.length = 0;
   }
 
   private closeIfOpenedFirstTime(groupName: string, toggler: () => void): void {
