@@ -14,14 +14,15 @@ limitations under the License. */
 
 import { Recommendation } from "@/store/model";
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
-import { delay } from "./utils";
+import { delay, getServerAddress } from "./utils";
 
-const ServerAddress = "http://localhost:8082";
-const RequestDelay = 100;
+const SERVER_ADDRESS: string = getServerAddress();
+const REQUEST_DELAY = 100;
 
 @Module
 export default class extends VuexModule {
   recommendations: Record<string, Recommendation> = {};
+  progress = 0; // percent of recommendations loaded
 
   @Mutation
   addRecommendation(recommendation: Recommendation) {
@@ -31,6 +32,11 @@ export default class extends VuexModule {
       `recommendation name ${recommendation.name} is present in the store already`
     );
     this.recommendations[recommendation.name] = recommendation;
+  }
+
+  @Mutation
+  setProgress(progress: number) {
+    this.progress = progress;
   }
 
   @Action
@@ -48,14 +54,21 @@ export default class extends VuexModule {
     let responseJson;
 
     for (;;) {
-      response = await fetch(`${ServerAddress}/recommendations`);
+      response = await fetch(`${SERVER_ADDRESS}/recommendations`);
       responseJson = await response.json();
 
       if (responseJson.recommendations !== undefined) {
         break;
       }
 
-      await delay(RequestDelay);
+      this.context.commit(
+        "setProgress",
+        Math.floor(
+          (100 * responseJson.batchesProcessed) / responseJson.numberOfBatches
+        )
+      );
+
+      await delay(REQUEST_DELAY);
     }
 
     for (const recommendation of responseJson.recommendations) {
