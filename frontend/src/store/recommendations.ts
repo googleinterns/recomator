@@ -15,6 +15,7 @@ limitations under the License. */
 import { Recommendation } from "@/store/model";
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 import { delay, getServerAddress } from "./utils";
+import { ReferenceWrapper } from "./reference";
 
 const SERVER_ADDRESS: string = getServerAddress();
 const REQUEST_DELAY = 100;
@@ -23,6 +24,7 @@ const REQUEST_DELAY = 100;
 export default class extends VuexModule {
   recommendations: Record<string, Recommendation> = {};
   progress = 0; // percent of recommendations loaded
+  inProgress = false;
 
   @Mutation
   addRecommendation(recommendation: Recommendation) {
@@ -32,6 +34,21 @@ export default class extends VuexModule {
       `recommendation name ${recommendation.name} is present in the store already`
     );
     this.recommendations[recommendation.name] = recommendation;
+  }
+
+  @Mutation // Only one fetching may be in progress at once
+  tryStartFetching(result: ReferenceWrapper<boolean>) {
+    if (this.inProgress) {
+      result.setValue(true);
+    }
+
+    result.setValue(false);
+    this.inProgress = true;
+  }
+
+  @Mutation
+  endFetching() {
+    this.inProgress = false;
   }
 
   @Mutation
@@ -50,6 +67,13 @@ export default class extends VuexModule {
 
   @Action
   async fetchRecommendations() {
+    const isAnotherFetchInProgress = new ReferenceWrapper(false);
+    this.context.commit("tryStartFetching", isAnotherFetchInProgress);
+
+    if (isAnotherFetchInProgress.getValue()) {
+      return;
+    }
+
     let response;
     let responseJson;
 
@@ -74,5 +98,7 @@ export default class extends VuexModule {
     for (const recommendation of responseJson.recommendations) {
       this.context.commit("addRecommendation", recommendation);
     }
+
+    this.context.commit("endFetching");
   }
 }

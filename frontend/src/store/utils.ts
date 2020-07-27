@@ -1,4 +1,4 @@
-const DEVELOPMENT_SERVER_ADDRESS = "http://localhost:8082";
+const DEVELOPMENT_SERVER_ADDRESS = "http://localhost:8000";
 const PRODUCTION_SERVER_ADDRESS = "";
 
 export function extractFromResource(
