@@ -19,12 +19,14 @@ import { ReferenceWrapper } from "./reference";
 
 const SERVER_ADDRESS: string = getServerAddress();
 const REQUEST_DELAY = 100;
+const HTTP_OK_CODE = 200;
 
 @Module
 export default class extends VuexModule {
   recommendations: Record<string, Recommendation> = {};
-  progress = 0; // percent of recommendations loaded
-  inProgress = false;
+  progress: number | null = null; // percent of recommendations loaded, if null, then loading recommendations is not in progress
+  errorCode: number | undefined = undefined;
+  errorMessage: string | undefined = undefined;
 
   @Mutation
   addRecommendation(recommendation: Recommendation) {
@@ -38,23 +40,32 @@ export default class extends VuexModule {
 
   @Mutation // Only one fetching may be in progress at once
   tryStartFetching(result: ReferenceWrapper<boolean>) {
-    if (this.inProgress) {
+    if (this.progress !== null) {
       result.setValue(true);
       return;
     }
 
     result.setValue(false);
-    this.inProgress = true;
+    this.progress = 0;
   }
 
   @Mutation
   endFetching() {
-    this.inProgress = false;
+    this.progress = null;
   }
 
   @Mutation
   setProgress(progress: number) {
     this.progress = progress;
+  }
+
+  @Mutation
+  setError(errorCode: number, errorMessage: string) {
+    this.errorCode = errorCode;
+    this.errorMessage = errorMessage;
+
+    console.log(errorMessage);
+    console.log(errorCode);
   }
 
   @Action
@@ -77,10 +88,24 @@ export default class extends VuexModule {
 
     let response;
     let responseJson;
+    let responseCode;
 
     for (;;) {
       response = await fetch(`${SERVER_ADDRESS}/recommendations`);
       responseJson = await response.json();
+      responseCode = response.status;
+
+      if (responseCode !== HTTP_OK_CODE) {
+        this.context.commit(
+          "setError",
+          responseCode,
+          responseJson.errorMessage
+        );
+
+        this.context.commit("endFetching");
+
+        return;
+      }
 
       if (responseJson.recommendations !== undefined) {
         break;
