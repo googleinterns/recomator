@@ -14,136 +14,8 @@ limitations under the License. -->
 <template>
   <v-app>
     <v-app-bar app color="primary" dark>
-      <v-icon v-on:click="showNavgDrawer = !showNavgDrawer" large
-        >mdi-menu</v-icon
-      >
       <h1>Recomator</h1>
     </v-app-bar>
-
-    <v-navigation-drawer app :v-model="true" :value="showNavgDrawer">
-      <v-container dense>
-        <v-row>
-          <v-col>
-            <h2>Filters</h2>
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <v-combobox
-              v-model="projectsSelected"
-              :items="summary.getProjectList()"
-              label="Select projects"
-              multiple
-              reverse
-              dense
-              v-on:input="filterRecommendation.setProjects(projectsSelected)"
-            >
-            </v-combobox>
-
-            <v-btn
-              rounded
-              color="primary"
-              dark
-              small
-              @click="
-                projectsSelected = [];
-                filterRecommendation.setProjects([]);
-              "
-              >Clear</v-btn
-            >
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <h3>Type</h3>
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <v-form ref="formType">
-              <v-radio-group>
-                <v-radio
-                  v-on:change="filterRecommendation.setType(value)"
-                  v-for="(value, index) in recommendationTypes"
-                  :key="index"
-                  :label="value"
-                  :value="value"
-                ></v-radio>
-              </v-radio-group>
-
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                @click="() => this.$refs.formType.reset()"
-                >Clear</v-btn
-              >
-            </v-form>
-          </v-col></v-row
-        >
-
-        <v-row
-          ><v-col>
-            <h3>Status</h3>
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <v-form ref="formStatus">
-              <v-radio-group>
-                <v-radio
-                  v-on:change="filterRecommendation.setStatus(value)"
-                  v-for="(value, index) in recommendationStatuses"
-                  :key="index"
-                  :label="value"
-                  :value="value"
-                ></v-radio>
-              </v-radio-group>
-
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                @click="() => this.$refs.formStatus.reset()"
-                >Clear</v-btn
-              >
-            </v-form>
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <h3>Costs/Savings</h3>
-          </v-col></v-row
-        >
-        <v-row
-          ><v-col>
-            <v-form ref="formCost">
-              <v-text-field
-                type="number"
-                label="Min absolute value"
-                v-on:input="filterRecommendation.setMinimalPrice($event)"
-              ></v-text-field>
-              <v-text-field
-                type="number"
-                label="Max absolute value"
-                v-on:input="filterRecommendation.setMaximalPrice($event)"
-              ></v-text-field>
-
-              <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                @click="() => this.$refs.formCost.reset()"
-                >Clear</v-btn
-              >
-            </v-form>
-          </v-col></v-row
-        >
-      </v-container>
-    </v-navigation-drawer>
 
     <v-main>
       <v-progress-linear v-if="!successfullyLoaded" :value="progressPercentage">
@@ -176,28 +48,6 @@ limitations under the License. -->
             </v-banner>
           </v-col>
         </v-row>
-
-        <v-row>
-          <v-col>
-              Showing
-              {{
-                recommendations.filter(recommendation =>
-                  filterRecommendation.predicate(recommendation)
-                ).length
-              }}
-              out of {{ recommendations.length }} recommendations
-          </v-col>
-          
-          <v-col>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details
-            ></v-text-field> </v-col
-        >
-        </v-row>
         <v-row>
           <v-col>
             <v-data-table
@@ -212,17 +62,59 @@ limitations under the License. -->
               v-on:update:group-by="groupByUpdated"
               :search="search"
               :items-per-page="itemsPerPage"
+              :single-select="false"
+              show-select
             >
-              
-              <template v-slot:header.apply>
-                <v-btn
-                rounded
-                color="primary"
-                dark
-                small
-                v-on:click="applyAllRecommendations"
-                >Apply <br/> Selected</v-btn
-              >
+              <template v-slot:body.prepend>
+                <tr>
+                <td/>
+                <td class="pb-5"> 
+              <v-text-field class=""
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search names"
+              single-line
+              hide-details
+            ></v-text-field>
+            </td>
+                <td><v-combobox
+              v-model="projectsSelected"
+              :items="summary.getProjectList()"
+              label="Select projects"
+              multiple
+              reverse
+              v-on:input="filterRecommendation.setProjects(projectsSelected)"
+            >
+            </v-combobox></td>
+            <td>   <v-combobox
+              v-model="typesSelected"
+              :items="['STOP_VM', 'SNAPSHOT_AND_DELETE_DISK', 'INCREASE_PERFORMANCE']"
+              label="Select types"
+              multiple
+              reverse
+              v-on:input="filterRecommendation.setTypes(typesSelected)"
+            >
+            </v-combobox></td>
+            <td class="pb-5"> 
+              <v-text-field class=""
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search descriptions"
+              single-line
+              hide-details
+            ></v-text-field>
+            </td>
+            <td>
+            </td>
+            <td><v-combobox
+              v-model="statusSelected"
+              :items="['Applicable', 'Success', 'Failure', 'In progress']"
+              label="Select status"
+              multiple
+              reverse
+              v-on:input="filterRecommendation.setTypes(statusSelected)"
+            >
+            </v-combobox></td></tr>
               </template>
               <template v-slot:group.summary="gsprops">
                 <td class="text-left" colspan="6">
@@ -235,9 +127,7 @@ limitations under the License. -->
               </template>
               <template v-slot:item="recommendation">
                 <tr>
-                  <td>
-                    <v-simple-checkbox small v-model="recommendation.item.selected"> </v-simple-checkbox>
-                  </td>
+                  <td></td>
                   <td class="text-left">
                     <a :href="recommendation.item.path">
                       {{ recommendation.item.name }}
@@ -670,7 +560,6 @@ export default class Mock extends Vue {
   private projectsSelected: Array<string> = [];
   private search = "";
   private headers = [
-    { text: "", value: "selected", groupable: false, sortable: true },
     { text: "Name", value: "name", groupable: false, sortable: true },
     { text: "Project", value: "project", sortable: true },
     { text: "Type", value: "recommenderSubtype", sortable: true },
@@ -852,7 +741,11 @@ export default class Mock extends Vue {
     });
   }
 
+  private simp = false
+
   private recommendations = [];
+  private typesSelected: string[] = [];
+  private statusSelected: string[] = [];
 
   private shuffleRecommendations(): void {
     this.recommendations.sort(function() {
