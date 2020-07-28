@@ -40,6 +40,7 @@ export default class extends VuexModule {
   tryStartFetching(result: ReferenceWrapper<boolean>) {
     if (this.inProgress) {
       result.setValue(true);
+      return;
     }
 
     result.setValue(false);

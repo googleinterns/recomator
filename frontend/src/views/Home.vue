@@ -25,9 +25,6 @@ limitations under the License. -->
 // @ is an alias to /src
 import { Component, Vue } from "vue-property-decorator";
 import HelloWorld from "@/components/HelloWorld.vue";
-import Vuex from "vuex";
-
-Vue.use(Vuex);
 
 @Component({
   components: {
