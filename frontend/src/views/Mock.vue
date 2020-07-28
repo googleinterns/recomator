@@ -35,16 +35,15 @@ limitations under the License. -->
             </v-card>
           </v-col>
         </v-row>
-        
+
         <v-row>
           <v-col>
             <v-banner single-line>
-                <v-icon
-                  color="primary"
-                >
-                  mdi-lightbulb-on-outline
-               </v-icon>
-               Hint: You can group recommendations by project or type by clicking "group" next to the column.
+              <v-icon color="primary">
+                mdi-lightbulb-on-outline
+              </v-icon>
+              Hint: You can group recommendations by project or type by clicking
+              "group" next to the column.
             </v-banner>
           </v-col>
         </v-row>
@@ -62,234 +61,220 @@ limitations under the License. -->
               v-on:update:group-by="groupByUpdated"
               :search="search"
               :items-per-page="itemsPerPage"
-              :single-select="false"
               show-select
+              :single-select="false"
+              v-model="selected"
+              item-key="name"
             >
               <template v-slot:body.prepend>
                 <tr>
-                <td/>
-                <td class="pb-5"> 
-              <v-text-field class=""
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search names"
-              single-line
-              hide-details
-            ></v-text-field>
-            </td>
-                <td><v-combobox
-              v-model="projectsSelected"
-              :items="summary.getProjectList()"
-              label="Select projects"
-              multiple
-              reverse
-              v-on:input="filterRecommendation.setProjects(projectsSelected)"
-            >
-            </v-combobox></td>
-            <td>   <v-combobox
-              v-model="typesSelected"
-              :items="['STOP_VM', 'SNAPSHOT_AND_DELETE_DISK', 'INCREASE_PERFORMANCE']"
-              label="Select types"
-              multiple
-              reverse
-              v-on:input="filterRecommendation.setTypes(typesSelected)"
-            >
-            </v-combobox></td>
-            <td class="pb-5"> 
-              <v-text-field class=""
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search descriptions"
-              single-line
-              hide-details
-            ></v-text-field>
-            </td>
-            <td>
-            </td>
-            <td><v-combobox
-              v-model="statusSelected"
-              :items="['Applicable', 'Success', 'Failure', 'In progress']"
-              label="Select status"
-              multiple
-              reverse
-              v-on:input="filterRecommendation.setTypes(statusSelected)"
-            >
-            </v-combobox></td></tr>
+                  <td />
+                  <td class="pb-5">
+                    <v-text-field
+                      class=""
+                      v-model="search"
+                      append-icon="mdi-magnify"
+                      label="Search names"
+                      single-line
+                      hide-details
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-combobox
+                      v-model="projectsSelected"
+                      :items="summary.getProjectList()"
+                      label="Select projects"
+                      multiple
+                      reverse
+                      v-on:input="
+                        filterRecommendation.setProjects(projectsSelected)
+                      "
+                    >
+                    </v-combobox>
+                  </td>
+                  <td>
+                    <v-combobox
+                      v-model="typesSelected"
+                      :items="[
+                        'STOP_VM',
+                        'SNAPSHOT_AND_DELETE_DISK',
+                        'INCREASE_PERFORMANCE'
+                      ]"
+                      label="Select types"
+                      multiple
+                      reverse
+                      v-on:input="filterRecommendation.setTypes(typesSelected)"
+                    >
+                    </v-combobox>
+                  </td>
+                  <td class="pb-5">
+                    <v-text-field
+                      class=""
+                      v-model="search"
+                      append-icon="mdi-magnify"
+                      label="Search descriptions"
+                      single-line
+                      hide-details
+                    ></v-text-field>
+                  </td>
+                  <td></td>
+                  <td>
+                    <v-combobox
+                      v-model="statusSelected"
+                      :items="[
+                        'Applicable',
+                        'Success',
+                        'Failure',
+                        'In progress'
+                      ]"
+                      label="Select status"
+                      multiple
+                      reverse
+                      v-on:input="filterRecommendation.setTypes(statusSelected)"
+                    >
+                    </v-combobox>
+                  </td>
+                </tr>
               </template>
               <template v-slot:group.summary="gsprops">
                 <td class="text-left" colspan="6">
                   Total savings:
                   <v-chip dark color="green" small> +{{ 123 }}$ </v-chip> Total
                   cost: <v-chip dark color="orange" small> {{ 33 }}$ </v-chip>
-                  Quantity: 1234 
+                  Quantity: 1234
                 </td>
-                {{ gsprops.isOpen ? closeIfOpenedFirstTime(gsprops.group, gsprops.toggle) : null }}
+                {{
+                  gsprops.isOpen
+                    ? closeIfOpenedFirstTime(gsprops.group, gsprops.toggle)
+                    : null
+                }}
               </template>
-              <template v-slot:item="recommendation">
-                <tr>
-                  <td></td>
-                  <td class="text-left">
-                    <a :href="recommendation.item.path">
-                      {{ recommendation.item.name }}
-                    </a>
-                  </td>
-                  <td class="text-left">{{ recommendation.item.project }}</td>
+              <template v-slot:item.name="{ item }">
+                <a :href="item.path">
+                  {{ item.name }}
+                </a>
+              </template>
 
-                  <td class="text-left">
-                    <v-chip class="ma-2" color="white" label>
-                      <v-icon
-                        left
-                        v-if="
-                          recommendation.item.recommenderSubtype ==
-                            'CHANGE_MACHINE_TYPE'
-                        "
-                        >mdi-move-resize-variant</v-icon
-                      >
-                      <v-icon
-                        left
-                        v-if="
-                          recommendation.item.recommenderSubtype == 'STOP_VM'
-                        "
-                        >mdi-monitor-off</v-icon
-                      >
-                      <v-icon
-                        left
-                        v-if="
-                          recommendation.item.recommenderSubtype ==
-                            'INCREASE_PERFORMANCE'
-                        "
-                        >mdi-monitor-screenshot</v-icon
-                      >
-                      <v-icon
-                        left
-                        v-if="
-                          recommendation.item.recommenderSubtype ==
-                            'SNAPSHOT_AND_DELETE_DISK'
-                        "
-                        >mdi-harddisk-remove</v-icon
-                      >
-                      {{ recommendation.item.recommenderSubtype }}
-                    </v-chip>
-                  </td>
-                  <td class="text-left">
-                    {{ recommendation.item.description }}
-                  </td>
-                  <td>
-                    <v-tooltip bottom>
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-chip
-                          :color="recommendation.item.getCostColour()"
-                          dark
-                          v-bind="attrs"
-                          v-on="on"
-                        >
-                          {{
-                            (recommendation.item.cost >= 0 ? "+" : "") +
-                              Math.abs(recommendation.item.cost)
-                          }}$</v-chip
-                        >
-                      </template>
-                      {{
-                        recommendation.item.cost >= 0
-                          ? `Save ${recommendation.item.cost}$ per week by applying this recommendation`
-                          : `Applying this recommendation will cost an additional ${-recommendation
-                              .item.cost}$ per week`
-                      }}
-                    </v-tooltip>
-                  </td>
-
-                  <td>
-                    <v-btn
-                      rounded
-                      color="primary"
-                      v-if="recommendation.item.applicable()"
-                      v-on:click="runRecommendation(recommendation.item)"
+              <template v-slot:item.project="{ item }">
+                {{ item.project }}
+              </template>
+              <template v-slot:item.recommenderSubtype="{ item }">
+                <v-chip class="ma-2" color="white" label>
+                  <v-icon
+                    left
+                    v-if="item.recommenderSubtype == 'CHANGE_MACHINE_TYPE'"
+                    >mdi-move-resize-variant</v-icon
+                  >
+                  <v-icon left v-if="item.recommenderSubtype == 'STOP_VM'"
+                    >mdi-monitor-off</v-icon
+                  >
+                  <v-icon
+                    left
+                    v-if="item.recommenderSubtype == 'INCREASE_PERFORMANCE'"
+                    >mdi-monitor-screenshot</v-icon
+                  >
+                  <v-icon
+                    left
+                    v-if="item.recommenderSubtype == 'SNAPSHOT_AND_DELETE_DISK'"
+                    >mdi-harddisk-remove</v-icon
+                  >
+                  {{ item.recommenderSubtype }}
+                </v-chip>
+              </template>
+              <template v-slot:item.description="{ item }">
+                {{ item.description }}
+              </template>
+              <template v-slot:item.cost="{ item }">
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-chip
+                      :color="item.getCostColour()"
                       dark
-                      x-small
-                      >Apply</v-btn
+                      v-bind="attrs"
+                      v-on="on"
                     >
-                    <v-progress-circular
-                      color="primary"
-                      :indeterminate="true"
-                      v-if="recommendation.item.inProgress()"
-                    ></v-progress-circular>
+                      {{
+                        (item.cost >= 0 ? "+" : "") + Math.abs(item.cost)
+                      }}$</v-chip
+                    >
+                  </template>
+                  {{
+                    item.cost >= 0
+                      ? `Save ${item.cost}$ per week by applying this recommendation`
+                      : `Applying this recommendation will cost an additional ${-item.cost}$ per week`
+                  }}
+                </v-tooltip>
+              </template>
+              <template v-slot:item.apply="{ item }">
+                <v-btn
+                  rounded
+                  color="primary"
+                  v-if="item.applicable()"
+                  v-on:click="runRecommendation(item)"
+                  dark
+                  x-small
+                  >Apply</v-btn
+                >
+                <v-progress-circular
+                  color="primary"
+                  :indeterminate="true"
+                  v-if="item.inProgress()"
+                ></v-progress-circular>
 
-                    <v-btn
-                      x-small
-                      label
-                      v-if="recommendation.item.succeded()"
-                      color="green"
-                    >
-                      <v-icon
-                        color="white"
-                        left
-                        dark
-                        v-if="recommendation.item.succeded()"
-                        >mdi-check-circle</v-icon
-                      >
-                      Succeded
+                <v-btn x-small label v-if="item.succeded()" color="green">
+                  <v-icon color="white" left dark v-if="item.succeded()"
+                    >mdi-check-circle</v-icon
+                  >
+                  Succeded
+                </v-btn>
+
+                <div
+                  v-if="
+                    !item.applicable() &&
+                      !item.inProgress() &&
+                      !item.failed() &&
+                      !item.succeded()
+                  "
+                >
+                  {{ item.status }}
+                </div>
+                <v-dialog max-width="600px" v-if="item.failed()">
+                  <template v-slot:activator="{ on }">
+                    <v-btn x-small color="red darken-2" v-on="on">
+                      <v-icon left dark color="white">mdi-close-circle</v-icon>
+                      Show Error
                     </v-btn>
-
-                    <!--<v-icon
-                      color="red darken-2"
-                      v-if="recommendation.item.failed()"
-                      >mdi-close-circle</v-icon
-                    >-->
-                    <div
-                      v-if="
-                        !recommendation.item.applicable() &&
-                          !recommendation.item.inProgress() &&
-                          !recommendation.item.failed() &&
-                          !recommendation.item.succeded()
-                      "
-                    >
-                      {{ recommendation.item.status }}
-                    </div>
-                    <v-dialog
-                      max-width="600px"
-                      v-if="recommendation.item.failed()"
-                    >
-                      <template v-slot:activator="{ on }">
-                        <v-btn x-small color="red darken-2" v-on="on">
-                          <v-icon left dark color="white"
-                            >mdi-close-circle</v-icon
-                          >
-                          Show Error
-                        </v-btn>
-                      </template>
-                      <v-card>
-                        <v-card-title class="headline">
-                          Applying recommendation failed
-                        </v-card-title>
-                        <v-card-text>
-                          A cookie associated with a cross-site resource at
-                          https://www.google.com/ was set without the `SameSite`
-                          attribute. It has been blocked, as Chrome now only
-                          delivers cookies with cross-site requests if they are
-                          set with `SameSite=None` and `Secure`. You can review
-                          cookies in developer tools under
-                          Application>Storage>Cookies and see more details at
-                          https://www.chromestatus.com/feature/5088147346030592
-                          and
-                          https://www.chromestatus.com/feature/5633521622188032.
-                        </v-card-text>
-                        <v-card-actions>
-                          <v-spacer></v-spacer>
-                          <v-btn
-                            color="primary"
-                            dark
-                            v-on:click="runRecommendation(recommendation.item)"
-                          >
-                            Retry
-                          </v-btn>
-                          <v-btn color="primary" dark>
-                            Close
-                          </v-btn>
-                        </v-card-actions>
-                      </v-card>
-                    </v-dialog>
-                  </td>
-                </tr>
+                  </template>
+                  <v-card>
+                    <v-card-title class="headline">
+                      Applying recommendation failed
+                    </v-card-title>
+                    <v-card-text>
+                      A cookie associated with a cross-site resource at
+                      https://www.google.com/ was set without the `SameSite`
+                      attribute. It has been blocked, as Chrome now only
+                      delivers cookies with cross-site requests if they are set
+                      with `SameSite=None` and `Secure`. You can review cookies
+                      in developer tools under Application>Storage>Cookies and
+                      see more details at
+                      https://www.chromestatus.com/feature/5088147346030592 and
+                      https://www.chromestatus.com/feature/5633521622188032.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn
+                        color="primary"
+                        dark
+                        v-on:click="runRecommendation(item)"
+                      >
+                        Retry
+                      </v-btn>
+                      <v-btn color="primary" dark>
+                        Close
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
               </template>
             </v-data-table>
           </v-col>
@@ -741,7 +726,7 @@ export default class Mock extends Vue {
     });
   }
 
-  private simp = false
+  private simp = false;
 
   private recommendations = [];
   private typesSelected: string[] = [];
@@ -790,12 +775,10 @@ export default class Mock extends Vue {
   private groupsToggledAlready: string[] = [];
 
   // A bit of a sneaky way not to have expanded groups at default
-  private groupByUpdated(groupCategories : string[]): void {
+  private groupByUpdated(groupCategories: string[]): void {
     this.groupsToggledAlready.length = 0;
-    if(groupCategories.length != 0)
-      this.itemsPerPage = 1000*1000*1000
-    else
-      this.itemsPerPage = 10
+    if (groupCategories.length != 0) this.itemsPerPage = 1000 * 1000 * 1000;
+    else this.itemsPerPage = 10;
   }
 
   private closeIfOpenedFirstTime(groupName: string, toggler: () => void): void {
@@ -806,5 +789,6 @@ export default class Mock extends Vue {
   }
 
   private itemsPerPage = 10;
+  private selected = [];
 }
 </script>
