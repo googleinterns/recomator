@@ -19,16 +19,20 @@ limitations under the License. -->
     </v-app-bar>
     <v-main>
       <v-progress-linear
-        v-if="$store.state.recommendationsStore.progress !== null"
         :value="$store.state.recommendationsStore.progress"
         data-name="main_progress_bar"
+        v-if="$store.state.recommendationsStore.progress !== null"
       />
       <v-container
         fluid
-        v-if="$store.state.recommendationsStore.progress === null"
         data-name="main_container"
+        v-if="$store.state.recommendationsStore.progress === null"
       >
-        <h1>All the app content will go here</h1>
+        <v-row>
+          <v-col>
+            <GroupingHint />
+          </v-col>
+        </v-row>
       </v-container>
     </v-main>
   </v-app>
@@ -37,9 +41,12 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Vuetify from "vuetify";
+import GroupingHint from "@/components/grouping_hint.vue";
 
 Vue.use(Vuetify);
 
-@Component
+@Component({
+  components: { GroupingHint }
+})
 export default class Home extends Vue {}
 </script>
