@@ -53,7 +53,7 @@ limitations under the License. -->
               dense
               :headers="headers"
               :items="
-                recommendations.filter(recommendation =>
+                recommendations.filter((recommendation) =>
                   filterRecommendation.predicate(recommendation)
                 )
               "
@@ -69,6 +69,7 @@ limitations under the License. -->
               <template v-slot:body.prepend>
                 <tr>
                   <td />
+
                   <td class="pb-5">
                     <v-text-field
                       class=""
@@ -98,7 +99,7 @@ limitations under the License. -->
                       :items="[
                         'STOP_VM',
                         'SNAPSHOT_AND_DELETE_DISK',
-                        'INCREASE_PERFORMANCE'
+                        'INCREASE_PERFORMANCE',
                       ]"
                       label="Select types"
                       multiple
@@ -125,7 +126,7 @@ limitations under the License. -->
                         'Applicable',
                         'Success',
                         'Failure',
-                        'In progress'
+                        'In progress',
                       ]"
                       label="Select status"
                       multiple
@@ -191,7 +192,9 @@ limitations under the License. -->
                       :color="item.getCostColour()"
                       dark
                       v-bind="attrs"
+                      block="true"
                       v-on="on"
+                      display="fill"
                     >
                       {{
                         (item.cost >= 0 ? "+" : "") + Math.abs(item.cost)
@@ -214,12 +217,18 @@ limitations under the License. -->
                   :loading="item.inProgress()"
                   dark
                   small
-                  block=true
+                  block="true"
                   >Apply</v-btn
                 >
 
-                <v-btn rounded small label v-if="item.succeded()" color="green"                   block=true
->
+                <v-btn
+                  rounded
+                  small
+                  label
+                  v-if="item.succeded()"
+                  color="green"
+                  block="true"
+                >
                   <v-icon color="white" left dark v-if="item.succeded()"
                     >mdi-check-circle</v-icon
                   >
@@ -238,7 +247,13 @@ limitations under the License. -->
                 </div>
                 <v-dialog max-width="600px" v-if="item.failed()">
                   <template v-slot:activator="{ on }">
-                    <v-btn color="red darken-2" v-on="on" small rounded block=true >
+                    <v-btn
+                      color="red darken-2"
+                      v-on="on"
+                      small
+                      rounded
+                      block="true"
+                    >
                       <v-icon left dark color="white">mdi-close-circle</v-icon>
                       Show Error
                     </v-btn>
@@ -275,6 +290,53 @@ limitations under the License. -->
                 </v-dialog>
               </template>
             </v-data-table>
+
+            <v-row justify="center">
+              <v-btn
+                rounded
+                color="primary"
+                v-on:click="runRecommendation(item)"
+                dark
+                x-large
+                @click.stop="dialog = true"
+              >
+                APPLY SELECTED RECOMMENDATIONS
+              </v-btn>
+
+              <v-dialog v-model="dialog" max-width="640px">
+                <v-card>
+                  <v-card-title class="headline"
+                    >Are you sure you want to apply the
+                    recommendations?</v-card-title
+                  >
+
+                  <v-card-text>
+                    You will apply 10327 recommendations. You will save 1004$
+                    each month by deleting excessive resources. You will
+                    increase the performance of your VMs thanks to spending 231$
+                    more each month.
+                  </v-card-text>
+
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+
+                    <v-btn
+                      color="green white--text"
+                      @click="dialog = false"
+                    >
+                      Proceed
+                    </v-btn>
+
+                    <v-btn
+                      color="red white--text"
+                      @click="dialog = false"
+                    >
+                      Resign
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-row>
           </v-col>
         </v-row>
       </v-container>
@@ -295,7 +357,7 @@ class Recommendation {
   description: string;
   recommenderSubtype: string;
   selected: boolean;
-  
+
   constructor(
     type: string,
     cost: number,
@@ -542,6 +604,7 @@ export default class Mock extends Vue {
   private filterRecommendation = new FilterRecommendation();
   private projectsSelected: Array<string> = [];
   private search = "";
+  private dialog = false;
   private headers = [
     { text: "Name", value: "name", groupable: false, sortable: true },
     { text: "Project", value: "project", sortable: true },
@@ -551,17 +614,17 @@ export default class Mock extends Vue {
       align: "start",
       sortable: false,
       value: "description",
-      groupable: false
+      groupable: false,
     },
     { text: "Savings/cost per week", value: "cost", groupable: false },
-    { text: "", value: "apply", groupable: false, sortable: false }
+    { text: "", value: "apply", groupable: false, sortable: false },
   ];
 
   private summaryHeaders = [
     { text: "Project", value: "project" },
     { text: "Total savings", value: "savings" },
     { text: "Total cost", value: "cost" },
-    { text: "Quantity", value: "q" }
+    { text: "Quantity", value: "q" },
   ];
 
   private summaryData = [
@@ -576,7 +639,7 @@ export default class Mock extends Vue {
     { project: "gmail", savings: 1234, cost: 12311, q: 123 },
     { project: "calendar", savings: 1934, cost: 23, q: 22 },
     { project: "ads", savings: 9123, cost: 12, q: 23 },
-    { project: "oil", savings: 2134, cost: 32221, q: 25 }
+    { project: "oil", savings: 2134, cost: 32221, q: 25 },
   ];
 
   private recommendationTypes = ["Resize", "Remove", "Performance"];
@@ -584,7 +647,7 @@ export default class Mock extends Vue {
     "Applicable",
     "In progress",
     "Succeeded",
-    "Failed"
+    "Failed",
   ];
 
   private recommendations_core = [
@@ -708,7 +771,7 @@ export default class Mock extends Vue {
       "ACTIVE",
       "Save cost by changing machine type from n1-highcpu-6 to n1-highcpu-2",
       "CHANGE_MACHINE_TYPE"
-    )
+    ),
   ];
 
   private generateRecommendations(): void {
@@ -742,10 +805,10 @@ export default class Mock extends Vue {
 
   private async runRecommendation(recommendation: Recommendation) {
     recommendation.status = "__INPROGRESS";
-    await new Promise(res => setTimeout(res, 2500));
+    await new Promise((res) => setTimeout(res, 2500));
     if (Math.random() < 0.33) recommendation.status = "FAILED";
     else {
-      await new Promise(res => setTimeout(res, 5000));
+      await new Promise((res) => setTimeout(res, 5000));
       recommendation.status = "SUCCEEDED";
     }
   }
@@ -762,7 +825,7 @@ export default class Mock extends Vue {
     const progressBarSteps = 25;
     const totalWaitTimeMs = 3000;
     for (; i < progressBarSteps; i++) {
-      const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
       await delay((totalWaitTimeMs / progressBarSteps) * 2 * Math.random());
       this.progressPercentage += 100 / progressBarSteps;
     }
