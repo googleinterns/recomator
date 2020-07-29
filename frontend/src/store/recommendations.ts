@@ -13,74 +13,75 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { Recommendation } from "@/store/model";
-import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 import { delay, getServerAddress } from "./utils";
 import { ReferenceWrapper } from "./reference";
+import { Module, MutationTree, ActionTree } from "vuex";
+import { IRootStoreState } from "./root";
 
 const SERVER_ADDRESS: string = getServerAddress();
 const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
-@Module
-export default class extends VuexModule {
-  recommendations: Record<string, Recommendation> = {};
-  progress: number | null = null; // percent of recommendations loaded, if null, then loading recommendations is not in progress
-  errorCode: number | undefined = undefined;
-  errorMessage: string | undefined = undefined;
+export interface IRecommendationStoreState {
+  recommendations: Record<string, Recommendation>;
+  errorCode: number | undefined;
+  errorMessage: string | undefined;
+  // % recommendations loaded, null if no fetching is happening
+  progress: number | null;
+}
 
-  @Mutation
-  addRecommendation(recommendation: Recommendation) {
+export function recommendationStoreStateFactory(): IRecommendationStoreState {
+  return {
+    recommendations: {},
+    progress: null,
+    errorCode: undefined,
+    errorMessage: undefined
+  };
+}
+
+const mutations: MutationTree<IRecommendationStoreState> = {
+  addRecommendation(state, recommendation: Recommendation): void {
     // prevent overwriting
     console.assert(
-      !(recommendation.name in this.recommendations),
+      !(recommendation.name in state.recommendations),
       `recommendation name ${recommendation.name} is present in the store already`
     );
-    this.recommendations[recommendation.name] = recommendation;
-  }
-
-  @Mutation // Only one fetching may be in progress at once
-  tryStartFetching(result: ReferenceWrapper<boolean>) {
-    if (this.progress !== null) {
+    state.recommendations[recommendation.name] = recommendation;
+  },
+  tryStartFetching(state, result: ReferenceWrapper<boolean>) {
+    // Only one fetching may be in progress at once
+    if (state.progress !== null) {
       result.setValue(true);
       return;
     }
 
     result.setValue(false);
-    this.progress = 0;
+    state.progress = 0;
+  },
+  endFetching(state) {
+    state.progress = null;
+  },
+  setProgress(state, progress: number) {
+    state.progress = progress;
+  },
+  setError(state, errorCodeAndMessage: [number, string]) {
+    state.errorCode = errorCodeAndMessage[0];
+    state.errorMessage = errorCodeAndMessage[1];
   }
+};
 
-  @Mutation
-  endFetching() {
-    this.progress = null;
-  }
-
-  @Mutation
-  setProgress(progress: number) {
-    this.progress = progress;
-  }
-
-  @Mutation
-  setError(errorCode: number, errorMessage: string) {
-    this.errorCode = errorCode;
-    this.errorMessage = errorMessage;
-
-    console.log(errorMessage);
-    console.log(errorCode);
-  }
-
-  @Action
-  getRecommendation(recommendationName: string): Recommendation {
+const actions: ActionTree<IRecommendationStoreState, IRootStoreState> = {
+  getRecommendation(context, recommendationName: string): Recommendation {
     console.assert(
-      recommendationName in this.recommendations,
+      recommendationName in context.state.recommendations,
       `recommendation name ${recommendationName} is not present in the store`
     );
-    return this.recommendations[recommendationName];
-  }
+    return context.state.recommendations[recommendationName];
+  },
 
-  @Action
-  async fetchRecommendations() {
+  async fetchRecommendations(context): Promise<void> {
     const isAnotherFetchInProgress = new ReferenceWrapper(false);
-    this.context.commit("tryStartFetching", isAnotherFetchInProgress);
+    context.commit("tryStartFetching", isAnotherFetchInProgress);
 
     if (isAnotherFetchInProgress.getValue()) {
       return;
@@ -96,13 +97,9 @@ export default class extends VuexModule {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        this.context.commit(
-          "setError",
-          responseCode,
-          responseJson.errorMessage
-        );
+        context.commit("setError", responseCode, responseJson.errorMessage);
 
-        this.context.commit("endFetching");
+        context.commit("endFetching");
 
         return;
       }
@@ -111,7 +108,7 @@ export default class extends VuexModule {
         break;
       }
 
-      this.context.commit(
+      context.commit(
         "setProgress",
         Math.floor(
           (100 * responseJson.batchesProcessed) / responseJson.numberOfBatches
@@ -122,9 +119,23 @@ export default class extends VuexModule {
     }
 
     for (const recommendation of responseJson.recommendations) {
-      this.context.commit("addRecommendation", recommendation);
+      context.commit("addRecommendation", recommendation);
     }
 
-    this.context.commit("endFetching");
+    context.commit("endFetching");
   }
+};
+
+export function recommendationStoreFactory(): Module<
+  IRecommendationStoreState,
+  IRootStoreState
+> {
+  return {
+    namespaced: true,
+    state: recommendationStoreStateFactory(),
+    mutations: mutations,
+    actions: actions
+  };
 }
+
+export const RecommendationsStore = recommendationStoreFactory();

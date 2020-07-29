@@ -13,8 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import Vue from "vue";
-import Vuetify from "vuetify/lib";
+import Vuetify from "vuetify";
 
 Vue.use(Vuetify);
 
-export default new Vuetify({});
+const vuetify = new Vuetify({});
+export default vuetify;

@@ -15,7 +15,14 @@ module.exports = {
   },
   rules: {
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
-    "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off"
+    "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
+
+    // I personally like interface names starting with 'I'
+    "@typescript-eslint/interface-name-prefix": "off",
+
+    // As described in store/root.ts, we need the ! operator
+    //  to make the type-checker happy with dynamically-added modules
+    "@typescript-eslint/no-non-null-assertion": "off"
   },
   overrides: [
     {

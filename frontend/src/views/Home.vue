@@ -14,22 +14,32 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark></v-app-bar>
-    <v-content>
-      <HelloWorld />
-    </v-content>
+    <v-app-bar app color="primary" dark>
+      <h1>Recomator</h1>
+    </v-app-bar>
+    <v-main>
+      <v-progress-linear
+        v-if="$store.state.recommendationsStore.progress !== null"
+        :value="$store.state.recommendationsStore.progress"
+        data-name="main_progress_bar"
+      />
+      <v-container
+        fluid
+        v-if="$store.state.recommendationsStore.progress === null"
+        data-name="main_container"
+      >
+        <h1>All the app content will go here</h1>
+      </v-container>
+    </v-main>
   </v-app>
 </template>
 
-<script>
-// @ is an alias to /src
+<script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import HelloWorld from "@/components/HelloWorld.vue";
+import Vuetify from "vuetify";
 
-@Component({
-  components: {
-    HelloWorld
-  }
-})
+Vue.use(Vuetify);
+
+@Component
 export default class Home extends Vue {}
 </script>

@@ -13,13 +13,31 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import Vue from "vue";
-import Vuex from "vuex";
-import RecommendationStore from "./recommendations";
+import Vuex, { StoreOptions, Store } from "vuex";
+import {
+  RecommendationsStore,
+  IRecommendationStoreState
+} from "./recommendations";
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
-  modules: {
-    recommendationsStore: RecommendationStore
-  }
-});
+export interface IRootStoreState {
+  // Static type checking needs to know of this property (which is added dynamically)
+  //  so it is added as optional as a workaround:
+  //  related issue: https://forum.vuejs.org/t/vuex-submodules-with-typescript/40903
+  // Therefore, the ! operator needs to be used whenever the state of any module
+  //  is accessed from outside.
+  recommendationsStore?: IRecommendationStoreState;
+}
+
+export function rootStoreFactory(): Store<IRootStoreState> {
+  const storeOptions: StoreOptions<IRootStoreState> = {
+    state: {},
+    modules: {
+      recommendationsStore: RecommendationsStore
+    }
+  };
+  return new Store<IRootStoreState>(storeOptions);
+}
+
+export default rootStoreFactory();
