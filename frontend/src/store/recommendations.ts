@@ -15,7 +15,6 @@ limitations under the License. */
 import { Recommendation } from "@/store/model";
 import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 import { delay, getServerAddress } from "./utils";
-import { ReferenceWrapper } from "./reference";
 
 const SERVER_ADDRESS: string = getServerAddress();
 const REQUEST_DELAY = 100;
@@ -38,17 +37,6 @@ export default class extends VuexModule {
     this.recommendations[recommendation.name] = recommendation;
   }
 
-  @Mutation // Only one fetching may be in progress at once
-  tryStartFetching(result: ReferenceWrapper<boolean>) {
-    if (this.progress !== null) {
-      result.setValue(true);
-      return;
-    }
-
-    result.setValue(false);
-    this.progress = 0;
-  }
-
   @Mutation
   endFetching() {
     this.progress = null;
@@ -63,9 +51,6 @@ export default class extends VuexModule {
   setError(errorCode: number, errorMessage: string) {
     this.errorCode = errorCode;
     this.errorMessage = errorMessage;
-
-    console.log(errorMessage);
-    console.log(errorCode);
   }
 
   @Action
@@ -79,12 +64,11 @@ export default class extends VuexModule {
 
   @Action
   async fetchRecommendations() {
-    const isAnotherFetchInProgress = new ReferenceWrapper(false);
-    this.context.commit("tryStartFetching", isAnotherFetchInProgress);
-
-    if (isAnotherFetchInProgress.getValue()) {
+    if (this.progress !== null) {
       return;
     }
+
+    this.context.commit("setProgress", 0);
 
     let response;
     let responseJson;
