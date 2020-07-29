@@ -209,19 +209,17 @@ limitations under the License. -->
                 <v-btn
                   rounded
                   color="primary"
-                  v-if="item.applicable()"
+                  v-if="item.applicable() || item.inProgress()"
                   v-on:click="runRecommendation(item)"
+                  :loading="item.inProgress()"
                   dark
-                  x-small
+                  small
+                  block=true
                   >Apply</v-btn
                 >
-                <v-progress-circular
-                  color="primary"
-                  :indeterminate="true"
-                  v-if="item.inProgress()"
-                ></v-progress-circular>
 
-                <v-btn x-small label v-if="item.succeded()" color="green">
+                <v-btn rounded small label v-if="item.succeded()" color="green"                   block=true
+>
                   <v-icon color="white" left dark v-if="item.succeded()"
                     >mdi-check-circle</v-icon
                   >
@@ -240,7 +238,7 @@ limitations under the License. -->
                 </div>
                 <v-dialog max-width="600px" v-if="item.failed()">
                   <template v-slot:activator="{ on }">
-                    <v-btn x-small color="red darken-2" v-on="on">
+                    <v-btn color="red darken-2" v-on="on" small rounded block=true >
                       <v-icon left dark color="white">mdi-close-circle</v-icon>
                       Show Error
                     </v-btn>
@@ -297,7 +295,7 @@ class Recommendation {
   description: string;
   recommenderSubtype: string;
   selected: boolean;
-
+  
   constructor(
     type: string,
     cost: number,
