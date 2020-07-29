@@ -343,7 +343,7 @@ func main() {
 			result, err := service.GetResult()
 			if err != nil {
 				apiErr := err.(*googleapi.Error)
-				c.String(apiErr.Code, apiErr.Message)
+				c.JSON(apiErr.Code, gin.H{"errorMessage": apiErr.Message})
 				return
 			}
 			cachedCalls.Store(result.anotherPageToken, result.recommendations)
