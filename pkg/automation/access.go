@@ -25,8 +25,8 @@ import (
 	"google.golang.org/api/serviceusage/v1"
 )
 
-// RequiredAPIs are APIs required for googleService
-var RequiredAPIs = []string{"compute.googleapis.com", "recommender.googleapis.com", "cloudresourcemanager.googleapis.com"}
+// requiredAPIs are APIs required for googleService
+var requiredAPIs = []string{"compute.googleapis.com", "recommender.googleapis.com", "cloudresourcemanager.googleapis.com"}
 
 const (
 	requirementFailed    = "FAILED"
@@ -90,8 +90,8 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]Re
 	return result, nil
 }
 
-// RequiredPermissions are permissions required for googleService
-var RequiredPermissions = [][]string{
+// requiredPermissions are permissions required for googleService
+var requiredPermissions = [][]string{
 	[]string{"compute.instances.setMachineType"},                            // ChangeMachineType
 	[]string{"compute.disks.createSnapshot", "compute.snapshots.create"},    // CreateSnapshot
 	[]string{"compute.disks.delete"},                                        // DeleteDisk
