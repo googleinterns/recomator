@@ -90,9 +90,9 @@ export function getRecommendationProject(
   return extractFromResource("projects", resource);
 }
 
-// TODO: remove ignoring Eslint, once these methods are actually used somewhere
+// TODO: remove ignoring Eslint, once these methods are actually used somewhere.
 
-// Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
+// Doesn't do much, but I think it is likely we will decide to show more clever descriptions later.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRecomendationDescription(
   recommendation: Recommendation
@@ -111,7 +111,7 @@ export function getRecommendationCostString(
     recommendation.primaryImpact.costProjection.cost.currencyCode
   );
 
-  // As a month doesn't have a fixed number of seconds, weekly cost is used
+  // As a month doesn't have a fixed number of seconds, weekly cost is used.
   // example duration: "2592000s"
   const secs = parseInt(
     recommendation.primaryImpact.costProjection.duration.slice(0, -1)
