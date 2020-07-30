@@ -19,8 +19,10 @@ package automation
 import (
 	"context"
 
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/recommender/v1"
+	"google.golang.org/api/serviceusage/v1"
 )
 
 // GoogleService is the inferface that prodives methods required to list recommendations and apply them
@@ -34,6 +36,12 @@ type GoogleService interface {
 	// deletes persistent disk
 	DeleteDisk(project, zone, disk string) error
 
+	// lists whether the requirements have been met for all APIs (APIs enabled).
+	ListAPIRequirements(project string, apis []string) ([]Requirement, error)
+
+	// lists whether the requirements have been met for all required permissions.
+	ListPermissionRequirements(project string, permissions [][]string) ([]Requirement, error)
+
 	// listing recommendations for specified project, zone and recommender
 	ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error)
 
@@ -44,30 +52,43 @@ type GoogleService interface {
 	StopInstance(project, zone, instance string) error
 }
 
-// googleService implements GoogleService interface for Recommender and Compute APIs,
-// using projects.locations.recommenders.recommendations/list and zones/list methods.
+// googleService implements GoogleService interface for Recommender and Compute APIs.
 type googleService struct {
-	ctx                context.Context
-	computeService     *compute.Service
-	recommenderService *recommender.Service
+	ctx                    context.Context
+	computeService         *compute.Service
+	recommenderService     *recommender.Service
+	resourceManagerService *cloudresourcemanager.Service
+	serviceUsageService    *serviceusage.Service
 }
 
 // NewGoogleService creates new googleServices.
 // If creation failed the error will be non-nil.
 func NewGoogleService(ctx context.Context) (GoogleService, error) {
-	recommenderService, err := recommender.NewService(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	computeService, err := compute.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	recommenderService, err := recommender.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	resourceManagerService, err := cloudresourcemanager.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceUsageService, err := serviceusage.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &googleService{
-		ctx:                ctx,
-		computeService:     computeService,
-		recommenderService: recommenderService,
+		ctx:                    ctx,
+		computeService:         computeService,
+		recommenderService:     recommenderService,
+		resourceManagerService: resourceManagerService,
+		serviceUsageService:    serviceUsageService,
 	}, nil
 }
