@@ -37,7 +37,7 @@ type MockService struct {
 func (s *MockService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	s.mutex.Lock()
 	s.numberOfTimesListRecommendationsCalls++
-	s.zonesCalled = append(s.zonesCalled, location)
+	s.locationsCalled = append(s.locationsCalled, location)
 	s.mutex.Unlock()
 	return []*gcloudRecommendation{}, nil
 }
@@ -59,8 +59,8 @@ func TestListRecommendations(t *testing.T) {
 
 		if assert.NoError(t, err, "Unexpected error from ListRecommendations") {
 			assert.Equal(t, 0, len(result), "No recommendations expected")
-			assert.Equal(t, len(zones), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
-			assert.ElementsMatch(t, mock.zones, mock.zonesCalled, "ListRecommendations was called for different zones")
+			assert.Equal(t, len(zones) + len(regions), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
+			assert.ElementsMatch(t, append(mock.zones, mock.regions...), mock.locationsCalled, "ListRecommendations was called for different zones")
 		}
 	}
 }
@@ -74,7 +74,7 @@ func (s *ErrorZonesService) ListZonesNames(project string) ([]string, error) {
 	return []string{}, s.err
 }
 
-func (s *ErrorRegionsService) ListRegionsNames(project string) ([]string, error) {
+func (s *ErrorZonesService) ListRegionsNames(project string) ([]string, error) {
 	return []string{}, s.err
 }
 
@@ -91,6 +91,7 @@ type ErrorRecommendationService struct {
 	mutex               sync.Mutex
 	numberOfTimesCalled int
 	zones               []string
+	regions               []string
 }
 
 func (s *ErrorRecommendationService) ListZonesNames(project string) ([]string, error) {
