@@ -28,6 +28,7 @@ export interface IRecommendationsStoreState {
   errorMessage: string | undefined;
   // % recommendations loaded, null if no fetching is happening
   progress: number | null;
+  selected: Array<boolean>;
 }
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
@@ -35,7 +36,8 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
     recommendations: {},
     progress: null,
     errorCode: undefined,
-    errorMessage: undefined
+    errorMessage: undefined,
+    selected: []
   };
 }
 
@@ -81,7 +83,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
   async fetchRecommendations(context): Promise<void> {
     const isAnotherFetchInProgress = new ReferenceWrapper(false);
-    context.commit("recommendationsStore/tryStartFetching", isAnotherFetchInProgress);
+    context.commit(
+      "recommendationsStore/tryStartFetching",
+      isAnotherFetchInProgress
+    );
 
     if (isAnotherFetchInProgress.getValue()) {
       return;
@@ -97,7 +102,11 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        context.commit("recommendationsStore/setError", responseCode, responseJson.errorMessage);
+        context.commit(
+          "recommendationsStore/setError",
+          responseCode,
+          responseJson.errorMessage
+        );
 
         context.commit("recommendationsStore/endFetching");
 
