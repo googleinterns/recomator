@@ -19,6 +19,7 @@ package automation
 import (
 	"context"
 
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/recommender/v1"
 	"google.golang.org/api/serviceusage/v1"
@@ -35,8 +36,11 @@ type GoogleService interface {
 	// delete persistent disk
 	DeleteDisk(project, location, disk string) error
 
-	// list APIs from apis that are disabled or the API used to get the list if it is disabled
-	ListDisabledAPIs(project string, apis []string) ([]string, error)
+	// lists whether the requirements have been met for all APIs (APIs enabled).
+	ListAPIRequirements(project string, apis []string) ([]Requirement, error)
+
+	// lists whether the requirements have been met for all required permissions.
+	ListPermissionRequirements(project string, permissions [][]string) ([]Requirement, error)
 
 	// listing recommendations for specified project, zone and recommender
 	ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error)
@@ -50,10 +54,11 @@ type GoogleService interface {
 
 // googleService implements GoogleService interface for Recommender and Compute APIs.
 type googleService struct {
-	ctx                 context.Context
-	computeService      *compute.Service
-	recommenderService  *recommender.Service
-	serviceUsageService *serviceusage.Service
+	ctx                    context.Context
+	computeService         *compute.Service
+	recommenderService     *recommender.Service
+	resourceManagerService *cloudresourcemanager.Service
+	serviceUsageService    *serviceusage.Service
 }
 
 // NewGoogleService creates new googleServices.
@@ -69,15 +74,21 @@ func NewGoogleService(ctx context.Context) (GoogleService, error) {
 		return nil, err
 	}
 
+	resourceManagerService, err := cloudresourcemanager.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	serviceUsageService, err := serviceusage.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return &googleService{
-		ctx:                 ctx,
-		computeService:      computeService,
-		recommenderService:  recommenderService,
-		serviceUsageService: serviceUsageService,
+		ctx:                    ctx,
+		computeService:         computeService,
+		recommenderService:     recommenderService,
+		resourceManagerService: resourceManagerService,
+		serviceUsageService:    serviceUsageService,
 	}, nil
 }
