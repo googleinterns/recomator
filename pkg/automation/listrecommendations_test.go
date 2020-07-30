@@ -33,7 +33,7 @@ type MockService struct {
 	zonesCalled                           []string
 }
 
-func (s *MockService) ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error) {
+func (s *MockService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	s.mutex.Lock()
 	s.numberOfTimesListRecommendationsCalls++
 	s.zonesCalled = append(s.zonesCalled, location)
@@ -87,7 +87,7 @@ func (s *ErrorRecommendationService) ListZonesNames(project string) ([]string, e
 	return s.zones, nil
 }
 
-func (s *ErrorRecommendationService) ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error) {
+func (s *ErrorRecommendationService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	s.mutex.Lock()
 	s.numberOfTimesCalled++
 	s.mutex.Unlock()
@@ -122,7 +122,7 @@ type BenchmarkService struct {
 	GoogleService
 }
 
-func (s *BenchmarkService) ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error) {
+func (s *BenchmarkService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	time.Sleep(time.Millisecond * 100)
 	return []*gcloudRecommendation{}, nil
 }

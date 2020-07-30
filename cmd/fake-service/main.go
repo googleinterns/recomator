@@ -29,6 +29,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/segmentio/ksuid"
 
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,7 @@ const (
 	numberOfFakeRecommendations = 60
 	expectedListTime            = time.Second * 10
 	expectedApplyTime           = time.Second * 10
+	probablityOfErrorList       = 1.0
 	probablityOfErrorApply      = 0.3
 )
 
@@ -87,6 +89,12 @@ type mockListService struct {
 	numberOfCalls    int
 	token            string
 	mutex            sync.Mutex
+	err              error
+}
+
+type listResult struct {
+	anotherPageToken string
+	recommendations  []*gcloudRecommendation
 }
 
 func randomTime(average time.Duration) time.Duration {
@@ -99,6 +107,12 @@ func (s *mockListService) ListRecommendations() {
 	s.numberOfCalls = rand.Int() % 100
 	s.callsDone = 0
 	s.anotherPageToken = ksuid.New().String()
+	willFail := rand.Float64() <= probablityOfErrorList
+	if willFail {
+		s.err = &googleapi.Error{Code: 403,
+			Message: "Request is missing required authentication credential. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+		}
+	}
 	s.mutex.Unlock()
 	for s.callsDone < s.numberOfCalls {
 		sleep := randomTime(expectedListTime) / time.Duration(s.numberOfCalls)
@@ -115,8 +129,11 @@ func (s *mockListService) GetProgress() (int, int) {
 	return s.callsDone, s.numberOfCalls
 }
 
-func (s *mockListService) GetResult() ([]*gcloudRecommendation, string) {
-	return s.recommendations, s.anotherPageToken
+func (s *mockListService) GetResult() (*listResult, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return &listResult{anotherPageToken: s.anotherPageToken, recommendations: s.recommendations}, nil
 }
 
 const (
@@ -322,11 +339,16 @@ func main() {
 		if done < all {
 			c.JSON(http.StatusOK, ListRecommendationsProgressResponse{done, all})
 		} else {
-			result, anotherPageToken := service.GetResult()
 			listRequestsInProcess.Delete(token)
-			cachedCalls.Store(anotherPageToken, result)
+			result, err := service.GetResult()
+			if err != nil {
+				apiErr := err.(*googleapi.Error)
+				c.JSON(apiErr.Code, gin.H{"errorMessage": apiErr.Message})
+				return
+			}
+			cachedCalls.Store(result.anotherPageToken, result.recommendations)
 			c.JSON(http.StatusOK, NewListRecommendationsResponse(
-				anotherPageToken, pageIndex, pageSize, result))
+				result.anotherPageToken, pageIndex, pageSize, result.recommendations))
 		}
 		return
 	})
