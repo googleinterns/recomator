@@ -20,17 +20,17 @@ import "google.golang.org/api/compute/v1"
 
 // CreateSnapshot calls the disks.createSnapshot method.
 // Requires compute.disks.createSnapshot or compute.snapshots.create permission.
-func (s *googleService) CreateSnapshot(project, location, disk, name string) error {
-	disksService := compute.NewRegionDisksService(s.computeService)
+func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
+	disksService := compute.NewDisksService(s.computeService)
 	snapshot := &compute.Snapshot{Name: name}
-	_, err := disksService.CreateSnapshot(project, location, disk, snapshot).Do()
+	_, err := disksService.CreateSnapshot(project, zone, disk, snapshot).Do()
 	return err
 }
 
 // DeleteDisk calls the disks.delete method.
 // Requires compute.disks.delete permission.
-func (s *googleService) DeleteDisk(project, location, disk string) error {
-	disksService := compute.NewRegionDisksService(s.computeService)
-	_, err := disksService.Delete(project, location, disk).Do()
+func (s *googleService) DeleteDisk(project, zone, disk string) error {
+	disksService := compute.NewDisksService(s.computeService)
+	_, err := disksService.Delete(project, zone, disk).Do()
 	return err
 }

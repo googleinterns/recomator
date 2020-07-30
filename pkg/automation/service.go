@@ -29,10 +29,10 @@ type GoogleService interface {
 	ChangeMachineType(project, zone, instance, machineType string) error
 
 	// creates a snapshot of a disk
-	CreateSnapshot(project, location, disk, name string) error
+	CreateSnapshot(project, zone, disk, name string) error
 
-	// delete persistent disk
-	DeleteDisk(project, location, disk string) error
+	// deletes persistent disk
+	DeleteDisk(project, zone, disk string) error
 
 	// listing recommendations for specified project, zone and recommender
 	ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error)
