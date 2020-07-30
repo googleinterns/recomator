@@ -30,7 +30,8 @@ type MockService struct {
 	mutex                                 sync.Mutex
 	numberOfTimesListRecommendationsCalls int
 	zones                                 []string
-	zonesCalled                           []string
+	regions								  []string
+	locationsCalled                           []string
 }
 
 func (s *MockService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
@@ -45,10 +46,15 @@ func (s *MockService) ListZonesNames(project string) ([]string, error) {
 	return s.zones, nil
 }
 
+func (s *MockService) ListRegionsNames(project string) ([]string, error) {
+	return s.regions, nil
+}
+
 func TestListRecommendations(t *testing.T) {
 	for numConcurrentCalls := 0; numConcurrentCalls <= 5; numConcurrentCalls++ {
 		zones := []string{"zone1", "zone2", "zone3"}
-		mock := &MockService{zones: zones}
+		regions := []string{"region1", "region2", "region3"}
+		mock := &MockService{zones: zones, regions: regions}
 		result, err := ListRecommendations(mock, "", "", numConcurrentCalls)
 
 		if assert.NoError(t, err, "Unexpected error from ListRecommendations") {
@@ -65,6 +71,10 @@ type ErrorZonesService struct {
 }
 
 func (s *ErrorZonesService) ListZonesNames(project string) ([]string, error) {
+	return []string{}, s.err
+}
+
+func (s *ErrorRegionsService) ListRegionsNames(project string) ([]string, error) {
 	return []string{}, s.err
 }
 
@@ -85,6 +95,10 @@ type ErrorRecommendationService struct {
 
 func (s *ErrorRecommendationService) ListZonesNames(project string) ([]string, error) {
 	return s.zones, nil
+}
+
+func (s *ErrorRecommendationService) ListRegionsNames(project string) ([]string, error) {
+	return s.regions, nil
 }
 
 func (s *ErrorRecommendationService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
@@ -133,6 +147,14 @@ func (s *BenchmarkService) ListZonesNames(project string) ([]string, error) {
 		zones = append(zones, fmt.Sprintf("zone %d", i))
 	}
 	return zones, nil
+}
+
+func (s *BenchmarkService) ListRegionsNames(project string) ([]string, error) {
+	regions := []string{}
+	for i := 0; i < 100; i++ {
+		regions = append(regions, fmt.Sprintf("zone %d", i))
+	}
+	return regions, nil
 }
 
 func BenchmarkGoroutines(b *testing.B) {

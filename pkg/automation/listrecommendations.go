@@ -71,7 +71,7 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 // If the error occurred the returned error is not nil.
 func (s *googleService) ListRegionNames(project string) ([]string, error) {
 	regionsService := compute.NewRegionsService(s.computeService)
-	listCall := regionService.List(project)
+	listCall := regionsService.List(project)
 
 	var regions []string
 	addRegions := func(regionList *compute.RegionList) error {
@@ -124,7 +124,7 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			for location := range locationsJobs {
-				recs, err := service.ListRecommendations(project, zone, recommenderID)
+				recs, err := service.ListRecommendations(project, location, recommenderID)
 				results <- result{recs, err}
 			}
 		}()
