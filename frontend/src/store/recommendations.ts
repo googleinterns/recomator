@@ -22,7 +22,7 @@ const SERVER_ADDRESS: string = getServerAddress();
 const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
-export interface IRecommendationStoreState {
+export interface IRecommendationsStoreState {
   recommendations: Record<string, Recommendation>;
   errorCode: number | undefined;
   errorMessage: string | undefined;
@@ -30,7 +30,7 @@ export interface IRecommendationStoreState {
   progress: number | null;
 }
 
-export function recommendationStoreStateFactory(): IRecommendationStoreState {
+export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: {},
     progress: null,
@@ -39,7 +39,7 @@ export function recommendationStoreStateFactory(): IRecommendationStoreState {
   };
 }
 
-const mutations: MutationTree<IRecommendationStoreState> = {
+const mutations: MutationTree<IRecommendationsStoreState> = {
   addRecommendation(state, recommendation: Recommendation): void {
     // prevent overwriting
     console.assert(
@@ -70,7 +70,7 @@ const mutations: MutationTree<IRecommendationStoreState> = {
   }
 };
 
-const actions: ActionTree<IRecommendationStoreState, IRootStoreState> = {
+const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   getRecommendation(context, recommendationName: string): Recommendation {
     console.assert(
       recommendationName in context.state.recommendations,
@@ -81,7 +81,7 @@ const actions: ActionTree<IRecommendationStoreState, IRootStoreState> = {
 
   async fetchRecommendations(context): Promise<void> {
     const isAnotherFetchInProgress = new ReferenceWrapper(false);
-    context.commit("tryStartFetching", isAnotherFetchInProgress);
+    context.commit("recommendationsStore/tryStartFetching", isAnotherFetchInProgress);
 
     if (isAnotherFetchInProgress.getValue()) {
       return;
@@ -97,9 +97,9 @@ const actions: ActionTree<IRecommendationStoreState, IRootStoreState> = {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        context.commit("setError", responseCode, responseJson.errorMessage);
+        context.commit("recommendationsStore/setError", responseCode, responseJson.errorMessage);
 
-        context.commit("endFetching");
+        context.commit("recommendationsStore/endFetching");
 
         return;
       }
@@ -109,7 +109,7 @@ const actions: ActionTree<IRecommendationStoreState, IRootStoreState> = {
       }
 
       context.commit(
-        "setProgress",
+        "recommendationsStore/setProgress",
         Math.floor(
           (100 * responseJson.batchesProcessed) / responseJson.numberOfBatches
         )
@@ -119,20 +119,20 @@ const actions: ActionTree<IRecommendationStoreState, IRootStoreState> = {
     }
 
     for (const recommendation of responseJson.recommendations) {
-      context.commit("addRecommendation", recommendation);
+      context.commit("recommendationsStore/addRecommendation", recommendation);
     }
 
-    context.commit("endFetching");
+    context.commit("recommendationsStore/endFetching");
   }
 };
 
 export function recommendationStoreFactory(): Module<
-  IRecommendationStoreState,
+  IRecommendationsStoreState,
   IRootStoreState
 > {
   return {
     namespaced: true,
-    state: recommendationStoreStateFactory(),
+    state: recommendationsStoreStateFactory(),
     mutations: mutations,
     actions: actions
   };

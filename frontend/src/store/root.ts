@@ -16,7 +16,7 @@ import Vue from "vue";
 import Vuex, { StoreOptions, Store } from "vuex";
 import {
   RecommendationsStore,
-  IRecommendationStoreState
+  IRecommendationsStoreState
 } from "./recommendations";
 
 Vue.use(Vuex);
@@ -27,7 +27,7 @@ export interface IRootStoreState {
   //  related issue: https://forum.vuejs.org/t/vuex-submodules-with-typescript/40903
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
-  recommendationsStore?: IRecommendationStoreState;
+  recommendationsStore?: IRecommendationsStoreState;
 }
 
 export function rootStoreFactory(): Store<IRootStoreState> {
