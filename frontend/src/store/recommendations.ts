@@ -14,7 +14,6 @@ limitations under the License. */
 
 import { Recommendation } from "@/store/model";
 import { delay, getServerAddress } from "./utils";
-import { ReferenceWrapper } from "./reference";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root";
 
@@ -50,16 +49,6 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     );
     state.recommendations[recommendation.name] = recommendation;
   },
-  tryStartFetching(state, result: ReferenceWrapper<boolean>) {
-    // Only one fetching may be in progress at once
-    if (state.progress !== null) {
-      result.setValue(true);
-      return;
-    }
-
-    result.setValue(false);
-    state.progress = 0;
-  },
   endFetching(state) {
     state.progress = null;
   },
@@ -82,15 +71,11 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   },
 
   async fetchRecommendations(context): Promise<void> {
-    const isAnotherFetchInProgress = new ReferenceWrapper(false);
-    context.commit(
-      "recommendationsStore/tryStartFetching",
-      isAnotherFetchInProgress
-    );
-
-    if (isAnotherFetchInProgress.getValue()) {
+    if (context.state.progress !== null) {
       return;
     }
+
+    context.commit("setProgress", 0);
 
     let response;
     let responseJson;
@@ -102,11 +87,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        context.commit(
-          "recommendationsStore/setError",
+        context.commit("recommendationsStore/setError", [
           responseCode,
           responseJson.errorMessage
-        );
+        ]);
 
         context.commit("recommendationsStore/endFetching");
 

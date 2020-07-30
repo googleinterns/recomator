@@ -23,19 +23,25 @@ import (
 	"google.golang.org/api/recommender/v1"
 )
 
-// GoogleService is the inferface that prodives the following methods:
-// ChangeMachineType - changes the machine type of an instance,
-// ListRecommendations - listing recommendations for specified project, zone and recommender,
-// ListZonesNames - listing every zone available for the project methods,
-// StopInstance - stops the specified instance.
+// GoogleService is the inferface that prodives methods required to list recommendations and apply them
 type GoogleService interface {
-	ChangeMachineType(project string, zone string, instance string, machineType string) error
+	// changes the machine type of an instance
+	ChangeMachineType(project, zone, instance, machineType string) error
 
-	ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error)
+	// creates a snapshot of a disk
+	CreateSnapshot(project, zone, disk, name string) error
 
+	// deletes persistent disk
+	DeleteDisk(project, zone, disk string) error
+
+	// listing recommendations for specified project, zone and recommender
+	ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error)
+
+	// listing every zone available for the project methods
 	ListZonesNames(project string) ([]string, error)
 
-	StopInstance(project string, zone string, instance string) error
+	// stops the specified instance
+	StopInstance(project, zone, instance string) error
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs,

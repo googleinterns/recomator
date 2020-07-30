@@ -29,7 +29,7 @@ type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
 // projects.locations.recommenders.recommendations/list method from Recommender API is used.
 // If the error occurred the returned error is not nil.
-func (s *googleService) ListRecommendations(project string, location string, recommenderID string) ([]*gcloudRecommendation, error) {
+func (s *googleService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	recommendationsService := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
 	listCall := recommendationsService.List(fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", project, location, recommenderID))
 	var recommendations []*gcloudRecommendation
@@ -75,7 +75,7 @@ type result struct {
 // Requires the recommender.*.list IAM permission for the specified recommender.
 // numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
 // non-positive values are ignored, instead the default value is used.
-func ListRecommendations(service GoogleService, project string, recommenderID string, numConcurrentCalls int) ([]*gcloudRecommendation, error) {
+func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int) ([]*gcloudRecommendation, error) {
 	zones, err := service.ListZonesNames(project)
 	if err != nil {
 		return []*gcloudRecommendation{}, err

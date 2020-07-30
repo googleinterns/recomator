@@ -56,6 +56,7 @@ export default class CoreTable extends Vue {
   private itemsPerPage = 10;
   // TODO: grouping should temporarily increase items shown to all
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onGroupByUpdated(groupByCategories: string[]): void {
     // TODO: update itemsPerPage
   }
