@@ -26,8 +26,9 @@ describe("Store", () => {
     );
     // For some very weird reason, using expect().toHaveProperty() only works if the name is short
     expect(
-      sampleRecommendation.name in
-        store.state.recommendationsStore!.recommendations
+      store.state.recommendationsStore!.recommendations.includes(
+        sampleRecommendation
+      )
     ).toBe(true);
     // TODO add recommendation content checks as well
   });

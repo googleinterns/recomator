@@ -22,7 +22,7 @@ limitations under the License. -->
     :single-select="false"
     v-model="$store.state.recommendationsStore.selected"
     show-select
-    item-key="instance"
+    item-key="name"
   />
 </template>
 <script lang="ts">

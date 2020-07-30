@@ -22,7 +22,7 @@ const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
-  recommendations: Record<string, Recommendation>;
+  recommendations: Array<Recommendation>;
   errorCode: number | undefined;
   errorMessage: string | undefined;
   // % recommendations loaded, null if no fetching is happening
@@ -32,7 +32,7 @@ export interface IRecommendationsStoreState {
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
-    recommendations: {},
+    recommendations: [],
     progress: null,
     errorCode: undefined,
     errorMessage: undefined,
@@ -42,12 +42,7 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
   addRecommendation(state, recommendation: Recommendation): void {
-    // prevent overwriting
-    console.assert(
-      !(recommendation.name in state.recommendations),
-      `recommendation name ${recommendation.name} is present in the store already`
-    );
-    state.recommendations[recommendation.name] = recommendation;
+    state.recommendations.push(recommendation);
   },
   endFetching(state) {
     state.progress = null;
@@ -62,14 +57,6 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
 };
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
-  getRecommendation(context, recommendationName: string): Recommendation {
-    console.assert(
-      recommendationName in context.state.recommendations,
-      `recommendation name ${recommendationName} is not present in the store`
-    );
-    return context.state.recommendations[recommendationName];
-  },
-
   async fetchRecommendations(context): Promise<void> {
     if (context.state.progress !== null) {
       return;
