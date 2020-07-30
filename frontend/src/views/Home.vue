@@ -43,8 +43,6 @@ import { Component, Vue } from "vue-property-decorator";
 import Vuetify from "vuetify";
 import GroupingHint from "@/components/grouping_hint.vue";
 
-Vue.use(Vuetify);
-
 @Component({
   components: { GroupingHint }
 })
