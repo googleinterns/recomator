@@ -40,7 +40,7 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 
 	err := listCall.Pages(s.ctx, addRecommendations)
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 	return recommendations, nil
 }
@@ -61,14 +61,9 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 	}
 	err := listCall.Pages(s.ctx, addZones)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	return zones, nil
-}
-
-type result struct {
-	recommendations []*gcloudRecommendation
-	err             error
 }
 
 // ListRecommendations returns the list of recommendations for a Cloud project.
@@ -78,7 +73,7 @@ type result struct {
 func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int) ([]*gcloudRecommendation, error) {
 	zones, err := service.ListZonesNames(project)
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 	numberOfZones := len(zones)
 
@@ -86,6 +81,11 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	const defaultNumWorkers = 16
 	if numWorkers <= 0 {
 		numWorkers = defaultNumWorkers
+	}
+
+	type result struct {
+		recommendations []*gcloudRecommendation
+		err             error
 	}
 
 	results := make(chan result, numberOfZones)
@@ -116,7 +116,7 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 		}
 	}
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 	return recommendations, nil
 }
