@@ -67,7 +67,7 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 }
 
 // ListRegionsNames returns list of region names for the specified project.
-// Uses region/list method from Compute API.
+// Uses regions/list method from Compute API.
 // If the error occurred the returned error is not nil.
 func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 	regionsService := compute.NewRegionsService(s.computeService)
