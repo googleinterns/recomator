@@ -55,7 +55,7 @@ import CoreTable from "@/components/CoreTable.vue";
 export default class Home extends Vue {
   private mounted() {
     // for testing purposes, use the fake middleware service:
-    this.$store.dispatch('recommendationsStore/fetchRecommendations');
+    this.$store.dispatch("recommendationsStore/fetchRecommendations");
   }
 }
 </script>
