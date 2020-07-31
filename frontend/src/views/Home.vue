@@ -46,11 +46,16 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import GroupingHint from "@/components/grouping_hint.vue";
-import CoreTable from "@/components/core_table.vue";
+import GroupingHint from "@/components/GroupingHint.vue";
+import CoreTable from "@/components/CoreTable.vue";
 
 @Component({
   components: { GroupingHint, CoreTable }
 })
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  private mounted() {
+    // for testing purposes, use the fake middleware service:
+    this.$store.dispatch('recommendationsStore/fetchRecommendations');
+  }
+}
 </script>
