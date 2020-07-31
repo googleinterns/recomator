@@ -13,62 +13,56 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { Recommendation } from "@/store/model";
-import { Module, VuexModule, Mutation, Action } from "vuex-module-decorators";
 import { delay, getServerAddress } from "./utils";
+import { Module, MutationTree, ActionTree } from "vuex";
+import { IRootStoreState } from "./root";
 
 const SERVER_ADDRESS: string = getServerAddress();
 const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
-@Module
-export default class extends VuexModule {
-  recommendations: Record<string, Recommendation> = {};
-  progress: number | null = null; // percent of recommendations loaded, if null, then loading recommendations is not in progress
-  errorCode: number | undefined = undefined;
-  errorMessage: string | undefined = undefined;
+export interface IRecommendationsStoreState {
+  recommendations: Array<Recommendation>;
+  errorCode: number | undefined;
+  errorMessage: string | undefined;
+  // % recommendations loaded, null if no fetching is happening
+  progress: number | null;
+  selected: Array<boolean>;
+}
 
-  @Mutation
-  addRecommendation(recommendation: Recommendation) {
-    // prevent overwriting
-    console.assert(
-      !(recommendation.name in this.recommendations),
-      `recommendation name ${recommendation.name} is present in the store already`
-    );
-    this.recommendations[recommendation.name] = recommendation;
+export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
+  return {
+    recommendations: [],
+    progress: null,
+    errorCode: undefined,
+    errorMessage: undefined,
+    selected: []
+  };
+}
+
+const mutations: MutationTree<IRecommendationsStoreState> = {
+  addRecommendation(state, recommendation: Recommendation): void {
+    state.recommendations.push(recommendation);
+  },
+  endFetching(state) {
+    state.progress = null;
+  },
+  setProgress(state, progress: number) {
+    state.progress = progress;
+  },
+  setError(state, errorCodeAndMessage: [number, string]) {
+    state.errorCode = errorCodeAndMessage[0];
+    state.errorMessage = errorCodeAndMessage[1];
   }
+};
 
-  @Mutation
-  endFetching() {
-    this.progress = null;
-  }
-
-  @Mutation
-  setProgress(progress: number) {
-    this.progress = progress;
-  }
-
-  @Mutation
-  setError(errorCode: number, errorMessage: string) {
-    this.errorCode = errorCode;
-    this.errorMessage = errorMessage;
-  }
-
-  @Action
-  getRecommendation(recommendationName: string): Recommendation {
-    console.assert(
-      recommendationName in this.recommendations,
-      `recommendation name ${recommendationName} is not present in the store`
-    );
-    return this.recommendations[recommendationName];
-  }
-
-  @Action
-  async fetchRecommendations() {
-    if (this.progress !== null) {
+const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
+  async fetchRecommendations(context): Promise<void> {
+    if (context.state.progress !== null) {
       return;
     }
 
-    this.context.commit("setProgress", 0);
+    context.commit("setProgress", 0);
 
     let response;
     let responseJson;
@@ -80,13 +74,12 @@ export default class extends VuexModule {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        this.context.commit(
-          "setError",
+        context.commit("recommendationsStore/setError", [
           responseCode,
           responseJson.errorMessage
-        );
+        ]);
 
-        this.context.commit("endFetching");
+        context.commit("recommendationsStore/endFetching");
 
         return;
       }
@@ -95,8 +88,8 @@ export default class extends VuexModule {
         break;
       }
 
-      this.context.commit(
-        "setProgress",
+      context.commit(
+        "recommendationsStore/setProgress",
         Math.floor(
           (100 * responseJson.batchesProcessed) / responseJson.numberOfBatches
         )
@@ -106,9 +99,23 @@ export default class extends VuexModule {
     }
 
     for (const recommendation of responseJson.recommendations) {
-      this.context.commit("addRecommendation", recommendation);
+      context.commit("recommendationsStore/addRecommendation", recommendation);
     }
 
-    this.context.commit("endFetching");
+    context.commit("recommendationsStore/endFetching");
   }
+};
+
+export function recommendationStoreFactory(): Module<
+  IRecommendationsStoreState,
+  IRootStoreState
+> {
+  return {
+    namespaced: true,
+    state: recommendationsStoreStateFactory(),
+    mutations: mutations,
+    actions: actions
+  };
 }
+
+export const RecommendationsStore = recommendationStoreFactory();

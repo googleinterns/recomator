@@ -14,22 +14,43 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark></v-app-bar>
-    <v-content>
-      <HelloWorld />
-    </v-content>
+    <v-app-bar app color="primary" dark>
+      <h1>Recomator</h1>
+    </v-app-bar>
+    <v-main>
+      <v-progress-linear
+        :value="$store.state.recommendationsStore.progress"
+        data-name="main_progress_bar"
+        v-if="$store.state.recommendationsStore.progress !== null"
+      />
+      <v-container
+        fluid
+        data-name="main_container"
+        v-if="$store.state.recommendationsStore.progress === null"
+      >
+        <v-row>
+          <v-col>
+            <GroupingHint />
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col>
+            <CoreTable />
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
   </v-app>
 </template>
 
-<script>
-// @ is an alias to /src
+<script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import HelloWorld from "@/components/HelloWorld.vue";
+import GroupingHint from "@/components/grouping_hint.vue";
+import CoreTable from "@/components/core_table.vue";
 
 @Component({
-  components: {
-    HelloWorld
-  }
+  components: { GroupingHint, CoreTable }
 })
 export default class Home extends Vue {}
 </script>
