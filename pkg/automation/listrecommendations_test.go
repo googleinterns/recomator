@@ -30,7 +30,7 @@ type MockService struct {
 	mutex                                 sync.Mutex
 	numberOfTimesListRecommendationsCalls int
 	zones                                 []string
-	regions								  []string
+	regions                               []string
 	locationsCalled                       []string
 }
 
@@ -51,7 +51,7 @@ func (s *MockService) ListRegionsNames(project string) ([]string, error) {
 }
 
 func TestListRecommendations(t *testing.T) {
-	for numConcurrentCalls := 0; numConcurrentCalls <= 5; numConcurrentCalls++ {
+	for numConcurrentCalls := 0; numConcurrentCalls <= 7; numConcurrentCalls++ {
 		zones := []string{"zone1", "zone2", "zone3"}
 		regions := []string{"region1", "region2", "region3"}
 		mock := &MockService{zones: zones, regions: regions}
@@ -59,7 +59,7 @@ func TestListRecommendations(t *testing.T) {
 
 		if assert.NoError(t, err, "Unexpected error from ListRecommendations") {
 			assert.Equal(t, 0, len(result), "No recommendations expected")
-			assert.Equal(t, len(zones) + len(regions), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
+			assert.Equal(t, len(zones)+len(regions), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
 			assert.ElementsMatch(t, append(mock.zones, mock.regions...), mock.locationsCalled, "ListRecommendations was called for different locations")
 		}
 	}
@@ -67,8 +67,8 @@ func TestListRecommendations(t *testing.T) {
 
 type ErrorZonesService struct {
 	GoogleService
-	err 			error
-	regions 		[]string
+	err     error
+	regions []string
 }
 
 func (s *ErrorZonesService) ListZonesNames(project string) ([]string, error) {
@@ -89,8 +89,8 @@ func TestErrorInListZones(t *testing.T) {
 
 type ErrorRegionsService struct {
 	GoogleService
-	err 			error
-	zones 			[]string
+	err   error
+	zones []string
 }
 
 func (s *ErrorRegionsService) ListZonesNames(project string) ([]string, error) {
@@ -102,16 +102,16 @@ func (s *ErrorRegionsService) ListRegionsNames(project string) ([]string, error)
 }
 
 func TestErrorInListRegions(t *testing.T) {
-	errorMessage := "error listing zones"
-	zones := []string{"region1", "region2", "region3"}
+	errorMessage := "error listing regions"
+	zones := []string{"zone1", "zone2", "zone3"}
 
 	_, err := ListRecommendations(&ErrorRegionsService{err: fmt.Errorf(errorMessage), zones: zones}, "", "", 2)
-	assert.EqualError(t, err, errorMessage, "Expected error calling ListZones")
+	assert.EqualError(t, err, errorMessage, "Expected error calling ListRegions")
 }
 
 type ErrorRecommendationService struct {
 	GoogleService
-	err                	error
+	err                 error
 	errorLocation       string
 	mutex               sync.Mutex
 	numberOfTimesCalled int
@@ -146,19 +146,19 @@ func TestErrorInRecommendations(t *testing.T) {
 	}
 
 	regions := []string{}
-	for i := 1; i <=7; i++ {
+	for i := 1; i <= 3; i++ {
 		regions = append(regions, fmt.Sprintf("region %d", i))
 	}
 
-	locations := append(zones, regions...);
+	locations := append(zones, regions...)
 
 	for _, location := range locations {
 		for numConcurrentCalls := 1; numConcurrentCalls <= 10; numConcurrentCalls++ {
 			service := &ErrorRecommendationService{
-				err:       		fmt.Errorf(errorMessage),
-				zones:    		zones,
-				regions:   		regions,
-				errorLocation: 	location,
+				err:           fmt.Errorf(errorMessage),
+				zones:         zones,
+				regions:       regions,
+				errorLocation: location,
 			}
 
 			_, err := ListRecommendations(service, "", "", numConcurrentCalls)
@@ -188,7 +188,7 @@ func (s *BenchmarkService) ListZonesNames(project string) ([]string, error) {
 func (s *BenchmarkService) ListRegionsNames(project string) ([]string, error) {
 	regions := []string{}
 	for i := 0; i < 25; i++ {
-		regions = append(regions, fmt.Sprintf("zone %d", i))
+		regions = append(regions, fmt.Sprintf("region %d", i))
 	}
 	return regions, nil
 }
