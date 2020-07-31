@@ -12,9 +12,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { Recommendation } from "@/store/model";
+import {
+  Recommendation,
+  getRecommendationProject,
+  getRecommendationType
+} from "@/store/model";
 import { delay, getServerAddress } from "./utils";
-import { Module, MutationTree, ActionTree } from "vuex";
+import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
 
 const SERVER_ADDRESS: string = getServerAddress();
@@ -57,6 +61,10 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
 };
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
+  /*
+    In order for this fetch to work with the fake middleware service,
+     run: `go run cmd/fake-service/*.go` first
+  */
   async fetchRecommendations(context): Promise<void> {
     if (context.state.progress !== null) {
       return;
@@ -106,6 +114,19 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   }
 };
 
+const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
+  allProjects(state): Array<string> {
+    const projects = state.recommendations.map(r =>
+      getRecommendationProject(r)
+    );
+    return Array.from(new Set(projects));
+  },
+  allTypes(state): Array<string> {
+    const projects = state.recommendations.map(r => getRecommendationType(r));
+    return Array.from(new Set(projects));
+  }
+};
+
 export function recommendationStoreFactory(): Module<
   IRecommendationsStoreState,
   IRootStoreState
@@ -114,7 +135,8 @@ export function recommendationStoreFactory(): Module<
     namespaced: true,
     state: recommendationsStoreStateFactory(),
     mutations: mutations,
-    actions: actions
+    actions: actions,
+    getters: getters
   };
 }
 

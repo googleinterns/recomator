@@ -19,6 +19,8 @@ import {
   IRecommendationsStoreState
 } from "./recommendations";
 
+import { CoreTableStore, ICoreTableStoreState } from "./core_table";
+
 Vue.use(Vuex);
 
 export interface IRootStoreState {
@@ -28,13 +30,15 @@ export interface IRootStoreState {
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
+  coreTableStore?: ICoreTableStoreState;
 }
 
 export function rootStoreFactory(): Store<IRootStoreState> {
   const storeOptions: StoreOptions<IRootStoreState> = {
     state: {},
     modules: {
-      recommendationsStore: RecommendationsStore
+      recommendationsStore: RecommendationsStore,
+      coreTableStore: CoreTableStore
     }
   };
   return new Store<IRootStoreState>(storeOptions);

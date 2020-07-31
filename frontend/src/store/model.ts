@@ -123,3 +123,8 @@ export function getRecommendationCostString(
 
   return `${costPerWeek.toFixed(2)} USD per week`;
 }
+
+// "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
+export function getRecommendationType(recommendation: Recommendation) {
+  return recommendation.recommenderSubtype;
+}

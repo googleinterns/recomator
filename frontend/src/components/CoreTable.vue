@@ -15,7 +15,7 @@ limitations under the License. -->
   <v-data-table
     dense
     :headers="headers"
-    :items="$store.state.recommendationsStore.recommendations"
+    :items="filteredRecommendations"
     show-group-by
     v-on:update:group-by="onGroupByUpdated"
     :items-per-page="itemsPerPage"
@@ -23,15 +23,36 @@ limitations under the License. -->
     v-model="$store.state.recommendationsStore.selected"
     show-select
     item-key="name"
-  />
+  >
+    <!-- customFilter prop is not used, because its implementation executes it for each property -->
+    <template v-slot:body.prepend>
+      <FiltersRow />
+    </template>
+  </v-data-table>
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import FiltersRow from "@/components/FiltersRow.vue";
 
-@Component
+// for some reason, my compiler in VSCode sometimes
+//  doesn't recognise the '@' notation for src/
+import { IRootStoreState } from "../store/root";
+import {
+  Recommendation,
+  getRecommendationProject,
+  getRecommendationType,
+  getRecommendationResourceShortName,
+  getRecomendationDescription
+} from "../store/model";
+
+@Component({
+  components: {
+    FiltersRow
+  }
+})
 export default class CoreTable extends Vue {
   private headers = [
-    { text: "Name", value: "instance", groupable: false, sortable: true },
+    { text: "Resource", value: "resource", groupable: false, sortable: true },
     { text: "Project", value: "project", groupable: true, sortable: true },
     {
       text: "Type",
@@ -53,6 +74,13 @@ export default class CoreTable extends Vue {
     { text: "", value: "applyAndStatus", groupable: false, sortable: false }
   ];
 
+  get filteredRecommendations() {
+    return (this.$store
+      .state as IRootStoreState).recommendationsStore!.recommendations.filter(
+      this.filterPredicate
+    );
+  }
+
   private itemsPerPage = 10;
   // TODO: grouping should temporarily increase items shown to all
 
@@ -62,5 +90,38 @@ export default class CoreTable extends Vue {
   }
 
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
+
+  private filterPredicate(rec: Recommendation): boolean {
+    const tableStoreState = (this.$store.state as IRootStoreState)
+      .coreTableStore!;
+
+    // project filter
+    if (
+      !tableStoreState.projectsSelected.includes(getRecommendationProject(rec))
+    )
+      return false;
+
+    // type filter
+    if (!tableStoreState.typesSelected.includes(getRecommendationType(rec)))
+      return false;
+
+    // resource name seach
+    if (
+      getRecommendationResourceShortName(rec).indexOf(
+        tableStoreState.resourceNameSearchText
+      ) === -1
+    )
+      return false;
+
+    // description search
+    if (
+      getRecomendationDescription(rec).indexOf(
+        tableStoreState.descriptionSearchText
+      ) === -1
+    )
+      return false;
+
+    return true;
+  }
 }
 </script>
