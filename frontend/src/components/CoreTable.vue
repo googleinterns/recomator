@@ -28,14 +28,48 @@ limitations under the License. -->
     <template v-slot:body.prepend>
       <FiltersRow />
     </template>
+
+    <!-- TODO: re-enable this warnings once these are implemented -->
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:group.summary="props">
+      <!-- TODO: Group summary -->
+    </template>
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:item.name="{ item }">
+      <!-- TODO: Resource name column -->
+    </template>
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:item.project="{ item }">
+      <!-- TODO: Savings/Cost column -->
+    </template>
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:item.recommenderSubtype="{ item }">
+      <!-- TODO: type column -->
+    </template>
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:item.description="{ item }">
+      <!-- TODO: Savings/Cost column -->
+    </template>
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:item.cost="{ item }">
+      <!-- TODO: Savings/Cost column -->
+    </template>
+
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <template v-slot:item.apply="{ item }">
+      <!-- TODO: Apply/status column -->
+    </template>
   </v-data-table>
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import FiltersRow from "@/components/FiltersRow.vue";
-
-// for some reason, my compiler in VSCode sometimes
-//  doesn't recognise the '@' notation for src/
 import { IRootStoreState } from "../store/root";
 import {
   Recommendation,
