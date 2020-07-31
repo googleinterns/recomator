@@ -11,28 +11,18 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
-
 <template>
-  <v-container>
-    <h1>{{ msg }}</h1>
-    <v-row class="text-center">
-      <v-col class="mb-4">
-        <h1 class="display-2 font-weight-bold mb-3">
-          Welcome to the... Recomator! {{ msg }}
-        </h1>
-      </v-col>
-    </v-row>
-  </v-container>
+  <v-banner single-line>
+    <v-icon color="primary">
+      mdi-lightbulb-on-outline
+    </v-icon>
+    Hint: You can group recommendations by project or type by clicking "group"
+    next to the column.
+  </v-banner>
 </template>
-
 <script lang="ts">
-import Vuetify from "vuetify";
-
-import { Component, Prop, Vue } from "vue-property-decorator";
-Vue.use(Vuetify);
+import { Component, Vue } from "vue-property-decorator";
 
 @Component
-export default class HelloWorld extends Vue {
-  @Prop() private msg!: string;
-}
+export default class GroupingHint extends Vue {}
 </script>
