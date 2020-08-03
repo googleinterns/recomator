@@ -56,9 +56,6 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
   setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
     state.errorCode = errorInfo.errorCode;
     state.errorMessage = errorInfo.errorMessage;
-
-    console.log(state.errorCode);
-    console.log(state.errorMessage);
   }
 };
 
@@ -88,7 +85,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         });
 
         context.commit("endFetching");
-
+        
         return;
       }
 
@@ -107,6 +104,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
 
     for (const recommendation of responseJson.recommendations) {
+
       context.commit("addRecommendation", recommendation);
     }
 
