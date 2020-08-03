@@ -73,9 +73,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
     for (;;) {
       response = await fetch(`${SERVER_ADDRESS}/recommendations`);
-
       responseJson = await response.json();
-
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
@@ -85,7 +83,6 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         });
 
         context.commit("endFetching");
-
         return;
       }
 
