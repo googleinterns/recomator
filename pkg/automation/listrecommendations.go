@@ -116,8 +116,8 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 		err             error
 	}
 
-	results := make(chan result, numberOfZones)
-  zonesJobs := make(chan string, numberOfZones)
+	results := make(chan result, numberOfLocations)
+  zonesJobs := make(chan string, numberOfLocations)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
