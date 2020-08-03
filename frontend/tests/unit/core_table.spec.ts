@@ -22,8 +22,8 @@ describe("Core Table", () => {
     const newSampleRecommendation = JSON.parse(
       JSON.stringify(sampleRecommendation)
     );
-    const filterPredicate = (CoreTable.prototype.constructor as any)
-      .filterPredicate;
+    const isRecommendationInResults = (CoreTable.prototype.constructor as any)
+      .isRecommendationInResults;
 
     // Check if we accept resoruce name: bob-vm0 when searching for bob
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "bob");
@@ -34,21 +34,30 @@ describe("Core Table", () => {
       newSampleRecommendation
     );
     expect(
-      filterPredicate(fakeStore.state.coreTableStore!, newSampleRecommendation)
+      isRecommendationInResults(
+        fakeStore.state.coreTableStore!,
+        newSampleRecommendation
+      )
     ).toBeTruthy();
 
     // Check if we accept resoruce name: alice-vm0 when searching for bob
     newSampleRecommendation.content.operationGroups[0].operations[0].resource =
       "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/alice-vm0";
     expect(
-      filterPredicate(fakeStore.state.coreTableStore!, newSampleRecommendation)
+      isRecommendationInResults(
+        fakeStore.state.coreTableStore!,
+        newSampleRecommendation
+      )
     ).toBeFalsy();
 
     // Check if we accept resoruce name: alice-vm0 when searching for alice
     //  - also checking if updating the search text works
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "alice");
     expect(
-      filterPredicate(fakeStore.state.coreTableStore!, newSampleRecommendation)
+      isRecommendationInResults(
+        fakeStore.state.coreTableStore!,
+        newSampleRecommendation
+      )
     ).toBeTruthy();
   });
 });

@@ -121,7 +121,7 @@ export default class CoreTable extends Vue {
     const rootStoreState = this.$store.state as IRootStoreState;
     return rootStoreState.recommendationsStore!.recommendations.filter(
       (recommendation: Recommendation) =>
-        CoreTable.filterPredicate(
+        CoreTable.isRecommendationInResults(
           rootStoreState.coreTableStore!,
           recommendation
         )
@@ -138,8 +138,7 @@ export default class CoreTable extends Vue {
 
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
 
-  // returns true if the recommendation should be included in the results
-  static filterPredicate(
+  static isRecommendationInResults(
     coreTableStoreState: ICoreTableStoreState,
     rec: Recommendation
   ): boolean {
@@ -156,15 +155,22 @@ export default class CoreTable extends Vue {
         )) &&
       // resource name search
       (coreTableStoreState.resourceNameSearchText.length === 0 ||
-        getRecommendationResourceShortName(rec).indexOf(
-          coreTableStoreState.resourceNameSearchText
-        ) !== -1) &&
+        CoreTable.isSearchTextInCell(
+          coreTableStoreState.resourceNameSearchText,
+          getRecommendationResourceShortName(rec)
+        )) &&
       // description search
       (coreTableStoreState.descriptionSearchText.length === 0 ||
-        getRecomendationDescription(rec).indexOf(
-          coreTableStoreState.descriptionSearchText
-        ) !== -1)
+        CoreTable.isSearchTextInCell(
+          coreTableStoreState.descriptionSearchText,
+          getRecomendationDescription(rec)
+        ))
     );
+  }
+
+  // We want 'save' in the search field to match 'Save' in a cell
+  static isSearchTextInCell(searchText: string, cellText: string): boolean {
+    return cellText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
   }
 }
 </script>
