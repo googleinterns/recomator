@@ -202,7 +202,7 @@ var recommendationsJSON = []string{`{
 	"content": {
 		"operationGroups": [
 			{
-				"operations": [
+				"operations":
 					{
 						"action": "add",
 						"path": "/",

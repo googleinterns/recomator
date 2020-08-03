@@ -36,17 +36,33 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 		}
 	case "replace":
 		switch operation.Path {
-		case "/machineType":
-			// set machine type
+		case "/machineType": 
+		    // TODO do both zones need to be the same?
+			path := operation.resource
+
+			project := extractFromURL(path, "projects")
+			zone := extractFromURL(path, "zones")
+			disk := extractFromURL(path, "disks")
+
+			ChangeMachineType(project, zone, instance, machineType)
 		case "/status":
 			// stop (or start?) the machine
+			// TODO start?
+			
 		default:
 			// return error operation not supported
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
-			// create snapshot
+			path := operation.resource
+
+			project := extractFromURL(path, "projects")
+			zone := extractFromURL(path, "zones")
+			disk := extractFromURL(path, "disks")
+			snapshotName := getSnapshotName(operation) // TODO
+
+			createSnapshot(project, zone, disk, snapshotName)
 		default:
 			//
 		}
@@ -54,7 +70,14 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 	case "remove":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Disk":
-			// delete disk
+			path := operation.value.source_disk
+
+			project := extractFromURL(path, "projects")
+			zone := extractFromURL(path, "zones")
+			disk := extractFromURL(path, "disks")
+
+			deleteDisk(project, zone, disk)
+			
 		default:
 			//
 		}
