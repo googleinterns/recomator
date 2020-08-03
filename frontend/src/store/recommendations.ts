@@ -85,7 +85,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         });
 
         context.commit("endFetching");
-        
+
         return;
       }
 
@@ -104,7 +104,6 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
 
     for (const recommendation of responseJson.recommendations) {
-
       context.commit("addRecommendation", recommendation);
     }
 
