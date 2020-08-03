@@ -137,41 +137,28 @@ export default class CoreTable extends Vue {
     coreTableStoreState: ICoreTableStoreState,
     rec: Recommendation
   ): boolean {
-    // project filter
-    if (
-      coreTableStoreState.projectsSelected.length !== 0 &&
-      !coreTableStoreState.projectsSelected.includes(
-        getRecommendationProject(rec)
-      )
-    )
-      return false;
-
-    // type filter
-    if (
-      coreTableStoreState.projectsSelected.length !== 0 &&
-      !coreTableStoreState.typesSelected.includes(getRecommendationType(rec))
-    )
-      return false;
-
-    // resource name search
-    if (
-      coreTableStoreState.resourceNameSearchText.length !== 0 &&
-      getRecommendationResourceShortName(rec).indexOf(
-        coreTableStoreState.resourceNameSearchText
-      ) === -1
-    )
-      return false;
-
-    // description search
-    if (
-      coreTableStoreState.descriptionSearchText.length !== 0 &&
-      getRecomendationDescription(rec).indexOf(
-        coreTableStoreState.descriptionSearchText
-      ) === -1
-    )
-      return false;
-
-    return true;
+    return (
+      // project filter
+      (coreTableStoreState.projectsSelected.length === 0 ||
+        coreTableStoreState.projectsSelected.includes(
+          getRecommendationProject(rec)
+        )) &&
+      // types selected
+      (coreTableStoreState.typesSelected.length === 0 ||
+        coreTableStoreState.typesSelected.includes(
+          getRecommendationType(rec)
+        )) &&
+      // resource name search
+      (coreTableStoreState.resourceNameSearchText.length === 0 ||
+        getRecommendationResourceShortName(rec).indexOf(
+          coreTableStoreState.resourceNameSearchText
+        ) !== -1) &&
+      // description search
+      (coreTableStoreState.descriptionSearchText.length === 0 ||
+        getRecomendationDescription(rec).indexOf(
+          coreTableStoreState.descriptionSearchText
+        ) !== -1)
+    );
   }
 }
 </script>
