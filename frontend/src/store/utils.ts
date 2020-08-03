@@ -10,7 +10,11 @@ export function extractFromResource(
   const regex = new RegExp(pattern);
 
   const found = regex.exec(resource);
-  if (found === null) throw `couldn't parse resource identifier: ${resource}`;
+  if (found === null) {
+    // TODO: this function doesn't support snapshots, so I have temporarily disabled errors
+    return "NOT IMPLEMENTED";
+    //throw `couldn't parse resource identifier: ${resource}`;
+  }
 
   const result = found[0].slice(sliceLen);
   return result;
