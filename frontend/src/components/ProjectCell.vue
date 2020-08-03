@@ -27,8 +27,6 @@ const ProjectProps = Vue.extend({
 
 @Component
 export default class ProjectCell extends ProjectProps {
-  //rowRecommendation: Recommendation | null = null;
-
   project() {
     return getRecommendationProject(this.rowRecommendation);
   }

@@ -27,8 +27,6 @@ const ResourceProps = Vue.extend({
 
 @Component
 export default class ResourceCell extends ResourceProps {
-  //rowRecommendation: Recommendation | null = null;
-
   shortName() {
     return getRecommendationResourceShortName(this.rowRecommendation);
   }
