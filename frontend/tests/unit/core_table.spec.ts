@@ -58,7 +58,7 @@ describe("Core Table", () => {
 
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "alice");
     expect(
-        (CoreTable.prototype.constructor as any).filterPredicate(
+      (CoreTable.prototype.constructor as any).filterPredicate(
         fakeStore.state.coreTableStore!,
         newSampleRecommendation
       )
