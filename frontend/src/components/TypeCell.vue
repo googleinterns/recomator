@@ -24,12 +24,12 @@ import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { getRecommendationType } from "../store/model";
 
-const TypeProps = Vue.extend({
+const TypeCellProps = Vue.extend({
   props: ["rowRecommendation"]
 });
 
 @Component
-export default class TypeCell extends TypeProps {
+export default class TypeCell extends TypeCellProps {
   recommenderSubtype(): string {
     return getRecommendationType(this.rowRecommendation);
   }

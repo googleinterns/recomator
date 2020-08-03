@@ -21,12 +21,12 @@ import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { getRecommendationProject } from "../store/model";
 
-const ProjectProps = Vue.extend({
+const ProjectCellProps = Vue.extend({
   props: ["rowRecommendation"]
 });
 
 @Component
-export default class ProjectCell extends ProjectProps {
+export default class ProjectCell extends ProjectCellProps {
   project() {
     return getRecommendationProject(this.rowRecommendation);
   }
