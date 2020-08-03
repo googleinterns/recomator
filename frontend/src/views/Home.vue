@@ -58,7 +58,7 @@ export default class Home extends Vue {
      run: `go run cmd/fake-service/*.go` first from the root folder.
     It might sometimes help to run it repeatedly until the errors disappear,
      make sure that Go is in the latest version too.
-    Finaly, uncomment the following line: */
+    Finally, uncomment the following line: */
     // this.$store.dispatch("recommendationsStore/fetchRecommendations");
   }
 }
