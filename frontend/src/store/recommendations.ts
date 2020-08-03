@@ -61,10 +61,6 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
 };
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
-  /*
-    In order for this fetch to work with the fake middleware service,
-     run: `go run cmd/fake-service/*.go` first
-  */
   async fetchRecommendations(context): Promise<void> {
     if (context.state.progress !== null) {
       return;
@@ -82,12 +78,9 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        context.commit("recommendationsStore/setError", [
-          responseCode,
-          responseJson.errorMessage
-        ]);
+        context.commit("setError", [responseCode, responseJson.errorMessage]);
 
-        context.commit("recommendationsStore/endFetching");
+        context.commit("endFetching");
 
         return;
       }
@@ -97,7 +90,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       }
 
       context.commit(
-        "recommendationsStore/setProgress",
+        "setProgress",
         Math.floor(
           (100 * responseJson.batchesProcessed) / responseJson.numberOfBatches
         )
@@ -107,10 +100,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
 
     for (const recommendation of responseJson.recommendations) {
-      context.commit("recommendationsStore/addRecommendation", recommendation);
+      context.commit("addRecommendation", recommendation);
     }
 
-    context.commit("recommendationsStore/endFetching");
+    context.commit("endFetching");
   }
 };
 
