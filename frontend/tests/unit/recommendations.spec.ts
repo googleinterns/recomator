@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { enableFetchMocks } from "jest-fetch-mock";
-enableFetchMocks();   // making it possible to mock fetch in this test suite
+enableFetchMocks(); // making it possible to mock fetch in this test suite
 fetchMock.dontMock(); // not mocking fetch in every test by default
 
 import * as Model from "@/store/model";
