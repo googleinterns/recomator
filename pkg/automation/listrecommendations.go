@@ -40,7 +40,7 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 
 	err := listCall.Pages(s.ctx, addRecommendations)
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 	return recommendations, nil
 }
@@ -61,7 +61,7 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 	}
 	err := listCall.Pages(s.ctx, addZones)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	return zones, nil
 }
@@ -87,11 +87,6 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 	return regions, nil
 }
 
-type result struct {
-	recommendations []*gcloudRecommendation
-	err             error
-}
-
 // ListRecommendations returns the list of recommendations for a Cloud project.
 // Requires the recommender.*.list IAM permission for the specified recommender.
 // numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
@@ -99,7 +94,7 @@ type result struct {
 func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int) ([]*gcloudRecommendation, error) {
 	zones, err := service.ListZonesNames(project)
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 
 	regions, err := service.ListRegionsNames(project)
@@ -108,7 +103,7 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	}
 
 	locations := append(zones, regions...)
-	numberOfLocations := len(locations);
+	numberOfLocations := len(locations)
 
 	numWorkers := numConcurrentCalls
 	const defaultNumWorkers = 16
@@ -116,8 +111,13 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 		numWorkers = defaultNumWorkers
 	}
 
+	type result struct {
+		recommendations []*gcloudRecommendation
+		err             error
+	}
+
 	results := make(chan result, numberOfLocations)
-	locationsJobs := make(chan string, numberOfLocations)
+  	locationsJobs := make(chan string, numberOfLocations)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
@@ -145,7 +145,7 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 		}
 	}
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 	return recommendations, nil
 }
