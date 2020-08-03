@@ -43,7 +43,7 @@ limitations under the License. -->
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.project="{ item }">
-       <ProjectCell :rowRecommendation="item" />
+      <ProjectCell :rowRecommendation="item" />
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
