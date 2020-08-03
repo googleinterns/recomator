@@ -37,13 +37,13 @@ limitations under the License. -->
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
-    <template v-slot:item.name="{ item }">
-      <!-- TODO: Resource name column -->
+    <template v-slot:item.resource="{ item }">
+      <ResourceCell :rowRecommendation="item" />
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.project="{ item }">
-      <!-- TODO: Savings/Cost column -->
+      <!-- TODO: Project column -->
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
@@ -53,7 +53,7 @@ limitations under the License. -->
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.description="{ item }">
-      <!-- TODO: Savings/Cost column -->
+      <!-- TODO: Description column -->
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
@@ -70,6 +70,7 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import FiltersRow from "@/components/FiltersRow.vue";
+import ResourceCell from "@/components/ResourceCell.vue";
 import { IRootStoreState } from "../store/root";
 import { ICoreTableStoreState } from "../store/core_table";
 import {
@@ -82,7 +83,8 @@ import {
 
 @Component({
   components: {
-    FiltersRow
+    FiltersRow,
+    ResourceCell
   }
 })
 export default class CoreTable extends Vue {
@@ -151,7 +153,7 @@ export default class CoreTable extends Vue {
     )
       return false;
 
-    // resource name seach
+    // resource name search
     if (
       coreTableStoreState.resourceNameSearchText.length !== 0 &&
       getRecommendationResourceShortName(rec).indexOf(
