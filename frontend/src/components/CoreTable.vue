@@ -43,7 +43,7 @@ limitations under the License. -->
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.project="{ item }">
-      <!-- TODO: Project column -->
+       <ProjectCell :rowRecommendation="item" />
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
@@ -71,6 +71,7 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import FiltersRow from "@/components/FiltersRow.vue";
 import ResourceCell from "@/components/ResourceCell.vue";
+import ProjectCell from "@/components/ProjectCell.vue";
 import { IRootStoreState } from "../store/root";
 import { ICoreTableStoreState } from "../store/core_table";
 import {
@@ -84,7 +85,8 @@ import {
 @Component({
   components: {
     FiltersRow,
-    ResourceCell
+    ResourceCell,
+    ProjectCell
   }
 })
 export default class CoreTable extends Vue {

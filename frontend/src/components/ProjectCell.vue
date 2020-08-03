@@ -13,24 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <td>
-    {{ shortName() }}
+    {{ project() }}
   </td>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { getRecommendationResourceShortName } from "../store/model";
+import { getRecommendationProject } from "../store/model";
 
-const ResourceProps = Vue.extend({
+const ProjectProps = Vue.extend({
   props: ["rowRecommendation"]
 });
 
 @Component
-export default class ResourceCell extends ResourceProps {
+export default class ProjectCell extends ProjectProps {
   //rowRecommendation: Recommendation | null = null;
 
-  shortName() {
-    return getRecommendationResourceShortName(this.rowRecommendation);
+  project() {
+    return getRecommendationProject(this.rowRecommendation);
   }
 }
 </script>
