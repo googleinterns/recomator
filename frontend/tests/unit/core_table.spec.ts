@@ -16,52 +16,39 @@ import CoreTable from "@/components/CoreTable.vue";
 import { rootStoreFactory } from "@/store/root";
 import sampleRecommendation from "./sample_recommendation";
 
-// Helpful for debugs: console.log(wrapper.html())
-//
-// await Vue.nextTick() is used to wait for Vue to actually update the components
-//  as recommended here: https://vue-test-utils.vuejs.org/guides/#testing-asynchronous-behavior
-//
-// We might consider switching to local Vue instances/vuetifys
-//  (there is a function for that in test-utils), as it is recommended
-//  but there are issues with that, which have fixes described here:
-//   https://vuetifyjs.com/en/getting-started/unit-testing/
-
 describe("Core Table", () => {
-  test("Filtering results", async () => {
+  test("Filtering results by resource name", async () => {
     const fakeStore = rootStoreFactory();
     const newSampleRecommendation = JSON.parse(
       JSON.stringify(sampleRecommendation)
     );
+    const filterPredicate = (CoreTable.prototype.constructor as any)
+      .filterPredicate;
 
+    // Check if we accept resoruce name: bob-vm0 when searching for bob
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "bob");
-    newSampleRecommendation.name =
+    newSampleRecommendation.content.operationGroups[0].operations[0].resource =
       "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/bob-vm0";
     fakeStore.commit(
       "recommendationsStore/addRecommendation",
       newSampleRecommendation
     );
     expect(
-      (CoreTable.prototype.constructor as any).filterPredicate(
-        fakeStore.state.coreTableStore!,
-        newSampleRecommendation
-      )
-    );
+      filterPredicate(fakeStore.state.coreTableStore!, newSampleRecommendation)
+    ).toBeTruthy();
 
-    newSampleRecommendation.name =
+    // Check if we accept resoruce name: alice-vm0 when searching for bob
+    newSampleRecommendation.content.operationGroups[0].operations[0].resource =
       "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/alice-vm0";
     expect(
-      !(CoreTable.prototype.constructor as any).filterPredicate(
-        fakeStore.state.coreTableStore!,
-        newSampleRecommendation
-      )
-    );
+      filterPredicate(fakeStore.state.coreTableStore!, newSampleRecommendation)
+    ).toBeFalsy();
 
+    // Check if we accept resoruce name: alice-vm0 when searching for alice
+    //  - also checking if updating the search text works
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "alice");
     expect(
-      (CoreTable.prototype.constructor as any).filterPredicate(
-        fakeStore.state.coreTableStore!,
-        newSampleRecommendation
-      )
-    );
+      filterPredicate(fakeStore.state.coreTableStore!, newSampleRecommendation)
+    ).toBeTruthy();
   });
 });
