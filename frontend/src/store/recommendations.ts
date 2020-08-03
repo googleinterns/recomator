@@ -48,9 +48,14 @@ export default class extends VuexModule {
   }
 
   @Mutation
-  setError(errorCode: number, errorMessage: string) {
-    this.errorCode = errorCode;
-    this.errorMessage = errorMessage;
+  setError(errorInfo: { errorCode: number; errorMessage: string }) {
+    this.errorCode = errorInfo.errorCode;
+    this.errorMessage = errorInfo.errorMessage;
+  }
+
+  @Mutation
+  resetRecommendations() {
+    this.recommendations = {};
   }
 
   @Action
@@ -76,15 +81,16 @@ export default class extends VuexModule {
 
     for (;;) {
       response = await fetch(`${SERVER_ADDRESS}/recommendations`);
+
       responseJson = await response.json();
+
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        this.context.commit(
-          "setError",
-          responseCode,
-          responseJson.errorMessage
-        );
+        this.context.commit("setError", {
+          errorCode: responseCode,
+          errorMessage: responseJson.errorMessage
+        });
 
         this.context.commit("endFetching");
 

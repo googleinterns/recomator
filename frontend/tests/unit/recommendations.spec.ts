@@ -12,6 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
+import { enableFetchMocks } from "jest-fetch-mock";
+enableFetchMocks();
+fetchMock.dontMock();
+
 import * as Model from "@/store/model";
 import RecommendationStore from "@/store/recommendations";
 import Vue from "vue";
@@ -60,6 +64,16 @@ const sampleRecommendation: Model.Recommendation = {
   }
 };
 
+beforeEach(() => {
+  const store = new Vuex.Store({
+    modules: {
+      recommendationsStore: RecommendationStore
+    }
+  });
+
+  store.commit("resetRecommendations");
+});
+
 describe("Store tests", () => {
   test("addRecommendation", () => {
     const store = new Vuex.Store({
@@ -87,5 +101,89 @@ describe("Store tests", () => {
     expect(
       Model.getRecommendationResourceShortName(sampleRecommendation)
     ).toEqual("alicja-test");
+  });
+
+  test("Fetching works correctly when given response without errors", async () => {
+    jest.setTimeout(30000);
+
+    fetchMock.doMock();
+
+    const responses = [];
+
+    responses.push(
+      JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 })
+    );
+    responses.push(
+      JSON.stringify({ batchesProcessed: 40, numberOfBatches: 100 })
+    );
+    responses.push(
+      JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
+    );
+
+    responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
+
+    fetchMock.mockResponses(...responses);
+
+    const store = new Vuex.Store({
+      modules: {
+        recommendationsStore: RecommendationStore
+      }
+    });
+
+    await store.dispatch("fetchRecommendations");
+
+    expect(
+      Object.values(store.state.recommendationsStore.recommendations)[0]
+    ).toEqual(sampleRecommendation);
+    expect(
+      Object.values(store.state.recommendationsStore.recommendations).length
+    ).toEqual(1);
+
+    fetchMock.dontMock();
+  });
+
+  test("Fetching works correctly when given response with errors", async () => {
+    jest.setTimeout(30000);
+
+    fetchMock.doMock();
+
+    const responses = [];
+
+    responses.push(
+      JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 })
+    );
+    responses.push(
+      JSON.stringify({ batchesProcessed: 40, numberOfBatches: 100 })
+    );
+    responses.push(
+      JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
+    );
+
+    responses.push(async () => {
+      return {
+        status: 302,
+        body: JSON.stringify({ errorMessage: "Something failed" })
+      };
+    });
+
+    responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
+
+    fetchMock.mockResponses(...responses);
+
+    const store = new Vuex.Store({
+      modules: {
+        recommendationsStore: RecommendationStore
+      }
+    });
+
+    await store.dispatch("fetchRecommendations");
+
+    expect(store.state.recommendationsStore.errorCode).toEqual(302);
+    expect(store.state.recommendationsStore.errorMessage).toEqual(
+      "Something failed"
+    );
+    expect(store.state.recommendationsStore.recommendations).toEqual({});
+
+    fetchMock.dontMock();
   });
 });
