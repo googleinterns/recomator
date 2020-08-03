@@ -71,6 +71,7 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import FiltersRow from "@/components/FiltersRow.vue";
 import { IRootStoreState } from "../store/root";
+import { ICoreTableStoreState } from "../store/core_table";
 import {
   Recommendation,
   getRecommendationProject,
@@ -85,7 +86,7 @@ import {
   }
 })
 export default class CoreTable extends Vue {
-  private headers = [
+  headers = [
     { text: "Resource", value: "resource", groupable: false, sortable: true },
     { text: "Project", value: "project", groupable: true, sortable: true },
     {
@@ -109,48 +110,50 @@ export default class CoreTable extends Vue {
   ];
 
   get filteredRecommendations() {
-    return (this.$store
-      .state as IRootStoreState).recommendationsStore!.recommendations.filter(
-      this.filterPredicate
+    const rootStoreState = this.$store.state as IRootStoreState;
+    return rootStoreState.recommendationsStore!.recommendations.filter(
+      (recommendation: Recommendation) => CoreTable.filterPredicate(rootStoreState.coreTableStore!, recommendation)
     );
   }
 
-  private itemsPerPage = 10;
+  itemsPerPage = 10;
   // TODO: grouping should temporarily increase items shown to all
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private onGroupByUpdated(groupByCategories: string[]): void {
+  onGroupByUpdated(groupByCategories: string[]): void {
     // TODO: update itemsPerPage
   }
-
+  
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
-
-  private filterPredicate(rec: Recommendation): boolean {
-    const tableStoreState = (this.$store.state as IRootStoreState)
-      .coreTableStore!;
-
+  
+  // returns true if the recommendation should be included in the results
+  static filterPredicate(coreTableStoreState: ICoreTableStoreState, rec: Recommendation): boolean {
     // project filter
     if (
-      !tableStoreState.projectsSelected.includes(getRecommendationProject(rec))
+      coreTableStoreState.projectsSelected.length !== 0 &&
+      !coreTableStoreState.projectsSelected.includes(getRecommendationProject(rec))
     )
       return false;
 
     // type filter
-    if (!tableStoreState.typesSelected.includes(getRecommendationType(rec)))
+    if (coreTableStoreState.projectsSelected.length !== 0 &&
+          !coreTableStoreState.typesSelected.includes(getRecommendationType(rec)))
       return false;
 
     // resource name seach
     if (
+      coreTableStoreState.resourceNameSearchText.length !== 0 &&
       getRecommendationResourceShortName(rec).indexOf(
-        tableStoreState.resourceNameSearchText
+        coreTableStoreState.resourceNameSearchText
       ) === -1
     )
       return false;
 
     // description search
     if (
+      coreTableStoreState.descriptionSearchText.length !== 0 &&
       getRecomendationDescription(rec).indexOf(
-        tableStoreState.descriptionSearchText
+        coreTableStoreState.descriptionSearchText
       ) === -1
     )
       return false;
@@ -158,4 +161,6 @@ export default class CoreTable extends Vue {
     return true;
   }
 }
+
+
 </script>
