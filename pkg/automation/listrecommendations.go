@@ -66,6 +66,27 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 	return zones, nil
 }
 
+// ListRegionsNames returns list of region names for the specified project.
+// Uses regions/list method from Compute API.
+// If the error occurred the returned error is not nil.
+func (s *googleService) ListRegionsNames(project string) ([]string, error) {
+	regionsService := compute.NewRegionsService(s.computeService)
+	listCall := regionsService.List(project)
+
+	var regions []string
+	addRegions := func(regionList *compute.RegionList) error {
+		for _, region := range regionList.Items {
+			regions = append(regions, region.Name)
+		}
+		return nil
+	}
+	err := listCall.Pages(s.ctx, addRegions)
+	if err != nil {
+		return []string{}, err
+	}
+	return regions, nil
+}
+
 // ListRecommendations returns the list of recommendations for a Cloud project.
 // Requires the recommender.*.list IAM permission for the specified recommender.
 // numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
@@ -75,7 +96,14 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	if err != nil {
 		return nil, err
 	}
-	numberOfZones := len(zones)
+
+	regions, err := service.ListRegionsNames(project)
+	if err != nil {
+		return []*gcloudRecommendation{}, err
+	}
+
+	locations := append(zones, regions...)
+	numberOfLocations := len(locations)
 
 	numWorkers := numConcurrentCalls
 	const defaultNumWorkers = 16
@@ -89,30 +117,31 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	}
 
 	results := make(chan result, numberOfZones)
-	zonesJobs := make(chan string, numberOfZones)
+  zonesJobs := make(chan string, numberOfZones)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
-			for zone := range zonesJobs {
-				recs, err := service.ListRecommendations(project, zone, recommenderID)
+			for location := range locationsJobs {
+				recs, err := service.ListRecommendations(project, location, recommenderID)
 				results <- result{recs, err}
 			}
 		}()
 	}
 
-	for _, zone := range zones {
-		zonesJobs <- zone
+	for _, location := range locations {
+		locationsJobs <- location
 	}
-	close(zonesJobs)
+
+	close(locationsJobs)
 
 	var recommendations []*gcloudRecommendation
 	err = nil
-	for range zones {
-		zoneResult := <-results
-		if zoneResult.err != nil {
-			err = zoneResult.err
+	for range locations {
+		locationResult := <-results
+		if locationResult.err != nil {
+			err = locationResult.err
 		} else {
-			recommendations = append(recommendations, zoneResult.recommendations...)
+			recommendations = append(recommendations, locationResult.recommendations...)
 		}
 	}
 	if err != nil {
