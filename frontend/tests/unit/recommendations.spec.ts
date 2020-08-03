@@ -35,13 +35,13 @@ describe("Store", () => {
 });
 
 describe("Recommendation-type objects", () => {
-  test("Getting the project that the recommendation references", async () => {
+  test("Getting the project that the recommendation references", () => {
     expect(Model.getRecommendationProject(sampleRecommendation)).toEqual(
       "rightsizer-test"
     );
   });
 
-  test("Getting the instance that the recommendation references", async () => {
+  test("Getting the instance that the recommendation references", () => {
     expect(
       Model.getRecommendationResourceShortName(sampleRecommendation)
     ).toEqual("alicja-test");
