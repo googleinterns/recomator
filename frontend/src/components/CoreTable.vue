@@ -112,7 +112,11 @@ export default class CoreTable extends Vue {
   get filteredRecommendations() {
     const rootStoreState = this.$store.state as IRootStoreState;
     return rootStoreState.recommendationsStore!.recommendations.filter(
-      (recommendation: Recommendation) => CoreTable.filterPredicate(rootStoreState.coreTableStore!, recommendation)
+      (recommendation: Recommendation) =>
+        CoreTable.filterPredicate(
+          rootStoreState.coreTableStore!,
+          recommendation
+        )
     );
   }
 
@@ -123,21 +127,28 @@ export default class CoreTable extends Vue {
   onGroupByUpdated(groupByCategories: string[]): void {
     // TODO: update itemsPerPage
   }
-  
+
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
-  
+
   // returns true if the recommendation should be included in the results
-  static filterPredicate(coreTableStoreState: ICoreTableStoreState, rec: Recommendation): boolean {
+  static filterPredicate(
+    coreTableStoreState: ICoreTableStoreState,
+    rec: Recommendation
+  ): boolean {
     // project filter
     if (
       coreTableStoreState.projectsSelected.length !== 0 &&
-      !coreTableStoreState.projectsSelected.includes(getRecommendationProject(rec))
+      !coreTableStoreState.projectsSelected.includes(
+        getRecommendationProject(rec)
+      )
     )
       return false;
 
     // type filter
-    if (coreTableStoreState.projectsSelected.length !== 0 &&
-          !coreTableStoreState.typesSelected.includes(getRecommendationType(rec)))
+    if (
+      coreTableStoreState.projectsSelected.length !== 0 &&
+      !coreTableStoreState.typesSelected.includes(getRecommendationType(rec))
+    )
       return false;
 
     // resource name seach
@@ -161,6 +172,4 @@ export default class CoreTable extends Vue {
     return true;
   }
 }
-
-
 </script>
