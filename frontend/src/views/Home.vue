@@ -54,8 +54,12 @@ import CoreTable from "@/components/CoreTable.vue";
 })
 export default class Home extends Vue {
   private mounted() {
-    // for testing purposes, use the fake middleware service:
-    this.$store.dispatch("recommendationsStore/fetchRecommendations");
+    /* In order for this fetch to work with the fake middleware service,
+     run: `go run cmd/fake-service/*.go` first from the root folder.
+    It might sometimes help to run it repeatedly until the errors disappear,
+     make sure that Go is in the latest version too.
+    Finaly, uncomment the following line: */
+    // this.$store.dispatch("recommendationsStore/fetchRecommendations");
   }
 }
 </script>
