@@ -30,13 +30,14 @@ type MockService struct {
 	mutex                                 sync.Mutex
 	numberOfTimesListRecommendationsCalls int
 	zones                                 []string
-	zonesCalled                           []string
+	regions                               []string
+	locationsCalled                       []string
 }
 
 func (s *MockService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	s.mutex.Lock()
 	s.numberOfTimesListRecommendationsCalls++
-	s.zonesCalled = append(s.zonesCalled, location)
+	s.locationsCalled = append(s.locationsCalled, location)
 	s.mutex.Unlock()
 	return []*gcloudRecommendation{}, nil
 }
@@ -45,46 +46,85 @@ func (s *MockService) ListZonesNames(project string) ([]string, error) {
 	return s.zones, nil
 }
 
+func (s *MockService) ListRegionsNames(project string) ([]string, error) {
+	return s.regions, nil
+}
+
 func TestListRecommendations(t *testing.T) {
-	for numConcurrentCalls := 0; numConcurrentCalls <= 5; numConcurrentCalls++ {
+	for numConcurrentCalls := 0; numConcurrentCalls <= 7; numConcurrentCalls++ {
 		zones := []string{"zone1", "zone2", "zone3"}
-		mock := &MockService{zones: zones}
+		regions := []string{"region1", "region2", "region3"}
+		mock := &MockService{zones: zones, regions: regions}
 		result, err := ListRecommendations(mock, "", "", numConcurrentCalls)
 
 		if assert.NoError(t, err, "Unexpected error from ListRecommendations") {
 			assert.Equal(t, 0, len(result), "No recommendations expected")
-			assert.Equal(t, len(zones), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
-			assert.ElementsMatch(t, mock.zones, mock.zonesCalled, "ListRecommendations was called for different zones")
+			assert.Equal(t, len(zones)+len(regions), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
+			assert.ElementsMatch(t, append(mock.zones, mock.regions...), mock.locationsCalled, "ListRecommendations was called for different locations")
 		}
 	}
 }
 
 type ErrorZonesService struct {
 	GoogleService
-	err error
+	err     error
+	regions []string
 }
 
 func (s *ErrorZonesService) ListZonesNames(project string) ([]string, error) {
 	return []string{}, s.err
 }
 
+func (s *ErrorZonesService) ListRegionsNames(project string) ([]string, error) {
+	return s.regions, nil
+}
+
 func TestErrorInListZones(t *testing.T) {
 	errorMessage := "error listing zones"
-	_, err := ListRecommendations(&ErrorZonesService{err: fmt.Errorf(errorMessage)}, "", "", 2)
+	regions := []string{"region1", "region2", "region3"}
+
+	_, err := ListRecommendations(&ErrorZonesService{err: fmt.Errorf(errorMessage), regions: regions}, "", "", 2)
 	assert.EqualError(t, err, errorMessage, "Expected error calling ListZones")
+}
+
+type ErrorRegionsService struct {
+	GoogleService
+	err   error
+	zones []string
+}
+
+func (s *ErrorRegionsService) ListZonesNames(project string) ([]string, error) {
+	return s.zones, nil
+}
+
+func (s *ErrorRegionsService) ListRegionsNames(project string) ([]string, error) {
+	return []string{}, s.err
+}
+
+func TestErrorInListRegions(t *testing.T) {
+	errorMessage := "error listing regions"
+	zones := []string{"zone1", "zone2", "zone3"}
+
+	_, err := ListRecommendations(&ErrorRegionsService{err: fmt.Errorf(errorMessage), zones: zones}, "", "", 2)
+	assert.EqualError(t, err, errorMessage, "Expected error calling ListRegions")
 }
 
 type ErrorRecommendationService struct {
 	GoogleService
 	err                 error
-	errorZone           string
+	errorLocation       string
 	mutex               sync.Mutex
 	numberOfTimesCalled int
 	zones               []string
+	regions             []string
 }
 
 func (s *ErrorRecommendationService) ListZonesNames(project string) ([]string, error) {
 	return s.zones, nil
+}
+
+func (s *ErrorRecommendationService) ListRegionsNames(project string) ([]string, error) {
+	return s.regions, nil
 }
 
 func (s *ErrorRecommendationService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
@@ -92,7 +132,7 @@ func (s *ErrorRecommendationService) ListRecommendations(project, location, reco
 	s.numberOfTimesCalled++
 	s.mutex.Unlock()
 
-	if location == s.errorZone {
+	if location == s.errorLocation {
 		return []*gcloudRecommendation{}, s.err
 	}
 	return []*gcloudRecommendation{}, nil
@@ -105,15 +145,25 @@ func TestErrorInRecommendations(t *testing.T) {
 		zones = append(zones, fmt.Sprintf("zone %d", i))
 	}
 
-	for _, zone := range zones {
+	regions := []string{}
+	for i := 1; i <= 3; i++ {
+		regions = append(regions, fmt.Sprintf("region %d", i))
+	}
+
+	locations := append(zones, regions...)
+
+	for _, location := range locations {
 		for numConcurrentCalls := 1; numConcurrentCalls <= 10; numConcurrentCalls++ {
 			service := &ErrorRecommendationService{
-				err:       fmt.Errorf(errorMessage),
-				zones:     zones,
-				errorZone: zone}
+				err:           fmt.Errorf(errorMessage),
+				zones:         zones,
+				regions:       regions,
+				errorLocation: location,
+			}
+
 			_, err := ListRecommendations(service, "", "", numConcurrentCalls)
 			assert.EqualError(t, err, errorMessage, "Expected error calling ListRecommendations")
-			assert.Equal(t, len(zones), service.numberOfTimesCalled, "ListRecommendations called wrong number of times")
+			assert.Equal(t, len(locations), service.numberOfTimesCalled, "ListRecommendations called wrong number of times")
 		}
 	}
 }
@@ -133,6 +183,14 @@ func (s *BenchmarkService) ListZonesNames(project string) ([]string, error) {
 		zones = append(zones, fmt.Sprintf("zone %d", i))
 	}
 	return zones, nil
+}
+
+func (s *BenchmarkService) ListRegionsNames(project string) ([]string, error) {
+	regions := []string{}
+	for i := 0; i < 25; i++ {
+		regions = append(regions, fmt.Sprintf("region %d", i))
+	}
+	return regions, nil
 }
 
 func BenchmarkGoroutines(b *testing.B) {

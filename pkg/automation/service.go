@@ -48,6 +48,9 @@ type GoogleService interface {
 	// listing every zone available for the project methods
 	ListZonesNames(project string) ([]string, error)
 
+	// listing every region available for the project methods
+	ListRegionsNames(project string) ([]string, error)
+
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
 }

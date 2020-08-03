@@ -17,86 +17,36 @@ enableFetchMocks();
 fetchMock.dontMock();
 
 import * as Model from "@/store/model";
-import RecommendationStore from "@/store/recommendations";
-import Vue from "vue";
-import Vuex from "vuex";
+import { rootStoreFactory } from "@/store/root";
+import sampleRecommendation from "./sample_recommendation";
 
-Vue.use(Vuex);
-
-const sampleRecommendation: Model.Recommendation = {
-  content: {
-    operationGroups: [
-      {
-        operations: [
-          {
-            path: "/machineType",
-            resource:
-              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
-            resourceType: "compute.googleapis.com/Instance"
-          },
-          {
-            path: "/machineType",
-            resource:
-              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
-            resourceType: "compute.googleapis.com/Instance"
-          }
-        ]
-      }
-    ]
-  },
-  description:
-    "Save cost by changing machine type from n1-standard-4 to custom-2-5120.",
-  name:
-    "projects/323016592286/locations/us-east1-b/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/6dfd692f-14b7-499a-be95-a09fe0893911",
-  primaryImpact: {
-    category: "COST",
-    costProjection: {
-      cost: {
-        currencyCode: "USD",
-        units: "-73"
-      },
-      duration: "2592000s"
-    }
-  },
-  recommenderSubtype: "CHANGE_MACHINE_TYPE",
-  stateInfo: {
-    state: "CLAIMED"
-  }
-};
-
-beforeEach(() => {
-  const store = new Vuex.Store({
-    modules: {
-      recommendationsStore: RecommendationStore
-    }
-  });
-
-  store.commit("resetRecommendations");
-});
-
-describe("Store tests", () => {
+describe("Store", () => {
   test("addRecommendation", () => {
-    const store = new Vuex.Store({
-      modules: {
-        recommendationsStore: RecommendationStore
-      }
-    });
+    const store = rootStoreFactory();
 
-    store.commit("addRecommendation", sampleRecommendation);
+    store.commit(
+      "recommendationsStore/addRecommendation",
+      sampleRecommendation
+    );
     // For some very weird reason, using expect().toHaveProperty() only works if the name is short
     expect(
-      sampleRecommendation.name in
-        store.state.recommendationsStore.recommendations
+      store.state.recommendationsStore!.recommendations.includes(
+        sampleRecommendation
+      )
     ).toBe(true);
     // TODO add recommendation content checks as well
   });
+});
 
+describe("Recommendation-type objects", () => {
   test("Getting the project that the recommendation references", async () => {
     expect(Model.getRecommendationProject(sampleRecommendation)).toEqual(
       "rightsizer-test"
     );
   });
+});
 
+describe("Fetching recommendations", () => {
   test("Getting the instance that the recommendation references", async () => {
     expect(
       Model.getRecommendationResourceShortName(sampleRecommendation)
@@ -124,20 +74,16 @@ describe("Store tests", () => {
 
     fetchMock.mockResponses(...responses);
 
-    const store = new Vuex.Store({
-      modules: {
-        recommendationsStore: RecommendationStore
-      }
-    });
+    const store = rootStoreFactory();
 
-    await store.dispatch("fetchRecommendations");
+    store.commit("recommendationsStore/resetRecommendations");
 
-    expect(
-      Object.values(store.state.recommendationsStore.recommendations)[0]
-    ).toEqual(sampleRecommendation);
-    expect(
-      Object.values(store.state.recommendationsStore.recommendations).length
-    ).toEqual(1);
+    await store.dispatch("recommendationsStore/fetchRecommendations");
+
+    expect(store.state.recommendationsStore!.recommendations[0]).toEqual(
+      sampleRecommendation
+    );
+    expect(store.state.recommendationsStore!.recommendations.length).toEqual(1);
 
     fetchMock.dontMock();
   });
@@ -170,19 +116,17 @@ describe("Store tests", () => {
 
     fetchMock.mockResponses(...responses);
 
-    const store = new Vuex.Store({
-      modules: {
-        recommendationsStore: RecommendationStore
-      }
-    });
+    const store = rootStoreFactory();
 
-    await store.dispatch("fetchRecommendations");
+    store.commit("recommendationsStore/resetRecommendations");
 
-    expect(store.state.recommendationsStore.errorCode).toEqual(302);
-    expect(store.state.recommendationsStore.errorMessage).toEqual(
+    await store.dispatch("recommendationsStore/fetchRecommendations");
+
+    expect(store.state.recommendationsStore!.errorCode).toEqual(302);
+    expect(store.state.recommendationsStore!.errorMessage).toEqual(
       "Something failed"
     );
-    expect(store.state.recommendationsStore.recommendations).toEqual({});
+    expect(store.state.recommendationsStore!.recommendations).toEqual([]);
 
     fetchMock.dontMock();
   });
