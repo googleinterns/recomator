@@ -26,12 +26,12 @@ const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
-  recommendations: Array<Recommendation>;
+  recommendations: Recommendation[];
   errorCode: number | undefined;
   errorMessage: string | undefined;
   // % recommendations loaded, null if no fetching is happening
   progress: number | null;
-  selected: Array<boolean>;
+  selected: boolean[];
 }
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
