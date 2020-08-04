@@ -45,11 +45,17 @@ type GoogleService interface {
 	// lists whether the requirements have been met for all required permissions.
 	ListPermissionRequirements(project string, permissions [][]string) ([]Requirement, error)
 
+	// lists projects
+	ListProjects() ([]string, error)
+
 	// listing recommendations for specified project, zone and recommender
 	ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error)
 
 	// listing every zone available for the project methods
 	ListZonesNames(project string) ([]string, error)
+
+	// listing every region available for the project methods
+	ListRegionsNames(project string) ([]string, error)
 
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
