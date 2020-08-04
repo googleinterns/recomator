@@ -20,7 +20,7 @@ limitations under the License. -->
     v-on:update:group-by="onGroupByUpdated"
     :items-per-page="itemsPerPage"
     :single-select="false"
-    v-model="$store.state.recommendationsStore.selected"
+    v-model="selectedRows"
     show-select
     item-key="name"
   >
@@ -70,6 +70,8 @@ import ProjectCell from "@/components/ProjectCell.vue";
 import DescriptionCell from "@/components/DescriptionCell.vue";
 import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
+import { IRootStoreState } from "../store/root";
+import { RecommendationExtra } from "../store/model";
 
 @Component({
   components: {
@@ -122,5 +124,14 @@ export default class CoreTable extends Vue {
   }
 
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
+
+  get selectedRows(): RecommendationExtra[] {
+    return (this.$store.state as IRootStoreState).recommendationsStore!
+      .selected;
+  }
+
+  set selectedRows(selected: RecommendationExtra[]) {
+    this.$store.commit("recommendationsStore/setSelected", selected);
+  }
 }
 </script>
