@@ -58,7 +58,7 @@ limitations under the License. -->
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.applyAndStatus="{ item }">
-          <!-- TODO: Apply/status column -->
+      <!-- TODO: Apply/status column -->
     </template>
   </v-data-table>
 </template>
@@ -78,7 +78,7 @@ import SavingsCostCell from "@/components/SavingsCostCell.vue";
     ProjectCell,
     TypeCell,
     DescriptionCell,
-    SavingsCostCell,
+    SavingsCostCell
   }
 })
 export default class CoreTable extends Vue {

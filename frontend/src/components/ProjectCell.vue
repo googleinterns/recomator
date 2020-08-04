@@ -13,22 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <td>
-    {{ project() }}
+    {{ project }}
   </td>
 </template>
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { getRecommendationProject } from "../store/model";
+import { RecommendationExtra } from "../store/model";
 
 const ProjectCellProps = Vue.extend({
-  props: ["rowRecommendation"]
+  props: {
+    rowRecommendation: {
+      type: Object as PropType<RecommendationExtra>,
+      required: true
+    }
+  }
 });
 
 @Component
 export default class ProjectCell extends ProjectCellProps {
-  project() {
-    return getRecommendationProject(this.rowRecommendation);
+  get project() {
+    return this.rowRecommendation.projectCol;
   }
 }
 </script>

@@ -13,22 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <td>
-    {{ description() }}
+    {{ description }}
   </td>
 </template>
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { getRecomendationDescription } from "../store/model";
+import { RecommendationExtra } from "../store/model";
 
 const DescriptionCellProps = Vue.extend({
-  props: ["rowRecommendation"]
+  props: {
+    rowRecommendation: {
+      type: Object as PropType<RecommendationExtra>,
+      required: true
+    }
+  }
 });
 
 @Component
 export default class DescriptionCell extends DescriptionCellProps {
-  description() {
-    return getRecomendationDescription(this.rowRecommendation);
+  get description() {
+    return this.rowRecommendation.description;
   }
 }
 </script>

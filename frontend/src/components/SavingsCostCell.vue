@@ -35,18 +35,23 @@ limitations under the License. -->
   </td>
 </template>
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { getRecommendationCostPerWeek } from "../store/model";
+import { RecommendationExtra } from "../store/model";
 
 const SavingsCostCellProps = Vue.extend({
-  props: ["rowRecommendation"]
+  props: {
+    rowRecommendation: {
+      type: Object as PropType<RecommendationExtra>,
+      required: true
+    }
+  }
 });
 
 @Component
 export default class SavingsCostCell extends SavingsCostCellProps {
   get cost(): number {
-    return getRecommendationCostPerWeek(this.rowRecommendation);
+    return this.rowRecommendation.costCol;
   }
   get costRounded(): string {
     return this.cost.toFixed(2);

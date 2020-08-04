@@ -69,6 +69,7 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root";
 
+
 @Component
 export default class FiltersRow extends Vue {
   // resource name

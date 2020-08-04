@@ -13,22 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <td>
-    {{ shortName() }}
+    {{ shortName }}
   </td>
 </template>
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { getRecommendationResourceShortName } from "../store/model";
+import { RecommendationExtra } from "../store/model";
 
 const ResourceCellProps = Vue.extend({
-  props: ["rowRecommendation"]
+  props: {
+    rowRecommendation: {
+      type: Object as PropType<RecommendationExtra>,
+      required: true
+    }
+  }
 });
 
 @Component
 export default class ResourceCell extends ResourceCellProps {
-  shortName() {
-    return getRecommendationResourceShortName(this.rowRecommendation);
+  get shortName() {
+    return this.rowRecommendation.resourceCol;
   }
 }
 </script>
