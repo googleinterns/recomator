@@ -123,9 +123,8 @@ export function getRecommendationCostPerWeek(
 
   let cost = 0;
 
-  if (Object.prototype.hasOwnProperty.call(costObject, "units"))
-    cost += parseInt(costObject.units!);
-  if (Object.prototype.hasOwnProperty.call(costObject, "nanos"))
+  if (costObject.units !== undefined) cost += parseInt(costObject.units!);
+  if (costObject.nanos !== undefined)
     cost += costObject.nanos! / (1000 * 1000 * 1000);
 
   return (cost * 60 * 60 * 24 * 7) / secs;
