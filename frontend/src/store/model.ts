@@ -135,3 +135,29 @@ export function getRecommendationCostPerWeek(
 export function getRecommendationType(recommendation: Recommendation) {
   return recommendation.recommenderSubtype;
 }
+
+// Class for cacheing extra fields that are used for grouping or sorting
+export class RecommendationExtra implements Recommendation {
+  name: string;
+  description: string;
+  recommenderSubtype: string;
+  primaryImpact: Impact;
+  content: RecommendationContent;
+  stateInfo: RecommendationStateInfo;
+  costCol: number;
+  projectCol: string;
+  resourceCol: string;
+  typeCol: string;
+  constructor(rec: Recommendation) {
+    this.name = rec.name;
+    this.description = rec.description;
+    this.recommenderSubtype = rec.recommenderSubtype;
+    this.primaryImpact = rec.primaryImpact;
+    this.content = rec.content;
+    this.stateInfo = rec.stateInfo;
+    this.costCol = getRecommendationCostPerWeek(rec);
+    this.projectCol = getRecommendationProject(rec);
+    this.resourceCol = getRecommendationResourceShortName(rec);
+    this.typeCol = getRecommendationType(rec);
+  }
+}

@@ -36,15 +36,15 @@ limitations under the License. -->
       <!-- TODO: Group summary -->
     </template>
 
-    <template v-slot:item.resource="{ item }">
+    <template v-slot:item.resourceCol="{ item }">
       <ResourceCell :rowRecommendation="item" />
     </template>
 
-    <template v-slot:item.project="{ item }">
+    <template v-slot:item.projectCol="{ item }">
       <ProjectCell :rowRecommendation="item" />
     </template>
 
-    <template v-slot:item.recommenderSubtype="{ item }">
+    <template v-slot:item.typeCol="{ item }">
       <TypeCell :rowRecommendation="item" />
     </template>
 
@@ -52,7 +52,7 @@ limitations under the License. -->
       <DescriptionCell :rowRecommendation="item" />
     </template>
 
-    <template v-slot:item.savingsAndCost="{ item }">
+    <template v-slot:item.costCol="{ item }">
       <SavingsCostCell :rowRecommendation="item" />
     </template>
 
@@ -75,6 +75,7 @@ import { IRootStoreState } from "../store/root";
 import { ICoreTableStoreState } from "../store/core_table";
 import {
   Recommendation,
+  RecommendationExtra,
   getRecommendationProject,
   getRecommendationType,
   getRecommendationResourceShortName,
@@ -92,30 +93,33 @@ import {
   }
 })
 export default class CoreTable extends Vue {
+  // headers ending with "Col" have values that are bound to corresponding properties
+  //  for example, Resource will take RecommendationExtra.resourceCol for sorting
   headers = [
-    { text: "Resource", value: "resource", groupable: false, sortable: true },
-    { text: "Project", value: "project", groupable: true, sortable: true },
+    { text: "Resource", value: "resourceCol", groupable: false, sortable: true },
+    { text: "Project", value: "projectCol", groupable: true, sortable: true },
     {
       text: "Type",
-      value: "recommenderSubtype",
+      value: "typeCol",
       groupable: true,
       sortable: true
     },
     {
       text: "Description",
       value: "description",
+      groupable: false,
       sortable: false,
-      groupable: false
     },
     {
       text: "Savings/cost per week",
-      value: "savingsAndCost",
-      groupable: false
+      value: "costCol",
+      groupable: false,
+      sortable: true
     },
     { text: "", value: "applyAndStatus", groupable: false, sortable: false }
   ];
 
-  get filteredRecommendations() {
+  get filteredRecommendations(): RecommendationExtra[] {
     const rootStoreState = this.$store.state as IRootStoreState;
     return rootStoreState.recommendationsStore!.recommendations.filter(
       (recommendation: Recommendation) =>
@@ -123,7 +127,7 @@ export default class CoreTable extends Vue {
           rootStoreState.coreTableStore!,
           recommendation
         )
-    );
+    ).map(recommendation => new RecommendationExtra(recommendation));
   }
 
   itemsPerPage = 10;
