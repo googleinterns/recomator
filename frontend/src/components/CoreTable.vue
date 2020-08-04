@@ -15,7 +15,7 @@ limitations under the License. -->
   <v-data-table
     dense
     :headers="headers"
-    :items="filteredRecommendations"
+    :items="filteredRecommendationsWithExtras"
     show-group-by
     v-on:update:group-by="onGroupByUpdated"
     :items-per-page="itemsPerPage"
@@ -96,7 +96,12 @@ export default class CoreTable extends Vue {
   // headers ending with "Col" have values that are bound to corresponding properties
   //  for example, Resource will take RecommendationExtra.resourceCol for sorting
   headers = [
-    { text: "Resource", value: "resourceCol", groupable: false, sortable: true },
+    {
+      text: "Resource",
+      value: "resourceCol",
+      groupable: false,
+      sortable: true
+    },
     { text: "Project", value: "projectCol", groupable: true, sortable: true },
     {
       text: "Type",
@@ -108,7 +113,7 @@ export default class CoreTable extends Vue {
       text: "Description",
       value: "description",
       groupable: false,
-      sortable: false,
+      sortable: false
     },
     {
       text: "Savings/cost per week",
@@ -119,7 +124,7 @@ export default class CoreTable extends Vue {
     { text: "", value: "applyAndStatus", groupable: false, sortable: false }
   ];
 
-  get filteredRecommendations(): RecommendationExtra[] {
+  get filteredRecommendations(): Recommendation[] {
     const rootStoreState = this.$store.state as IRootStoreState;
     return rootStoreState.recommendationsStore!.recommendations.filter(
       (recommendation: Recommendation) =>
@@ -127,7 +132,13 @@ export default class CoreTable extends Vue {
           rootStoreState.coreTableStore!,
           recommendation
         )
-    ).map(recommendation => new RecommendationExtra(recommendation));
+    );
+  }
+
+  get filteredRecommendationsWithExtras(): Recommendation[] {
+    return this.filteredRecommendations.map(
+      recommendation => new RecommendationExtra(recommendation)
+    );
   }
 
   itemsPerPage = 10;
