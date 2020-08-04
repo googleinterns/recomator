@@ -12,41 +12,37 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import CoreTable from "@/components/CoreTable.vue";
 import { rootStoreFactory } from "@/store/root";
+import { isRecommendationInResults } from "@/store/core_table";
 import sampleRecommendation from "./sample_recommendation";
+import { Recommendation, RecommendationExtra } from "@/store/model";
 
 describe("Core Table", () => {
   test("Filtering results by resource name", async () => {
     const fakeStore = rootStoreFactory();
-    const newSampleRecommendation = JSON.parse(
+    const freshSampleRecommendation = JSON.parse(
+      // deep copy
       JSON.stringify(sampleRecommendation)
-    );
-    const isRecommendationInResults = (CoreTable.prototype.constructor as any)
-      .isRecommendationInResults;
+    ) as Recommendation;
 
     // Check if we accept resoruce name: bob-vm0 when searching for bob
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "bob");
-    newSampleRecommendation.content.operationGroups[0].operations[0].resource =
+    freshSampleRecommendation.content.operationGroups[0].operations[0].resource =
       "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/bob-vm0";
-    fakeStore.commit(
-      "recommendationsStore/addRecommendation",
-      newSampleRecommendation
-    );
     expect(
       isRecommendationInResults(
         fakeStore.state.coreTableStore!,
-        newSampleRecommendation
+        new RecommendationExtra(freshSampleRecommendation)
       )
     ).toBeTruthy();
 
     // Check if we accept resoruce name: alice-vm0 when searching for bob
-    newSampleRecommendation.content.operationGroups[0].operations[0].resource =
+    freshSampleRecommendation.content.operationGroups[0].operations[0].resource =
       "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/alice-vm0";
     expect(
       isRecommendationInResults(
         fakeStore.state.coreTableStore!,
-        newSampleRecommendation
+        new RecommendationExtra(freshSampleRecommendation)
       )
     ).toBeFalsy();
 
@@ -56,7 +52,7 @@ describe("Core Table", () => {
     expect(
       isRecommendationInResults(
         fakeStore.state.coreTableStore!,
-        newSampleRecommendation
+        new RecommendationExtra(freshSampleRecommendation)
       )
     ).toBeTruthy();
   });

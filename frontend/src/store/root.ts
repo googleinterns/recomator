@@ -13,13 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import Vue from "vue";
-import Vuex, { StoreOptions, Store } from "vuex";
+import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
 import {
   RecommendationsStore,
   IRecommendationsStoreState
 } from "./recommendations";
 
-import { CoreTableStore, ICoreTableStoreState } from "./core_table";
+import {
+  CoreTableStore,
+  ICoreTableStoreState,
+  isRecommendationInResults
+} from "./core_table";
+import { RecommendationExtra } from "./model";
 
 Vue.use(Vuex);
 
@@ -33,9 +38,22 @@ export interface IRootStoreState {
   coreTableStore?: ICoreTableStoreState;
 }
 
+const getters: GetterTree<IRootStoreState, IRootStoreState> = {
+  filteredRecommendationsWithExtras(state): RecommendationExtra[] {
+    return state
+      .recommendationsStore!.recommendations.map(
+        rec => new RecommendationExtra(rec)
+      )
+      .filter((recExtra: RecommendationExtra) =>
+        isRecommendationInResults(state.coreTableStore!, recExtra)
+      );
+  }
+};
+
 export function rootStoreFactory(): Store<IRootStoreState> {
   const storeOptions: StoreOptions<IRootStoreState> = {
     state: {},
+    getters: getters,
     modules: {
       recommendationsStore: RecommendationsStore,
       coreTableStore: CoreTableStore

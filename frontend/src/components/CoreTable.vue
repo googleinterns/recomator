@@ -15,7 +15,7 @@ limitations under the License. -->
   <v-data-table
     dense
     :headers="headers"
-    :items="filteredRecommendationsWithExtras"
+    :items="this.$store.getters['filteredRecommendationsWithExtras']"
     show-group-by
     v-on:update:group-by="onGroupByUpdated"
     :items-per-page="itemsPerPage"
@@ -58,7 +58,7 @@ limitations under the License. -->
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.applyAndStatus="{ item }">
-      <!-- TODO: Apply/status column -->
+          <!-- TODO: Apply/status column -->
     </template>
   </v-data-table>
 </template>
@@ -71,17 +71,6 @@ import DescriptionCell from "@/components/DescriptionCell.vue";
 import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 
-import { IRootStoreState } from "../store/root";
-import { ICoreTableStoreState } from "../store/core_table";
-import {
-  Recommendation,
-  RecommendationExtra,
-  getRecommendationProject,
-  getRecommendationType,
-  getRecommendationResourceShortName,
-  getRecomendationDescription
-} from "../store/model";
-
 @Component({
   components: {
     FiltersRow,
@@ -89,7 +78,7 @@ import {
     ProjectCell,
     TypeCell,
     DescriptionCell,
-    SavingsCostCell
+    SavingsCostCell,
   }
 })
 export default class CoreTable extends Vue {
@@ -124,23 +113,6 @@ export default class CoreTable extends Vue {
     { text: "", value: "applyAndStatus", groupable: false, sortable: false }
   ];
 
-  get filteredRecommendations(): Recommendation[] {
-    const rootStoreState = this.$store.state as IRootStoreState;
-    return rootStoreState.recommendationsStore!.recommendations.filter(
-      (recommendation: Recommendation) =>
-        CoreTable.isRecommendationInResults(
-          rootStoreState.coreTableStore!,
-          recommendation
-        )
-    );
-  }
-
-  get filteredRecommendationsWithExtras(): Recommendation[] {
-    return this.filteredRecommendations.map(
-      recommendation => new RecommendationExtra(recommendation)
-    );
-  }
-
   itemsPerPage = 10;
   // TODO: grouping should temporarily increase items shown to all
 
@@ -150,40 +122,5 @@ export default class CoreTable extends Vue {
   }
 
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
-
-  static isRecommendationInResults(
-    coreTableStoreState: ICoreTableStoreState,
-    rec: Recommendation
-  ): boolean {
-    return (
-      // project filter
-      (coreTableStoreState.projectsSelected.length === 0 ||
-        coreTableStoreState.projectsSelected.includes(
-          getRecommendationProject(rec)
-        )) &&
-      // types selected
-      (coreTableStoreState.typesSelected.length === 0 ||
-        coreTableStoreState.typesSelected.includes(
-          getRecommendationType(rec)
-        )) &&
-      // resource name search
-      (coreTableStoreState.resourceNameSearchText.length === 0 ||
-        CoreTable.isSearchTextInCell(
-          coreTableStoreState.resourceNameSearchText,
-          getRecommendationResourceShortName(rec)
-        )) &&
-      // description search
-      (coreTableStoreState.descriptionSearchText.length === 0 ||
-        CoreTable.isSearchTextInCell(
-          coreTableStoreState.descriptionSearchText,
-          getRecomendationDescription(rec)
-        ))
-    );
-  }
-
-  // We want 'save' in the search field to match 'Save' in a cell
-  static isSearchTextInCell(searchText: string, cellText: string): boolean {
-    return cellText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
-  }
 }
 </script>
