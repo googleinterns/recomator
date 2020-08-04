@@ -108,13 +108,13 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 };
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
-  allProjects(state): Array<string> {
+  allProjects(state): string[] {
     const projects = state.recommendations.map(r =>
       getRecommendationProject(r)
     );
     return Array.from(new Set(projects));
   },
-  allTypes(state): Array<string> {
+  allTypes(state): string[] {
     const projects = state.recommendations.map(r => getRecommendationType(r));
     return Array.from(new Set(projects));
   }
