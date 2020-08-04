@@ -19,10 +19,10 @@ import { RecommendationExtra } from "./model";
 export interface ICoreTableStoreState {
   resourceNameSearchText: string;
   descriptionSearchText: string;
-  projectsSelected: Array<string>;
-  typesSelected: Array<string>;
+  projectsSelected: string[];
+  typesSelected: string[];
   // status is the correct plural form, but this is clearer
-  statusesSelected: Array<string>;
+  statusesSelected: string[];
 }
 
 export function coreTableStoreStateFactory(): ICoreTableStoreState {
@@ -42,13 +42,13 @@ const mutations: MutationTree<ICoreTableStoreState> = {
   setDescriptionSearchText(state, text: string): void {
     state.descriptionSearchText = text;
   },
-  setProjectsSelected(state, projects: Array<string>): void {
+  setProjectsSelected(state, projects: string[]): void {
     state.projectsSelected = projects;
   },
-  setTypesSelected(state, types: Array<string>): void {
+  setTypesSelected(state, types: string[]): void {
     state.typesSelected = types;
   },
-  setStatusesSelected(state, statuses: Array<string>): void {
+  setStatusesSelected(state, statuses: string[]): void {
     state.statusesSelected = statuses;
   }
 };

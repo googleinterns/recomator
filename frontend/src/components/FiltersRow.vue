@@ -95,46 +95,46 @@ export default class FiltersRow extends Vue {
 
   // projects
 
-  get allProjects(): Array<string> {
+  get allProjects(): string[] {
     // We could cache these, but filtering is the bottleneck so there is no point to bother
     return this.$store.getters["recommendationsStore/allProjects"];
   }
 
-  get projectsSelected(): Array<string> {
+  get projectsSelected(): string[] {
     return (this.$store.state as IRootStoreState).coreTableStore!
       .projectsSelected;
   }
 
-  set projectsSelected(projects: Array<string>) {
+  set projectsSelected(projects: string[]) {
     this.$store.commit("coreTableStore/setProjectsSelected", projects);
   }
 
   // types
 
-  get allTypes(): Array<string> {
+  get allTypes(): string[] {
     return this.$store.getters["recommendationsStore/allTypes"];
   }
 
-  get typesSelected(): Array<string> {
+  get typesSelected(): string[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.typesSelected;
   }
 
-  set typesSelected(types: Array<string>) {
+  set typesSelected(types: string[]) {
     this.$store.commit("coreTableStore/setTypesSelected", types);
   }
 
   // statuses
 
-  get statusesSelected(): Array<string> {
+  get statusesSelected(): string[] {
     return (this.$store.state as IRootStoreState).coreTableStore!
       .statusesSelected;
   }
 
-  set statusesSelected(statuses: Array<string>) {
+  set statusesSelected(statuses: string[]) {
     this.$store.commit("coreTableStore/setStatusesSelected", statuses);
   }
 
-  get allStatuses(): Array<string> {
+  get allStatuses(): string[] {
     return this.$store.getters["recommendationsStore/allStatuses"];
   }
 }
