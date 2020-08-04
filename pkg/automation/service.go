@@ -36,6 +36,9 @@ type GoogleService interface {
 	// deletes persistent disk
 	DeleteDisk(project, zone, disk string) error
 
+	// gets the specified instance resource
+	GetInstance(project string, zone string, instance string) (*compute.Instance, error)
+
 	// lists whether the requirements have been met for all APIs (APIs enabled).
 	ListAPIRequirements(project string, apis []string) ([]Requirement, error)
 
