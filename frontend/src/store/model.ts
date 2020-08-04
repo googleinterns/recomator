@@ -38,7 +38,8 @@ export interface CostProjection {
 
 export interface Money {
   currencyCode: string;
-  units: string;
+  units?: string;
+  nanos?: number;
 }
 
 export interface RecommendationStateInfo {
@@ -93,22 +94,22 @@ export function getRecommendationProject(
 // TODO: remove ignoring Eslint, once these methods are actually used somewhere
 
 // Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRecomendationDescription(
   recommendation: Recommendation
 ): string {
   return recommendation.description;
 }
 
-// "3.5$ per week"
+// "3.5" ($ per week)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function getRecommendationCostString(
+export function getRecommendationCostPerWeek(
   recommendation: Recommendation
-): string {
+): number {
+  const costObject = recommendation.primaryImpact.costProjection.cost;
   console.assert(
-    recommendation.primaryImpact.costProjection.cost.currencyCode === "USD",
+    costObject.currencyCode === "USD",
     "Only USD supported, got %s",
-    recommendation.primaryImpact.costProjection.cost.currencyCode
+    costObject.currencyCode
   );
 
   // As a month doesn't have a fixed number of seconds, weekly cost is used
@@ -116,12 +117,18 @@ export function getRecommendationCostString(
   const secs = parseInt(
     recommendation.primaryImpact.costProjection.duration.slice(0, -1)
   );
-  // example units: "-73"
-  const cost = parseInt(recommendation.primaryImpact.costProjection.cost.units);
+  // example units: "-73", example nanos: 4200000000 => -73.42
+  // Sometimes we will only get the 'nanos' field
+  //  (only observed for snaphshots for now)
 
-  const costPerWeek = (cost * 60 * 60 * 24 * 7) / secs;
+  let cost = 0;
 
-  return `${costPerWeek.toFixed(2)} USD per week`;
+  if (Object.prototype.hasOwnProperty.call(costObject, "units"))
+    cost += parseInt(costObject.units!);
+  if (Object.prototype.hasOwnProperty.call(costObject, "nanos"))
+    cost += costObject.nanos! / (1000 * 1000 * 1000);
+
+  return (cost * 60 * 60 * 24 * 7) / secs;
 }
 
 // "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...

@@ -36,33 +36,28 @@ limitations under the License. -->
       <!-- TODO: Group summary -->
     </template>
 
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.resource="{ item }">
       <ResourceCell :rowRecommendation="item" />
     </template>
 
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.project="{ item }">
       <ProjectCell :rowRecommendation="item" />
     </template>
 
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.recommenderSubtype="{ item }">
       <TypeCell :rowRecommendation="item" />
     </template>
 
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
     <template v-slot:item.description="{ item }">
       <DescriptionCell :rowRecommendation="item" />
     </template>
 
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
-    <template v-slot:item.cost="{ item }">
-      <!-- TODO: Savings/Cost column -->
+    <template v-slot:item.savingsAndCost="{ item }">
+      <SavingsCostCell :rowRecommendation="item" />
     </template>
 
     <!-- eslint-disable-next-line vue/no-unused-vars -->
-    <template v-slot:item.apply="{ item }">
+    <template v-slot:item.applyAndStatus="{ item }">
       <!-- TODO: Apply/status column -->
     </template>
   </v-data-table>
@@ -74,6 +69,8 @@ import ResourceCell from "@/components/ResourceCell.vue";
 import ProjectCell from "@/components/ProjectCell.vue";
 import DescriptionCell from "@/components/DescriptionCell.vue";
 import TypeCell from "@/components/TypeCell.vue";
+import SavingsCostCell from "@/components/SavingsCostCell.vue";
+
 import { IRootStoreState } from "../store/root";
 import { ICoreTableStoreState } from "../store/core_table";
 import {
@@ -90,7 +87,8 @@ import {
     ResourceCell,
     ProjectCell,
     TypeCell,
-    DescriptionCell
+    DescriptionCell,
+    SavingsCostCell
   }
 })
 export default class CoreTable extends Vue {
