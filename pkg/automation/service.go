@@ -31,7 +31,7 @@ type GoogleService interface {
 	ChangeMachineType(project, zone, instance, machineType string) error
 
 	// creates a snapshot of a disk
-	CreateSnapshot(project, zone, disk, name string) error
+	CreateSnapshot(project, zone, disk string) error
 
 	// deletes persistent disk
 	DeleteDisk(project, zone, disk string) error

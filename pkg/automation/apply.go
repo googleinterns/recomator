@@ -22,6 +22,12 @@ import (
 	"google.golang.org/api/recommender/v1"
 )
 
+type valueAddSnapshot struct {
+	Name              string
+	Source_disk       string
+	Storage_locations string
+}
+
 // DoOperation does the action specified in the operation.
 func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommenderV1Operation) error {
 	switch strings.ToLower(operation.Action) {
@@ -31,27 +37,44 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			path := operation.Resource
 
 			project := extractFromURL(path, "projects")
-			zone := extractFromURL(path, "zones");
+			zone := extractFromURL(path, "zones")
 			instance := extractFromURL(path, "instance")
 
 			result, err := s.TestMachineType(project, zone, instance, operation.Value, operation.ValueMatcher)
+			if err != nil {
+
+			}
+
+			if result == false {
+
+			}
 		case "/status":
 			path := operation.Resource
 
 			project := extractFromURL(path, "projects")
-			zone := extractFromURL(path, "zones");
+			zone := extractFromURL(path, "zones")
 			instance := extractFromURL(path, "instance")
 
 			result, err := s.TestStatus(project, zone, instance, operation.Value, operation.ValueMatcher)
+			if err != nil {
+
+			}
+
+			if result == false {
+
+			}
 		default:
 			// return error operation not supported
 		}
 	case "replace":
 		switch operation.Path {
-		case "/machineType": 
-		    // TODO do both zones need to be the same?
+		case "/machineType":
+			// TODO do both zones need to be the same?
 			path1 := operation.Resource
-			path2 := operation.Value
+			path2, ok := operation.Value.(string)
+			if !ok {
+				// handle error (if nil, it's fine)
+			}
 
 			project := extractFromURL(path1, "projects")
 			instance := extractFromURL(path1, "instances")
@@ -62,28 +85,31 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 		case "/status":
 			// stop (or start?) the machine
 			// TODO start?
-			path := resource
+			path := operation.Resource
 
 			project := extractFromURL(path, "projects")
-			zone := extractFromURL(path, "zones");
+			zone := extractFromURL(path, "zones")
 			instance := extractFromURL(path, "instance")
 
 			s.StopInstance(project, zone, instance)
-			
+
 		default:
 			// return error operation not supported
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
-			path := operation.Resource
+			value, ok := operation.Value.(valueAddSnapshot)
+			if !ok {
+				// handle error (if nil, it's fine)
+			}
+			path := value.Source_disk
 
 			project := extractFromURL(path, "projects")
 			zone := extractFromURL(path, "zones")
 			disk := extractFromURL(path, "disks")
-			snapshotName := getSnapshotName(operation) // TODO
 
-			s.createSnapshot(project, zone, disk, snapshotName)
+			s.CreateSnapshot(project, zone, disk)
 		default:
 			//
 		}
@@ -91,14 +117,14 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 	case "remove":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Disk":
-			path := operation.Value.Source_disk
+			path := operation.Resource
 
 			project := extractFromURL(path, "projects")
 			zone := extractFromURL(path, "zones")
 			disk := extractFromURL(path, "disks")
 
-			s.deleteDisk(project, zone, disk)
-			
+			s.DeleteDisk(project, zone, disk)
+
 		default:
 			//
 		}
@@ -117,6 +143,8 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
 	// check the state is ACTIVE
 	// claim the recommendation
+	// this may somehow be concurrent
+	// if test fails, just proceed to the next group? Or what?
 	for _, operationGroup := range recommendation.Content.OperationGroups {
 		for _, operation := range operationGroup.Operations {
 			err := s.DoOperation(operation)
