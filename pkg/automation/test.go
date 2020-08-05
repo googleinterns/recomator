@@ -24,6 +24,10 @@ import (
 
 type gcloudValueMatcher = recommender.GoogleCloudRecommenderV1ValueMatcher
 
+// Checks if the string toTest matches the member MatchesPattern of valueMatcher
+// If valueMatcher is not nil. Otherwise, if value is not nil it is interpreted as string
+// And equality of value.(string) and toTest is checked. If both value and valueMatcher are nil,
+// then it results in an error
 func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	if value == nil {
 		if valueMatcher == nil {
@@ -31,7 +35,6 @@ func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (b
 		}
 
 		r, err := regexp.Compile("^" + valueMatcher.MatchesPattern + "$")
-
 		if err != nil {
 			return false, err
 		}
@@ -47,6 +50,8 @@ func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (b
 	return valueString == toTest, nil
 }
 
+// Checks if the machine type of the instance specified by given project, zone and instance
+// matches the given value or valueMatcher
 func (s *googleService) TestMachineType(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	machineInstance, err := s.GetInstance(project, zone, instance)
 	if err != nil {
@@ -58,6 +63,8 @@ func (s *googleService) TestMachineType(project string, zone string, instance st
 	return test(machineType, value, valueMatcher)
 }
 
+// Checks if the status of the instance specified by given project, zone and instance
+// matches the given value or valueMatcher
 func (s *googleService) TestStatus(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	machineInstance, err := s.GetInstance(project, zone, instance)
 	if err != nil {

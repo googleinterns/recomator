@@ -18,10 +18,14 @@ package automation
 
 import "errors"
 
+// Error returned when some type does not
+// fit its asserted type
 func typeError() error {
 	return errors.New("Type error")
 }
 
+// Error returned when some parameter of the
+// operation makes it impossible to perform
 func operationUnsupportedError() error {
 	return errors.New("The operation is not supported")
 }
