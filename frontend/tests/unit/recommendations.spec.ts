@@ -47,7 +47,7 @@ describe("Recommendation-type objects", () => {
 });
 
 describe("Fetching recommendations", () => {
-  test("Getting the instance that the recommendation references",  () => {
+  test("Getting the instance that the recommendation references", () => {
     expect(
       Model.getRecommendationResourceShortName(sampleRecommendation)
     ).toEqual("alicja-test");
