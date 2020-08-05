@@ -22,10 +22,6 @@ func typeError() error {
 	return errors.New("Type error")
 }
 
-func testError() error {
-	return errors.New("Test operation failed")
-}
-
 func operationUnsupportedError() error {
 	return errors.New("The operation is not supported")
 }
