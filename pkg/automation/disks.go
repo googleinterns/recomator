@@ -27,8 +27,6 @@ const maxDisknameLen = 20
 const maxZonenameLen = 26
 const maxSnapshotnameLen = 63
 
-//TODO replace zone with location or sth
-
 func min(a int, b int) int {
 	if a < b {
 		return a
