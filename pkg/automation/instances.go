@@ -22,6 +22,7 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
+// ChangeMachineType changes machine type using instances.setMachineType method
 func (s *googleService) ChangeMachineType(project string, zone string, instance string, machineType string) error {
 	machineType = fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
 	request := &compute.InstancesSetMachineTypeRequest{MachineType: machineType}
@@ -30,6 +31,13 @@ func (s *googleService) ChangeMachineType(project string, zone string, instance 
 	return err
 }
 
+// GetInstance gets instance using instances.get method
+func (s *googleService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
+	instancesService := compute.NewInstancesService(s.computeService)
+	return instancesService.Get(project, zone, instance).Do()
+}
+
+// StopInstance stops instance using instances.stop method
 func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
 	_, err := instancesService.Stop(project, zone, instance).Do()

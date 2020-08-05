@@ -59,9 +59,12 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
   setProgress(state, progress: number) {
     state.progress = progress;
   },
-  setError(state, errorCodeAndMessage: [number, string]) {
-    state.errorCode = errorCodeAndMessage[0];
-    state.errorMessage = errorCodeAndMessage[1];
+  resetRecommendations(state) {
+    state.recommendations = [];
+  },
+  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
+    state.errorCode = errorInfo.errorCode;
+    state.errorMessage = errorInfo.errorMessage;
   }
 };
 
@@ -83,10 +86,12 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        context.commit("setError", [responseCode, responseJson.errorMessage]);
+        context.commit("setError", {
+          errorCode: responseCode,
+          errorMessage: responseJson.errorMessage
+        });
 
         context.commit("endFetching");
-
         return;
       }
 
