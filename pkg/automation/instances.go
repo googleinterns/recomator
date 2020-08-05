@@ -18,7 +18,6 @@ package automation
 
 import (
 	"fmt"
-
 	"google.golang.org/api/compute/v1"
 )
 

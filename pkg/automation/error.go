@@ -18,14 +18,14 @@ package automation
 
 import "errors"
 
-func TypeError() error {
+func typeError() error {
 	return errors.New("Type error")
 }
 
-func TestError() error {
+func testError() error {
 	return errors.New("Test operation failed")
 }
 
-func OperationUnsupportedError() error {
+func operationUnsupportedError() error {
 	return errors.New("The operation is not supported")
 }

@@ -16,20 +16,21 @@ limitations under the License.
 
 package automation
 
-import ( 
-	"google.golang.org/api/compute/v1" 
-	"time" 
+import (
+	"time"
+
 	"github.com/xyproto/randomstring"
+	"google.golang.org/api/compute/v1"
 )
 
-const MAX_DISKNAME_LEN = 20
-const MAX_ZONENAME_LEN = 26
-const MAX_SNAPSHOTNAME_LEN  = 63
+const maxDisknameLen = 20
+const maxZonenameLen = 26
+const maxSnapshotnameLen = 63
 
 //TODO replace zone with location or sth
 
-func Min(a int, b int) int {
-	if (a < b) {
+func min(a int, b int) int {
+	if a < b {
 		return a
 	}
 
@@ -42,17 +43,17 @@ func getTimestamp() string {
 }
 
 // Returns the name of the snapshot, following
-// the convention described here: 
+// the convention described here:
 // https://cloud.google.com/compute/docs/disks/scheduled-snapshots#names_for_scheduled_snapshots
 func getSnapshotName(zone, disk string) string {
 	result := ""
-	result += disk[:Min(MAX_DISKNAME_LEN, len(disk))]
+	result += disk[:min(maxDisknameLen, len(disk))]
 	result += "-"
-	result += zone[:Min(MAX_ZONENAME_LEN, len(zone))]
+	result += zone[:min(maxZonenameLen, len(zone))]
 	result += "-"
 	result += getTimestamp()
 	result += "-"
-	randomSequenceLen := MAX_SNAPSHOTNAME_LEN - len(result)
+	randomSequenceLen := maxSnapshotnameLen - len(result)
 	result += randomstring.HumanFriendlyString(randomSequenceLen)
 
 	return result

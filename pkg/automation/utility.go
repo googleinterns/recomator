@@ -16,24 +16,21 @@ limitations under the License.
 
 package automation
 
-import ("regexp")
+import (
+	"regexp"
+)
 
 // TODO change to returning error
-func extractFromURL (url, parameterName string) string {
-	r, err := regexp.Compile("/" + parameterName + "/[a-zA-Z0-9]+/")
-	
-	if err != nil {
-		return ""
-	}
+func extractFromURL(url, parameterName string) string {
+	// Panic if doesn't compile - which should not happen
+	r := regexp.MustCompile("/" + parameterName + "/[a-zA-Z0-9]+/")
 
 	partialResult := r.FindString(url)
-
 	if len(partialResult) == 0 {
 		return ""
 	}
-	
+
 	stringResult := string(partialResult)
-	result := stringResult[len(parameterName) + 2: len(stringResult) - 1]
-	
+	result := stringResult[len(parameterName)+2 : len(stringResult)-1]
 	return result
 }

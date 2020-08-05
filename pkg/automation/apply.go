@@ -23,9 +23,9 @@ import (
 )
 
 type valueAddSnapshot struct {
-	Name              string
-	Source_disk       string
-	Storage_locations string
+	Name             string
+	SourceDisk       string
+	StorageLocations string
 }
 
 // DoOperation does the action specified in the operation.
@@ -42,11 +42,11 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 
 			result, err := s.TestMachineType(project, zone, instance, operation.Value, operation.ValueMatcher)
 			if err != nil {
-
+				return err
 			}
 
 			if result == false {
-
+				return testError()
 			}
 		case "/status":
 			path := operation.Resource
@@ -57,23 +57,22 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 
 			result, err := s.TestStatus(project, zone, instance, operation.Value, operation.ValueMatcher)
 			if err != nil {
-
+				return err
 			}
 
 			if result == false {
-
+				return testError()
 			}
 		default:
-			// return error operation not supported
+			return operationUnsupportedError()
 		}
 	case "replace":
 		switch operation.Path {
 		case "/machineType":
-			// TODO do both zones need to be the same?
 			path1 := operation.Resource
 			path2, ok := operation.Value.(string)
 			if !ok {
-				// handle error (if nil, it's fine)
+				return typeError()
 			}
 
 			project := extractFromURL(path1, "projects")
@@ -83,35 +82,38 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 
 			s.ChangeMachineType(project, zone, instance, machineType)
 		case "/status":
-			// stop (or start?) the machine
-			// TODO start?
 			path := operation.Resource
 
 			project := extractFromURL(path, "projects")
 			zone := extractFromURL(path, "zones")
 			instance := extractFromURL(path, "instance")
 
-			s.StopInstance(project, zone, instance)
-
+			err := s.StopInstance(project, zone, instance)
+			if err != nil {
+				return err
+			}
 		default:
-			// return error operation not supported
+			return operationUnsupportedError()
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
 			value, ok := operation.Value.(valueAddSnapshot)
 			if !ok {
-				// handle error (if nil, it's fine)
+				return typeError()
 			}
-			path := value.Source_disk
+			path := value.SourceDisk
 
 			project := extractFromURL(path, "projects")
 			zone := extractFromURL(path, "zones")
 			disk := extractFromURL(path, "disks")
 
-			s.CreateSnapshot(project, zone, disk)
+			err := s.CreateSnapshot(project, zone, disk)
+			if err != nil {
+				return err
+			}
 		default:
-			//
+			return operationUnsupportedError()
 		}
 
 	case "remove":
@@ -123,15 +125,19 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			zone := extractFromURL(path, "zones")
 			disk := extractFromURL(path, "disks")
 
-			s.DeleteDisk(project, zone, disk)
+			err := s.DeleteDisk(project, zone, disk)
+			if err != nil {
+				return err
+			}
 
 		default:
-			//
+			return operationUnsupportedError()
 		}
 
 	default:
-		// return error operation not supported
+		return operationUnsupportedError()
 	}
+
 	return nil
 }
 
