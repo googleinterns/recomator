@@ -35,9 +35,10 @@ func min(a int, b int) int {
 	return b
 }
 
+// Returns current time in the fromat YYYYMMDDHHMMSS
 func getTimestamp() string {
 	t := time.Now().UTC()
-	return t.Format(time.RFC850)
+	return t.Format("20060102150405")
 }
 
 // Returns the name of the snapshot, following
