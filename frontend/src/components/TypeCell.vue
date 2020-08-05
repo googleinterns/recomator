@@ -15,26 +15,31 @@ limitations under the License. -->
   <td>
     <v-chip class="ma-2" color="white" label>
       <v-icon left>{{ iconName() }}</v-icon>
-      {{ recommenderSubtype() }}
+      {{ recommenderSubtype }}
     </v-chip>
   </td>
 </template>
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { getRecommendationType } from "../store/model";
+import { RecommendationExtra } from "../store/model";
 
 const TypeCellProps = Vue.extend({
-  props: ["rowRecommendation"]
+  props: {
+    rowRecommendation: {
+      type: Object as PropType<RecommendationExtra>,
+      required: true
+    }
+  }
 });
 
 @Component
 export default class TypeCell extends TypeCellProps {
-  recommenderSubtype(): string {
-    return getRecommendationType(this.rowRecommendation);
+  get recommenderSubtype(): string {
+    return this.rowRecommendation.typeCol;
   }
   iconName(): string {
-    switch (this.recommenderSubtype()) {
+    switch (this.recommenderSubtype) {
       case "CHANGE_MACHINE_TYPE":
         return "mdi-move-resize-variant";
       case "STOP_VM":
