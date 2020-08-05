@@ -18,12 +18,13 @@ fetchMock.dontMock(); // not mocking fetch in every test by default
 
 import * as Model from "@/store/model";
 import { rootStoreFactory } from "@/store/root";
-import sampleRecommendation from "./sample_recommendation";
+import { freshSampleRecommendation } from "./sample_recommendation";
 
 describe("Store", () => {
   test("addRecommendation", () => {
     const store = rootStoreFactory();
 
+    const sampleRecommendation = freshSampleRecommendation();
     store.commit(
       "recommendationsStore/addRecommendation",
       sampleRecommendation
@@ -38,21 +39,21 @@ describe("Store", () => {
   });
 });
 
-describe("Recommendation-type objects", () => {
+describe("Calculated properties", () => {
   test("Getting the project that the recommendation references", () => {
-    expect(Model.getRecommendationProject(sampleRecommendation)).toEqual(
+    expect(Model.getRecommendationProject(freshSampleRecommendation())).toEqual(
       "rightsizer-test"
     );
+  });
+
+  test("Getting the instance that the recommendation references", () => {
+    expect(
+      Model.getRecommendationResourceShortName(freshSampleRecommendation())
+    ).toEqual("alicja-test");
   });
 });
 
 describe("Fetching recommendations", () => {
-  test("Getting the instance that the recommendation references", () => {
-    expect(
-      Model.getRecommendationResourceShortName(sampleRecommendation)
-    ).toEqual("alicja-test");
-  });
-
   test("Fetching works correctly when given response without errors", async () => {
     jest.setTimeout(30000);
     fetchMock.doMock();
@@ -67,8 +68,11 @@ describe("Fetching recommendations", () => {
     responses.push(
       JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
     );
+
+    const sampleRecommendation = freshSampleRecommendation();
     responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
     fetchMock.mockResponses(...responses);
+
     const store = rootStoreFactory();
     store.commit("recommendationsStore/resetRecommendations");
     await store.dispatch("recommendationsStore/fetchRecommendations");
@@ -100,7 +104,9 @@ describe("Fetching recommendations", () => {
         body: JSON.stringify({ errorMessage: "Something failed" })
       };
     });
-    responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
+    responses.push(
+      JSON.stringify({ recommendations: [freshSampleRecommendation()] })
+    );
     fetchMock.mockResponses(...responses);
     const store = rootStoreFactory();
     store.commit("recommendationsStore/resetRecommendations");
