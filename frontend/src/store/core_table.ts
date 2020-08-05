@@ -15,6 +15,12 @@ limitations under the License. */
 import { Module, MutationTree } from "vuex";
 import { IRootStoreState } from "./root";
 import { RecommendationExtra } from "./model";
+import {
+  descriptionFilterAccepted,
+  projectFilterAccepted,
+  resourceFilterAccepted,
+  typeFilterAccepted
+} from "./core_table_filter_utils";
 
 export interface ICoreTableStoreState {
   resourceNameSearchText: string;
@@ -66,36 +72,15 @@ export function coreTableStoreFactory(): Module<
 
 export const CoreTableStore = coreTableStoreFactory();
 
-// We want 'save' in the search field to match 'Save' in a cell
-export function isSearchTextInCell(
-  searchText: string,
-  cellText: string
-): boolean {
-  return cellText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
-}
-
 export function isRecommendationInResults(
-  coreTableStoreState: ICoreTableStoreState,
+  tableState: ICoreTableStoreState,
   recExtra: RecommendationExtra
 ): boolean {
   return (
-    // project filter
-    (coreTableStoreState.projectsSelected.length === 0 ||
-      coreTableStoreState.projectsSelected.includes(recExtra.projectCol)) &&
-    // types selected
-    (coreTableStoreState.typesSelected.length === 0 ||
-      coreTableStoreState.typesSelected.includes(recExtra.typeCol)) &&
-    // resource name search
-    (coreTableStoreState.resourceNameSearchText.length === 0 ||
-      isSearchTextInCell(
-        coreTableStoreState.resourceNameSearchText,
-        recExtra.resourceCol
-      )) &&
-    // description search
-    (coreTableStoreState.descriptionSearchText.length === 0 ||
-      isSearchTextInCell(
-        coreTableStoreState.descriptionSearchText,
-        recExtra.description
-      ))
+    projectFilterAccepted(tableState, recExtra) &&
+    typeFilterAccepted(tableState, recExtra) &&
+    //statusFilterAccepted(tableState, recExtra) &&
+    resourceFilterAccepted(tableState, recExtra) &&
+    descriptionFilterAccepted(tableState, recExtra)
   );
 }
