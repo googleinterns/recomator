@@ -50,9 +50,12 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
   setProgress(state, progress: number) {
     state.progress = progress;
   },
-  setError(state, errorCodeAndMessage: [number, string]) {
-    state.errorCode = errorCodeAndMessage[0];
-    state.errorMessage = errorCodeAndMessage[1];
+  resetRecommendations(state) {
+    state.recommendations = [];
+  },
+  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
+    state.errorCode = errorInfo.errorCode;
+    state.errorMessage = errorInfo.errorMessage;
   }
 };
 
@@ -74,13 +77,12 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
-        context.commit("recommendationsStore/setError", [
-          responseCode,
-          responseJson.errorMessage
-        ]);
+        context.commit("setError", {
+          errorCode: responseCode,
+          errorMessage: responseJson.errorMessage
+        });
 
-        context.commit("recommendationsStore/endFetching");
-
+        context.commit("endFetching");
         return;
       }
 
@@ -89,7 +91,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       }
 
       context.commit(
-        "recommendationsStore/setProgress",
+        "setProgress",
         Math.floor(
           (100 * responseJson.batchesProcessed) / responseJson.numberOfBatches
         )
@@ -99,10 +101,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
 
     for (const recommendation of responseJson.recommendations) {
-      context.commit("recommendationsStore/addRecommendation", recommendation);
+      context.commit("addRecommendation", recommendation);
     }
 
-    context.commit("recommendationsStore/endFetching");
+    context.commit("endFetching");
   }
 };
 
