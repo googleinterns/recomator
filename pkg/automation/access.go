@@ -95,6 +95,7 @@ var requiredPermissions = [][]string{
 	[]string{"compute.instances.setMachineType"},                            // ChangeMachineType
 	[]string{"compute.disks.createSnapshot", "compute.snapshots.create"},    // CreateSnapshot
 	[]string{"compute.disks.delete"},                                        // DeleteDisk
+	[]string{"compute.instances.get"},                                       // GetInstance
 	[]string{"recommender.computeDiskIdleResourceRecommendations.list"},     // ListRecommendations for google.compute.disk.IdleResourceRecommender
 	[]string{"recommender.computeInstanceIdleResourceRecommendations.list"}, // ListRecommendations for google.compute.instance.IdleResourceRecommender
 	[]string{"recommender.computeInstanceMachineTypeRecommendations.list"},  // ListRecommendations for google.compute.instance.MachineTypeRecommender
