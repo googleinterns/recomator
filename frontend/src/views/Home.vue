@@ -46,11 +46,20 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import GroupingHint from "@/components/grouping_hint.vue";
-import CoreTable from "@/components/core_table.vue";
+import GroupingHint from "@/components/GroupingHint.vue";
+import CoreTable from "@/components/CoreTable.vue";
 
 @Component({
   components: { GroupingHint, CoreTable }
 })
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  private mounted() {
+    /* In order for this fetch to work with the fake middleware service,
+     run: `go run cmd/fake-service/*.go` first from the root folder.
+    It might sometimes help to run it repeatedly until the errors disappear,
+     make sure that Go is in the latest version too.
+    Finally, uncomment the following line: */
+    // this.$store.dispatch("recommendationsStore/fetchRecommendations");
+  }
+}
 </script>

@@ -12,9 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { Recommendation } from "@/store/model";
+import {
+  Recommendation,
+  RecommendationExtra,
+  getRecommendationProject,
+  getRecommendationType
+} from "@/store/model";
 import { delay, getServerAddress } from "./utils";
-import { Module, MutationTree, ActionTree } from "vuex";
+import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
 
 const SERVER_ADDRESS: string = getServerAddress();
@@ -22,27 +27,31 @@ const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
-  recommendations: Array<Recommendation>;
+  recommendations: Recommendation[];
+  selected: RecommendationExtra[];
+
   errorCode: number | undefined;
   errorMessage: string | undefined;
   // % recommendations loaded, null if no fetching is happening
   progress: number | null;
-  selected: Array<boolean>;
 }
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
+    selected: [],
     progress: null,
     errorCode: undefined,
-    errorMessage: undefined,
-    selected: []
+    errorMessage: undefined
   };
 }
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
   addRecommendation(state, recommendation: Recommendation): void {
     state.recommendations.push(recommendation);
+  },
+  setSelected(state, selected: RecommendationExtra[]) {
+    state.selected = selected;
   },
   endFetching(state) {
     state.progress = null;
@@ -108,6 +117,19 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   }
 };
 
+const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
+  allProjects(state): string[] {
+    const projects = state.recommendations.map(r =>
+      getRecommendationProject(r)
+    );
+    return Array.from(new Set(projects));
+  },
+  allTypes(state): string[] {
+    const projects = state.recommendations.map(r => getRecommendationType(r));
+    return Array.from(new Set(projects));
+  }
+};
+
 export function recommendationStoreFactory(): Module<
   IRecommendationsStoreState,
   IRootStoreState
@@ -116,7 +138,8 @@ export function recommendationStoreFactory(): Module<
     namespaced: true,
     state: recommendationsStoreStateFactory(),
     mutations: mutations,
-    actions: actions
+    actions: actions,
+    getters: getters
   };
 }
 
