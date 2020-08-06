@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 export class ProjectConfig {
-  public static SEND_REQUESTS_FOR_RECOMMENDATIONS = true;
   public static DEVELOPMENT_SERVER_ADDRESS = "http://localhost:8000";
   public static PRODUCTION_SERVER_ADDRESS = "";
 }

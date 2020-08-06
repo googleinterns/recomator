@@ -48,19 +48,9 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import GroupingHint from "@/components/GroupingHint.vue";
 import CoreTable from "@/components/CoreTable.vue";
-import { ProjectConfig } from "./../config";
 
 @Component({
   components: { GroupingHint, CoreTable }
 })
-export default class Home extends Vue {
-  private mounted() {
-    /* In order for this fetch to work with the fake middleware service,
-     run: `go run cmd/fake-service/*.go` first from the root folder.
-    It might initially help to run it repeatedly until the installing 
-     errors disappear, make sure that Go is in the latest version too. */
-    if (ProjectConfig.SEND_REQUESTS_FOR_RECOMMENDATIONS)
-      this.$store.dispatch("recommendationsStore/fetchRecommendations");
-  }
-}
+export default class Home extends Vue {}
 </script>
