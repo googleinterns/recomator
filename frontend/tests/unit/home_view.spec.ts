@@ -17,6 +17,7 @@ import { mount } from "@vue/test-utils";
 import { rootStoreFactory } from "@/store/root";
 import Home from "@/views/Home.vue";
 import vuetify from "@/plugins/vuetify";
+import { ProjectConfig } from "@/config";
 
 // Helpful for debugs: console.log(wrapper.html())
 //
@@ -29,6 +30,14 @@ import vuetify from "@/plugins/vuetify";
 //   https://vuetifyjs.com/en/getting-started/unit-testing/
 
 describe("Home", () => {
+  // make sure that requesting recommendations from a server is disabled
+  beforeAll(() => {
+    ProjectConfig.SEND_REQUESTS_FOR_RECOMMENDATIONS = false;
+  });
+  afterAll(() => {
+    ProjectConfig.SEND_REQUESTS_FOR_RECOMMENDATIONS = true;
+  });
+
   test("Progress bar and main container visibility", async () => {
     const fakeStore = rootStoreFactory();
     const wrapper = mount(Home, { store: fakeStore, vuetify: vuetify });
