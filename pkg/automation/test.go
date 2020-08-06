@@ -25,30 +25,52 @@ import (
 
 type gcloudValueMatcher = recommender.GoogleCloudRecommenderV1ValueMatcher
 
-// Checks if the string toTest matches the member MatchesPattern of valueMatcher
-// If valueMatcher is not nil. Otherwise, if value is not nil it is interpreted as string
-// And equality of value.(string) and toTest is checked. If both value and valueMatcher are nil,
-// then it results in an error
-func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
+// Checks if the string toTest is equal to the string represented by value
+// It is an error if value can't be interpreted as a string, unless
+// value is nil. In that case true is returned.
+func testValue(toTest string, value interface{}) (bool, error) {
 	if value == nil {
-		if valueMatcher == nil {
-			return false, errors.New("at least one of value and valueMatcher must be specified")
-		}
-
-		r, err := regexp.Compile("^" + valueMatcher.MatchesPattern + "$")
-		if err != nil {
-			return false, err
-		}
-
-		return r.MatchString(toTest), nil
+		return false, nil
 	}
-
 	valueString, ok := value.(string)
 	if !ok {
 		return false, errors.New("if value is specified it must be of type string")
 	}
 
 	return valueString == toTest, nil
+}
+
+// Checks if the string toTest matches regex given by valueMatcher.MatchesPattern.
+// If valueMatcher is nil. In that case true is returned.
+func testValueMatcher(toTest string, valueMatcher *gcloudValueMatcher) (bool, error) {
+	if valueMatcher == nil {
+		return false, nil
+	}
+
+	r, err := regexp.Compile("^" + valueMatcher.MatchesPattern + "$")
+	if err != nil {
+		return false, err
+	}
+
+	return r.MatchString(toTest), nil
+}
+
+// Checks if the string toTest matches the member MatchesPattern of valueMatcher
+// If valueMatcher is not nil. Otherwise, if value is not nil it is interpreted as string
+// And equality of value.(string) and toTest is checked. If both value and valueMatcher are nil,
+// then it results in an error
+func testMatching(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
+	resultValue, err := testValue(toTest, value)
+	if err != nil {
+		return false, err
+	}
+
+	resultValueMatcher, err := testValueMatcher(toTest, valueMatcher)
+	if err != nil {
+		return false, err
+	}
+
+	return resultValue && resultValueMatcher, nil
 }
 
 // Checks if the machine type of the instance specified by given project, zone and instance
@@ -63,7 +85,7 @@ func (s *googleService) TestMachineType(project string, zone string, instance st
 		return false, err
 	}
 
-	return test(machineInstance.MachineType, value, valueMatcher)
+	return testMatching(machineInstance.MachineType, value, valueMatcher)
 }
 
 // Checks if the status of the instance specified by given project, zone and instance
@@ -78,6 +100,6 @@ func (s *googleService) TestStatus(project string, zone string, instance string,
 		return false, err
 	}
 
-	return test(machineInstance.Status, value, valueMatcher)
+	return testMatching(machineInstance.Status, value, valueMatcher)
 
 }
