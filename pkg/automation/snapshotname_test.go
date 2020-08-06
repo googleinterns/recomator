@@ -28,13 +28,13 @@ import (
 // Tests if the generated names are different
 func TestDifferentNames(t *testing.T) {
 	testZone := strings.Repeat("a", 100)
-	testDiskName := strings.Repeat("a", 100)
+	testDisk := strings.Repeat("a", 100)
 
 	numberOfTrials := 10000
 	results := make([]string, numberOfTrials)
 
 	for i := range results {
-		results[i] = randomSnapshotName(testZone, testDiskName)
+		results[i] = randomSnapshotName(testZone, testDisk)
 	}
 
 	sort.Strings(results)
@@ -47,19 +47,19 @@ func TestDifferentNames(t *testing.T) {
 // Tests that the returned name is not to long if the zone name is long
 func TestLongZoneName(t *testing.T) {
 	testZone := strings.Repeat("a", 2*maxSnapshotnameLen)
-	testDiskName := ""
+	testDisk := ""
 
-	result := randomSnapshotName(testZone, testDiskName)
+	result := randomSnapshotName(testZone, testDisk)
 
 	assert.LessOrEqual(t, len(result), maxSnapshotnameLen, fmt.Sprintf("The length of the returned snapshot name must be less than %d", maxSnapshotnameLen))
 }
 
 // Tests that the returned name is not to long if the disk name is long
 func TestLongDiskName(t *testing.T) {
-	testZone := strings.Repeat("a", 2*maxSnapshotnameLen)
-	testDiskName := ""
+	testZone := ""
+	testDisk := strings.Repeat("a", 2*maxSnapshotnameLen)
 
-	result := randomSnapshotName(testZone, testDiskName)
+	result := randomSnapshotName(testZone, testDisk)
 
 	assert.LessOrEqual(t, len(result), maxSnapshotnameLen, fmt.Sprintf("The length of the returned snapshot name must be less than %d", maxSnapshotnameLen))
 }
