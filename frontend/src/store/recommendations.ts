@@ -14,7 +14,6 @@ limitations under the License. */
 
 import {
   Recommendation,
-  RecommendationExtra,
   getRecommendationProject,
   getRecommendationType
 } from "@/store/model";
@@ -28,8 +27,6 @@ const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
   recommendations: Recommendation[];
-  selected: RecommendationExtra[];
-
   errorCode: number | undefined;
   errorMessage: string | undefined;
   // % recommendations loaded, null if no fetching is happening
@@ -39,7 +36,6 @@ export interface IRecommendationsStoreState {
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
-    selected: [],
     progress: null,
     errorCode: undefined,
     errorMessage: undefined
@@ -49,9 +45,6 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
 const mutations: MutationTree<IRecommendationsStoreState> = {
   addRecommendation(state, recommendation: Recommendation): void {
     state.recommendations.push(recommendation);
-  },
-  setSelected(state, selected: RecommendationExtra[]) {
-    state.selected = selected;
   },
   endFetching(state) {
     state.progress = null;

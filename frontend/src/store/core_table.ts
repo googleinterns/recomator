@@ -29,6 +29,7 @@ export interface ICoreTableStoreState {
   typesSelected: string[];
   // status is the correct plural form, but this is clearer
   statusesSelected: string[];
+  selected: RecommendationExtra[];
 }
 
 export function coreTableStoreStateFactory(): ICoreTableStoreState {
@@ -37,7 +38,8 @@ export function coreTableStoreStateFactory(): ICoreTableStoreState {
     descriptionSearchText: "",
     projectsSelected: [],
     typesSelected: [],
-    statusesSelected: []
+    statusesSelected: [],
+    selected: []
   };
 }
 
@@ -56,6 +58,9 @@ const mutations: MutationTree<ICoreTableStoreState> = {
   },
   setStatusesSelected(state, statuses: string[]): void {
     state.statusesSelected = statuses;
+  },
+  setSelected(state, selected: RecommendationExtra[]) {
+    state.selected = selected;
   }
 };
 

@@ -126,12 +126,11 @@ export default class CoreTable extends Vue {
   // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
 
   get selectedRows(): RecommendationExtra[] {
-    return (this.$store.state as IRootStoreState).recommendationsStore!
-      .selected;
+    return (this.$store.state as IRootStoreState).coreTableStore!.selected;
   }
 
   set selectedRows(selected: RecommendationExtra[]) {
-    this.$store.commit("recommendationsStore/setSelected", selected);
+    this.$store.commit("coreTableStore/setSelected", selected);
   }
 }
 </script>
