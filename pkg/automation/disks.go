@@ -17,7 +17,6 @@ limitations under the License.
 package automation
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -81,7 +80,7 @@ func randomSnapshotName(zone, disk string) string {
 // The maximum name length is 63.
 func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
 	if len(name) > maxSnapshotnameLen {
-		return errors.New(fmt.Sprintf("Length of the snapshot name must not exceed %d", maxSnapshotnameLen))
+		return fmt.Errorf("Length of the snapshot name must not exceed %d", maxSnapshotnameLen)
 	}
 	disksService := compute.NewDisksService(s.computeService)
 	snapshot := &compute.Snapshot{Name: name}
