@@ -27,7 +27,11 @@ import {
   descriptionFilterAccepted
 } from "@/store/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
-import { RecommendationExtra, RecommendationRaw, getInternalStatusMapping } from "@/store/model";
+import {
+  RecommendationExtra,
+  RecommendationRaw,
+  getInternalStatusMapping
+} from "@/store/model";
 
 describe("Core Table store", () => {
   test("Filtering results by resource with store mutations", () => {

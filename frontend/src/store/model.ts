@@ -153,7 +153,6 @@ export function getInternalStatusMapping(statusName: string): string {
   return internalStatusMap[statusName];
 }
 
-
 // data that can't be calculated from a RecommendationRaw-type object,
 //   that is held by the app for each recommendation
 export interface IRecommendationExtraAppData {
@@ -192,9 +191,7 @@ export class RecommendationExtra implements RecommendationRaw {
     this.typeCol = getRecommendationType(rec);
     this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
 
-    if(appData !== undefined)
-      this.appData = appData;
-    else
-      this.appData = {};
+    if (appData !== undefined) this.appData = appData;
+    else this.appData = {};
   }
 }

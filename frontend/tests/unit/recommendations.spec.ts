@@ -16,7 +16,11 @@ import { enableFetchMocks } from "jest-fetch-mock";
 enableFetchMocks(); // making it possible to mock fetch in this test suite
 fetchMock.dontMock(); // not mocking fetch in every test by default
 
-import { RecommendationExtra, getRecommendationProject, getRecommendationResourceShortName } from "@/store/model";
+import {
+  RecommendationExtra,
+  getRecommendationProject,
+  getRecommendationResourceShortName
+} from "@/store/model";
 import { rootStoreFactory } from "@/store/root";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 
@@ -30,9 +34,9 @@ describe("Store", () => {
       sampleRecommendation
     );
 
-    expect(
-      store.state.recommendationsStore!.recommendations
-    ).toEqual([new RecommendationExtra(sampleRecommendation)])
+    expect(store.state.recommendationsStore!.recommendations).toEqual([
+      new RecommendationExtra(sampleRecommendation)
+    ]);
   });
 });
 

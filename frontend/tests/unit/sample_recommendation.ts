@@ -57,5 +57,7 @@ const sampleRawRecommendation: RecommendationRaw = {
 
 export function freshSampleRawRecommendation(): RecommendationRaw {
   // deep copy
-  return JSON.parse(JSON.stringify(sampleRawRecommendation)) as RecommendationRaw;
+  return JSON.parse(
+    JSON.stringify(sampleRawRecommendation)
+  ) as RecommendationRaw;
 }
