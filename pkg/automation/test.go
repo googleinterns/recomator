@@ -30,7 +30,7 @@ type gcloudValueMatcher = recommender.GoogleCloudRecommenderV1ValueMatcher
 // value is nil. In that case true is returned.
 func testValue(toTest string, value interface{}) (bool, error) {
 	if value == nil {
-		return false, nil
+		return true, nil
 	}
 	valueString, ok := value.(string)
 	if !ok {
@@ -41,12 +41,11 @@ func testValue(toTest string, value interface{}) (bool, error) {
 }
 
 // Checks if the string toTest matches regex given by valueMatcher.MatchesPattern.
-// If valueMatcher is nil. In that case true is returned.
+// If valueMatcher is nil then true is returned.
 func testValueMatcher(toTest string, valueMatcher *gcloudValueMatcher) (bool, error) {
 	if valueMatcher == nil {
-		return false, nil
+		return true, nil
 	}
-
 	r, err := regexp.Compile("^" + valueMatcher.MatchesPattern + "$")
 	if err != nil {
 		return false, err
@@ -55,10 +54,9 @@ func testValueMatcher(toTest string, valueMatcher *gcloudValueMatcher) (bool, er
 	return r.MatchString(toTest), nil
 }
 
-// Checks if the string toTest matches the member MatchesPattern of valueMatcher
-// If valueMatcher is not nil. Otherwise, if value is not nil it is interpreted as string
-// And equality of value.(string) and toTest is checked. If both value and valueMatcher are nil,
-// then it results in an error
+// Checks if the string toTest matches the member MatchesPattern of valueMatcher,
+// if valueMatcher is not nil. Otherwise, if value is not nil it is interpreted as string
+// and equality of value.(string) and toTest is checked.
 func testMatching(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	resultValue, err := testValue(toTest, value)
 	if err != nil {
@@ -74,7 +72,7 @@ func testMatching(toTest string, value interface{}, valueMatcher *gcloudValueMat
 }
 
 // Checks if the machine type of the instance specified by given project, zone and instance
-// matches the given value or valueMatcher
+// matches the given value or valueMatcher.
 // According to Recommender API, in a test operation, either value or valueMatcher is specified.
 // The value specified by the path field in the operation struct must match value or valueMatcher,
 // depending on which one is defined. More can be read here:
@@ -89,7 +87,7 @@ func (s *googleService) TestMachineType(project string, zone string, instance st
 }
 
 // Checks if the status of the instance specified by given project, zone and instance
-// matches the given value or valueMatcher
+// matches the given value or valueMatcher.
 // According to Recommender API, in a test operation, either value or valueMatcher is specified.
 // The value specified by the path field in the operation struct must match value or valueMatcher,
 // depending on which one is defined. More can be read here:
