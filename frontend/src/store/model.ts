@@ -153,31 +153,24 @@ export function getInternalStatusMapping(statusName: string): string {
   return internalStatusMap[statusName];
 }
 
-// data that can't be calculated from a RecommendationRaw-type object,
-//   that is held by the app for each recommendation
-export interface IRecommendationExtraAppData {
-  errorName?: string;
-  errorDescription?: string;
-}
-
 // All data maintained for each recommendation
 export class RecommendationExtra implements RecommendationRaw {
-  name: string;
-  description: string;
-  recommenderSubtype: string;
-  primaryImpact: Impact;
-  content: RecommendationContent;
-  stateInfo: RecommendationStateInfo;
+  readonly name: string;
+  readonly description: string;
+  readonly recommenderSubtype: string;
+  readonly primaryImpact: Impact;
+  readonly content: RecommendationContent;
+  readonly stateInfo: RecommendationStateInfo;
 
   // need to remember them so that v-data-table knows what to sort by
-  costCol: number;
-  projectCol: string;
-  resourceCol: string;
-  typeCol: string;
+  readonly costCol: number;
+  readonly projectCol: string;
+  readonly resourceCol: string;
+  readonly typeCol: string;
   statusCol: string;
-  appData: IRecommendationExtraAppData;
-
-  constructor(rec: RecommendationRaw, appData?: IRecommendationExtraAppData) {
+  errorHeader?: string;
+  errorDescription?: string;
+  constructor(rec: RecommendationRaw) {
     this.name = rec.name;
     this.description = rec.description;
     this.recommenderSubtype = rec.recommenderSubtype;
@@ -190,8 +183,5 @@ export class RecommendationExtra implements RecommendationRaw {
     this.resourceCol = getRecommendationResourceShortName(rec);
     this.typeCol = getRecommendationType(rec);
     this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
-
-    if (appData !== undefined) this.appData = appData;
-    else this.appData = {};
   }
 }
