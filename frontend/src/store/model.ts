@@ -17,7 +17,7 @@ import { extractFromResource } from "./utils";
 // Follows data model from:
 //    https://cloud.google.com/recommender/docs/reference/rest/v1beta1/projects.locations.recommenders.recommendations
 
-export interface Recommendation {
+export interface RecommendationRaw {
   name: string;
   description: string;
   recommenderSubtype: string;
@@ -70,14 +70,14 @@ export interface Operation {
 
 // -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
 export function getRecommendationResource(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
 // -> "timus-test-for-probers-n2-std-4-idling"
 export function getRecommendationResourceShortName(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   const resource = getRecommendationResource(recommendation);
   return extractFromResource("instances", resource);
@@ -85,7 +85,7 @@ export function getRecommendationResourceShortName(
 
 // -> "rightsizer-test"
 export function getRecommendationProject(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   const resource = getRecommendationResource(recommendation);
   return extractFromResource("projects", resource);
@@ -95,7 +95,7 @@ export function getRecommendationProject(
 
 // Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
 export function getRecomendationDescription(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   return recommendation.description;
 }
@@ -103,7 +103,7 @@ export function getRecomendationDescription(
 // "3.5" ($ per week)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRecommendationCostPerWeek(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): number {
   const costObject = recommendation.primaryImpact.costProjection.cost;
   console.assert(
@@ -131,7 +131,7 @@ export function getRecommendationCostPerWeek(
 }
 
 // "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
-export function getRecommendationType(recommendation: Recommendation) {
+export function getRecommendationType(recommendation: RecommendationRaw) {
   return recommendation.recommenderSubtype;
 }
 
@@ -153,30 +153,48 @@ export function getInternalStatusMapping(statusName: string): string {
   return internalStatusMap[statusName];
 }
 
-// Class for cacheing extra fields that are used for grouping or sorting
-export class RecommendationExtra implements Recommendation {
+
+// data that can't be calculated from a RecommendationRaw-type object,
+//   that is held by the app for each recommendation
+export interface IRecommendationExtraAppData {
+  errorName?: string;
+  errorDescription?: string;
+}
+
+// All data maintained for each recommendation
+export class RecommendationExtra implements RecommendationRaw {
   name: string;
   description: string;
   recommenderSubtype: string;
   primaryImpact: Impact;
   content: RecommendationContent;
   stateInfo: RecommendationStateInfo;
+
+  // need to remember them so that v-data-table knows what to sort by
   costCol: number;
   projectCol: string;
   resourceCol: string;
   typeCol: string;
   statusCol: string;
-  constructor(rec: Recommendation) {
+  appData: IRecommendationExtraAppData;
+
+  constructor(rec: RecommendationRaw, appData?: IRecommendationExtraAppData) {
     this.name = rec.name;
     this.description = rec.description;
     this.recommenderSubtype = rec.recommenderSubtype;
     this.primaryImpact = rec.primaryImpact;
     this.content = rec.content;
     this.stateInfo = rec.stateInfo;
+
     this.costCol = getRecommendationCostPerWeek(rec);
     this.projectCol = getRecommendationProject(rec);
     this.resourceCol = getRecommendationResourceShortName(rec);
     this.typeCol = getRecommendationType(rec);
     this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
+
+    if(appData !== undefined)
+      this.appData = appData;
+    else
+      this.appData = {};
   }
 }

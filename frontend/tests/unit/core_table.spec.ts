@@ -26,18 +26,14 @@ import {
   resourceFilterAccepted,
   descriptionFilterAccepted
 } from "@/store/core_table_filter_utils";
-import { freshSampleRecommendation } from "./sample_recommendation";
-import {
-  RecommendationExtra,
-  Recommendation,
-  getInternalStatusMapping
-} from "@/store/model";
+import { freshSampleRawRecommendation } from "./sample_recommendation";
+import { RecommendationExtra, RecommendationRaw, getInternalStatusMapping } from "@/store/model";
 
 describe("Core Table store", () => {
   test("Filtering results by resource with store mutations", () => {
     // this is not really a unit test, but interaction tests are also useful
     const fakeStore = rootStoreFactory();
-    const sampleRecommendation = freshSampleRecommendation();
+    const sampleRecommendation = freshSampleRawRecommendation();
 
     // Check if we accept resoruce name: bob-vm0 when searching for bob
     fakeStore.commit("coreTableStore/setResourceNameSearchText", "bob");
@@ -75,12 +71,12 @@ describe("Core Table store", () => {
 describe("Filtering predicates individually", () => {
   // Not using actual Vuex instances here, so we don't need to use mutations
   let tableState: ICoreTableStoreState;
-  let recommendation: Recommendation;
+  let recommendation: RecommendationRaw;
   const extra = () => new RecommendationExtra(recommendation);
 
   beforeEach(() => {
     tableState = coreTableStoreStateFactory();
-    recommendation = freshSampleRecommendation();
+    recommendation = freshSampleRawRecommendation();
   });
 
   test("project filter", () => {

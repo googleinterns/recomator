@@ -41,9 +41,7 @@ export interface IRootStoreState {
 const getters: GetterTree<IRootStoreState, IRootStoreState> = {
   filteredRecommendationsWithExtras(state): RecommendationExtra[] {
     return state
-      .recommendationsStore!.recommendations.map(
-        rec => new RecommendationExtra(rec)
-      )
+      .recommendationsStore!.recommendations
       .filter((recExtra: RecommendationExtra) =>
         isRecommendationInResults(state.coreTableStore!, recExtra)
       );

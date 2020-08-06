@@ -27,12 +27,12 @@ import {
   isRecommendationInResults
 } from "@/store/core_table";
 
-import { freshSampleRecommendation } from "./sample_recommendation";
+import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { RecommendationExtra } from "@/store/model";
 
 describe("Filtering aggregate (resource name, type, status...)", () => {
   const tableState = coreTableStoreStateFactory();
-  const recommendation = freshSampleRecommendation();
+  const recommendation = freshSampleRawRecommendation();
   const passesAll = () =>
     isRecommendationInResults(
       tableState,

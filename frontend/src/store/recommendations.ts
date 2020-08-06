@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import {
-  Recommendation,
+  RecommendationRaw,
   RecommendationExtra,
   getRecommendationProject,
   getRecommendationType,
@@ -28,7 +28,7 @@ const REQUEST_DELAY = 100;
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
-  recommendations: Recommendation[];
+  recommendations: RecommendationExtra[];
   selected: RecommendationExtra[];
 
   errorCode: number | undefined;
@@ -48,8 +48,8 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
 }
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
-  addRecommendation(state, recommendation: Recommendation): void {
-    state.recommendations.push(recommendation);
+  addRecommendation(state, recommendation: RecommendationRaw): void {
+    state.recommendations.push(new RecommendationExtra(recommendation));
   },
   setSelected(state, selected: RecommendationExtra[]) {
     state.selected = selected;
