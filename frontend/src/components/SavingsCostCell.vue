@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <td>
+  <div>
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
         <v-chip
@@ -32,7 +32,7 @@ limitations under the License. -->
           : `Applying this recommendation will cost an additional ${-costRounded}$ per week`
       }}
     </v-tooltip>
-  </td>
+  </div>
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";

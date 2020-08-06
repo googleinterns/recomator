@@ -22,12 +22,16 @@ import {
 import {
   projectFilterAccepted,
   typeFilterAccepted,
-  //statusFilterAccepted,
+  statusFilterAccepted,
   resourceFilterAccepted,
   descriptionFilterAccepted
 } from "@/store/core_table_filter_utils";
 import { freshSampleRecommendation } from "./sample_recommendation";
-import { RecommendationExtra, Recommendation } from "@/store/model";
+import {
+  RecommendationExtra,
+  Recommendation,
+  getInternalStatusMapping
+} from "@/store/model";
 
 describe("Core Table store", () => {
   test("Filtering results by resource with store mutations", () => {
@@ -122,20 +126,23 @@ describe("Filtering predicates individually", () => {
     expect(typeFilterAccepted(tableState, extra())).toBeTruthy();
   });
 
-  /* TODO: TEMPORARILY DISABLED (until the statutes are properly implemented in the next PR)
-    test("status filter", () => {
+  test("status filter", () => {
     recommendation.stateInfo.state = "FAILED"; // this maps to "Failed"
 
     tableState.statusesSelected = [];
     expect(statusFilterAccepted(tableState, extra())).toBeTruthy();
 
     // what if statuses repeat ?
-    tableState.typesSelected = ["Success", "Success", "In progress"];
+    tableState.statusesSelected = [
+      "SUCCEDED",
+      "SUCCEDED",
+      "CLAIMED"
+    ].map(status => getInternalStatusMapping(status));
     expect(statusFilterAccepted(tableState, extra())).toBeFalsy();
 
     recommendation.stateInfo.state = "CLAIMED"; // this maps to "In progress"
     expect(statusFilterAccepted(tableState, extra())).toBeTruthy();
-  });*/
+  });
 
   test("resource filter", () => {
     // Making sure that possible delimiters are handled properly,

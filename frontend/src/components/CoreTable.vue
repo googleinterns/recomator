@@ -56,9 +56,8 @@ limitations under the License. -->
       <SavingsCostCell :rowRecommendation="item" />
     </template>
 
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
-    <template v-slot:item.applyAndStatus="{ item }">
-      <!-- TODO: Apply/status column -->
+    <template v-slot:item.statusCol="{ item }">
+      <ApplyAndStatusCell :rowRecommendation="item" />
     </template>
   </v-data-table>
 </template>
@@ -70,6 +69,7 @@ import ProjectCell from "@/components/ProjectCell.vue";
 import DescriptionCell from "@/components/DescriptionCell.vue";
 import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
+import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
 import { IRootStoreState } from "../store/root";
 import { RecommendationExtra } from "../store/model";
 
@@ -80,7 +80,8 @@ import { RecommendationExtra } from "../store/model";
     ProjectCell,
     TypeCell,
     DescriptionCell,
-    SavingsCostCell
+    SavingsCostCell,
+    ApplyAndStatusCell
   }
 })
 export default class CoreTable extends Vue {
@@ -112,7 +113,7 @@ export default class CoreTable extends Vue {
       groupable: false,
       sortable: true
     },
-    { text: "", value: "applyAndStatus", groupable: false, sortable: false }
+    { text: "", value: "statusCol", groupable: false, sortable: false }
   ];
 
   itemsPerPage = 10;

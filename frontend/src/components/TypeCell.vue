@@ -12,12 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <td>
+  <div>
     <v-chip class="ma-2" color="white" label>
       <v-icon left>{{ iconName() }}</v-icon>
       {{ recommenderSubtype }}
     </v-chip>
-  </td>
+  </div>
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
