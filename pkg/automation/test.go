@@ -17,6 +17,7 @@ limitations under the License.
 package automation
 
 import (
+	"errors"
 	"regexp"
 
 	"google.golang.org/api/recommender/v1"
@@ -31,7 +32,7 @@ type gcloudValueMatcher = recommender.GoogleCloudRecommenderV1ValueMatcher
 func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	if value == nil {
 		if valueMatcher == nil {
-			return false, operationUnsupportedError()
+			return false, errors.New("at least one of value and valueMatcher must be specified")
 		}
 
 		r, err := regexp.Compile("^" + valueMatcher.MatchesPattern + "$")
@@ -44,7 +45,7 @@ func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (b
 
 	valueString, ok := value.(string)
 	if !ok {
-		return false, typeError()
+		return false, errors.New("if value is specified it must be of type string")
 	}
 
 	return valueString == toTest, nil
@@ -52,27 +53,31 @@ func test(toTest string, value interface{}, valueMatcher *gcloudValueMatcher) (b
 
 // Checks if the machine type of the instance specified by given project, zone and instance
 // matches the given value or valueMatcher
+// According to Recommender API, in a test operation, either value or valueMatcher is specified.
+// The value specified by the path field in the operation struct must match value or valueMatcher,
+// depending on which one is defined. More can be read here:
+// https://cloud.google.com/recommender/docs/reference/rest/v1/projects.locations.recommenders.recommendations#operation
 func (s *googleService) TestMachineType(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	machineInstance, err := s.GetInstance(project, zone, instance)
 	if err != nil {
 		return false, err
 	}
 
-	machineType := machineInstance.MachineType
-
-	return test(machineType, value, valueMatcher)
+	return test(machineInstance.MachineType, value, valueMatcher)
 }
 
 // Checks if the status of the instance specified by given project, zone and instance
 // matches the given value or valueMatcher
+// According to Recommender API, in a test operation, either value or valueMatcher is specified.
+// The value specified by the path field in the operation struct must match value or valueMatcher,
+// depending on which one is defined. More can be read here:
+// https://cloud.google.com/recommender/docs/reference/rest/v1/projects.locations.recommenders.recommendations#operation
 func (s *googleService) TestStatus(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
 	machineInstance, err := s.GetInstance(project, zone, instance)
 	if err != nil {
 		return false, err
 	}
 
-	status := machineInstance.Status
-
-	return test(status, value, valueMatcher)
+	return test(machineInstance.Status, value, valueMatcher)
 
 }
