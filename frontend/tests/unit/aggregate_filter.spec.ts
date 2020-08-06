@@ -12,15 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-jest.mock("../../src/store/core_table_filter_utils");
+jest.mock("@/store/core_table_filter_utils");
 
 import {
   descriptionFilterAccepted,
-  //statusFilterAccepted,
+  statusFilterAccepted,
   projectFilterAccepted,
   typeFilterAccepted,
   resourceFilterAccepted
-} from "../../src/store/core_table_filter_utils";
+} from "@/store/core_table_filter_utils";
 
 import {
   coreTableStoreStateFactory,
@@ -40,11 +40,12 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
     ) as boolean;
 
   test("project filter", () => {
-    let isOn = [true, true, true, true];
+    let isOn = [true, true, true, true, true];
     (descriptionFilterAccepted as any).mockImplementation(() => isOn[0]);
     (projectFilterAccepted as any).mockImplementation(() => isOn[1]);
     (typeFilterAccepted as any).mockImplementation(() => isOn[2]);
     (resourceFilterAccepted as any).mockImplementation(() => isOn[3]);
+    (statusFilterAccepted as any).mockImplementation(() => isOn[4]);
 
     for (let i = 0; i < isOn.length; i++) {
       expect(passesAll()).toBeTruthy();

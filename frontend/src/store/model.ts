@@ -135,6 +135,24 @@ export function getRecommendationType(recommendation: Recommendation) {
   return recommendation.recommenderSubtype;
 }
 
+export const internalStatusMap: Record<string, string> = {
+  ACTIVE: "Applicable",
+  CLAIMED: "In progress",
+  SUCCEDED: "Success",
+  FAILED: "Failed",
+  DISMISSED: "Dismissed"
+};
+
+export function throwIfInvalidStatus(statusName: string): void {
+  if (!(statusName in internalStatusMap))
+    throw `invalid status name passed: ${statusName}`;
+}
+
+export function getInternalStatusMapping(statusName: string): string {
+  throwIfInvalidStatus(statusName);
+  return internalStatusMap[statusName];
+}
+
 // Class for cacheing extra fields that are used for grouping or sorting
 export class RecommendationExtra implements Recommendation {
   name: string;
@@ -147,6 +165,7 @@ export class RecommendationExtra implements Recommendation {
   projectCol: string;
   resourceCol: string;
   typeCol: string;
+  statusCol: string;
   constructor(rec: Recommendation) {
     this.name = rec.name;
     this.description = rec.description;
@@ -158,5 +177,6 @@ export class RecommendationExtra implements Recommendation {
     this.projectCol = getRecommendationProject(rec);
     this.resourceCol = getRecommendationResourceShortName(rec);
     this.typeCol = getRecommendationType(rec);
+    this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
   }
 }
