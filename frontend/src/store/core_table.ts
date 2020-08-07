@@ -19,7 +19,8 @@ import {
   descriptionFilterAccepted,
   projectFilterAccepted,
   resourceFilterAccepted,
-  typeFilterAccepted
+  typeFilterAccepted,
+  statusFilterAccepted
 } from "./core_table_filter_utils";
 
 export interface ICoreTableStoreState {
@@ -84,7 +85,7 @@ export function isRecommendationInResults(
   return (
     projectFilterAccepted(tableState, recExtra) &&
     typeFilterAccepted(tableState, recExtra) &&
-    //statusFilterAccepted(tableState, recExtra) &&
+    statusFilterAccepted(tableState, recExtra) &&
     resourceFilterAccepted(tableState, recExtra) &&
     descriptionFilterAccepted(tableState, recExtra)
   );

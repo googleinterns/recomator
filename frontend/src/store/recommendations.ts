@@ -15,7 +15,8 @@ limitations under the License. */
 import {
   Recommendation,
   getRecommendationProject,
-  getRecommendationType
+  getRecommendationType,
+  getInternalStatusMapping
 } from "@/store/model";
 import { delay, getServerAddress } from "./utils";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
@@ -107,7 +108,12 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
 
     context.commit("endFetching");
-  }
+  } /* TODO: TO BE IMPLEMENTED,
+  async applySingleRecommendation(
+    context,
+    recommendation: Recommendation
+  ): Promise<void> {
+  }*/
 };
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
@@ -118,8 +124,14 @@ const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
     return Array.from(new Set(projects));
   },
   allTypes(state): string[] {
-    const projects = state.recommendations.map(r => getRecommendationType(r));
-    return Array.from(new Set(projects));
+    const types = state.recommendations.map(r => getRecommendationType(r));
+    return Array.from(new Set(types));
+  },
+  allStatuses(state): string[] {
+    const statuses = state.recommendations.map(r =>
+      getInternalStatusMapping(r.stateInfo.state)
+    );
+    return Array.from(new Set(statuses));
   }
 };
 

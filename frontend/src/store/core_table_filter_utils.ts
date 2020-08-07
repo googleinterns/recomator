@@ -47,16 +47,15 @@ export function typeFilterAccepted(
   );
 }
 
-/* TODO: Temporarily disabled until the next PR
-  export function statusFilterAccepted(
-    tableState: ICoreTableStoreState,
-    recExtra: RecommendationExtra
-  ) {
-    return (
-      tableState.statusesSelected.length === 0 ||
-      tableState.statusesSelected.includes(recExtra.statusCol)
-    );
-  }*/
+export function statusFilterAccepted(
+  tableState: ICoreTableStoreState,
+  recExtra: RecommendationExtra
+) {
+  return (
+    tableState.statusesSelected.length === 0 ||
+    tableState.statusesSelected.includes(recExtra.statusCol)
+  );
+}
 
 export function resourceFilterAccepted(
   tableState: ICoreTableStoreState,

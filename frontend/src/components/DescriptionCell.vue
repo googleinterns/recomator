@@ -12,9 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <td>
-    {{ description }}
-  </td>
+  <div>{{ description }}</div>
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
