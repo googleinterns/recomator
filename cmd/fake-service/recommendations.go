@@ -50,8 +50,8 @@ var recommendationsJSON = []string{`{
 		"costProjection": {
 			"cost": {
 				"currencyCode": "USD",
-				"nanos": -268972762,
-				"units": "-73"
+				"nanos": 268972762,
+				"units": "73"
 			},
 			"duration": "2592000s"
 		}
@@ -95,8 +95,8 @@ var recommendationsJSON = []string{`{
 		"costProjection": {
 			"cost": {
 				"currencyCode": "USD",
-				"nanos": -79835798,
-				"units": "-24"
+				"nanos": 79835798,
+				"units": "24"
 			},
 			"duration": "2592000s"
 		}
