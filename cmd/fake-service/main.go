@@ -39,7 +39,7 @@ const (
 	numberOfFakeRecommendations = 60
 	expectedListTime            = time.Second * 10
 	expectedApplyTime           = time.Second * 10
-	probablityOfErrorList       = 1.0
+	probablityOfErrorList       = 0.0
 	probablityOfErrorApply      = 0.3
 )
 

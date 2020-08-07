@@ -29,8 +29,6 @@ const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
   recommendations: RecommendationExtra[];
-  selected: RecommendationExtra[];
-
   errorCode: number | undefined;
   errorMessage: string | undefined;
   // % recommendations loaded, null if no fetching is happening
@@ -40,7 +38,6 @@ export interface IRecommendationsStoreState {
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
-    selected: [],
     progress: null,
     errorCode: undefined,
     errorMessage: undefined
@@ -50,9 +47,6 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
 const mutations: MutationTree<IRecommendationsStoreState> = {
   addRecommendation(state, recommendation: RecommendationRaw): void {
     state.recommendations.push(new RecommendationExtra(recommendation));
-  },
-  setSelected(state, selected: RecommendationExtra[]) {
-    state.selected = selected;
   },
   endFetching(state) {
     state.progress = null;

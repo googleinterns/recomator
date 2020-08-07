@@ -29,8 +29,8 @@ import { RecommendationExtra } from "./model";
 Vue.use(Vuex);
 
 export interface IRootStoreState {
-  // Static type checking needs to know of this property (which is added dynamically)
-  //  so it is added as optional as a workaround:
+  // Static type checking needs to know of these properties (added dynamically)
+  //  so they are added as optional as a workaround:
   //  related issue: https://forum.vuejs.org/t/vuex-submodules-with-typescript/40903
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
