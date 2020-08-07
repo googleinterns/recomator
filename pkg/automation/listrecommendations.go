@@ -87,6 +87,11 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 	return regions, nil
 }
 
+type result struct {
+	recommendations []*gcloudRecommendation
+	err             error
+}
+
 // ListRecommendations returns the list of recommendations for a Cloud project.
 // Requires the recommender.*.list IAM permission for the specified recommender.
 // numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
@@ -111,13 +116,8 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 		numWorkers = defaultNumWorkers
 	}
 
-	type result struct {
-		recommendations []*gcloudRecommendation
-		err             error
-	}
-
 	results := make(chan result, numberOfLocations)
-  	locationsJobs := make(chan string, numberOfLocations)
+	locationsJobs := make(chan string, numberOfLocations)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {

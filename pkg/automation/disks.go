@@ -25,13 +25,12 @@ import (
 )
 
 const maxDisknameLen = 20
-const maxZonenameLen = 20
+const maxZonenameLen = 26
 const maxSnapshotnameLen = 63
 
 const characters = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-var generator = rand.New(rand.NewSource(time.Now().UnixNano()))
+const timestampFormat = "20060102150405"
 
 func min(a int, b int) int {
 	if a < b {
@@ -44,11 +43,14 @@ func min(a int, b int) int {
 // Returns current time in the format YYYYMMDDHHMMSS
 func getTimestamp() string {
 	t := time.Now().UTC()
-	return t.Format("20060102150405")
+	return t.Format(timestampFormat)
 }
 
 // Returns a random string of the given length
-func randomString(sequenceLen int) string {
+// generated using the given generator.
+// This function will only be thread safe, if the given
+// generator is thread safe.
+func randomString(sequenceLen int, generator *rand.Rand) string {
 	result := make([]byte, sequenceLen)
 	for i := range result {
 		result[i] = characters[generator.Intn(len(characters))]
@@ -57,21 +59,27 @@ func randomString(sequenceLen int) string {
 	return string(result)
 }
 
-// Returns the name of the snapshot, following
-// the convention described here:
+// Returns the name of the snapshot, generated using the given generator
+// following the convention described here:
 // https://cloud.google.com/compute/docs/disks/scheduled-snapshots#names_for_scheduled_snapshots
-func randomSnapshotName(zone, disk string) string {
+// This function will only be thread safe, if the given
+// generator is thread safe.
+func randomSnapshotName(zone string, disk string, generator *rand.Rand) (string, error) {
+	if len(zone) > maxZonenameLen {
+		return "", fmt.Errorf("length of the zone name must not exceed %d", maxZonenameLen)
+	}
+
 	result := ""
 	result += disk[:min(maxDisknameLen, len(disk))]
 	result += "-"
-	result += zone[:min(maxZonenameLen, len(zone))]
+	result += zone
 	result += "-"
 	result += getTimestamp()
 	result += "-"
 	randomSequenceLen := maxSnapshotnameLen - len(result)
-	result += randomString(randomSequenceLen)
+	result += randomString(randomSequenceLen, generator)
 
-	return result
+	return result, nil
 }
 
 // CreateSnapshot calls the disks.createSnapshot method.
