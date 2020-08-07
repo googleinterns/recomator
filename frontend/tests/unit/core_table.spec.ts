@@ -134,8 +134,8 @@ describe("Filtering predicates individually", () => {
 
     // what if statuses repeat ?
     tableState.statusesSelected = [
-      "SUCCEDED",
-      "SUCCEDED",
+      "SUCCEEDED",
+      "SUCCEEDED",
       "CLAIMED"
     ].map(status => getInternalStatusMapping(status));
     expect(statusFilterAccepted(tableState, extra())).toBeFalsy();

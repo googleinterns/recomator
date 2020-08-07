@@ -138,7 +138,7 @@ export function getRecommendationType(recommendation: RecommendationRaw) {
 export const internalStatusMap: Record<string, string> = {
   ACTIVE: "Applicable",
   CLAIMED: "In progress",
-  SUCCEDED: "Success",
+  SUCCEEDED: "Success",
   FAILED: "Failed",
   DISMISSED: "Dismissed"
 };
@@ -155,21 +155,25 @@ export function getInternalStatusMapping(statusName: string): string {
 
 // All data maintained for each recommendation
 export class RecommendationExtra implements RecommendationRaw {
+  // These should not be modified (including inner fields) outside of tests:
   readonly name: string;
   readonly description: string;
   readonly recommenderSubtype: string;
   readonly primaryImpact: Impact;
   readonly content: RecommendationContent;
-  readonly stateInfo: RecommendationStateInfo;
+  readonly stateInfo: RecommendationStateInfo; // original status
 
   // need to remember them so that v-data-table knows what to sort by
   readonly costCol: number;
   readonly projectCol: string;
   readonly resourceCol: string;
   readonly typeCol: string;
-  statusCol: string;
+
+  // These can be modified:
+  statusCol: string; // follows the current recommendation status
   errorHeader?: string;
   errorDescription?: string;
+
   constructor(rec: RecommendationRaw) {
     this.name = rec.name;
     this.description = rec.description;
