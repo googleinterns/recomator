@@ -38,7 +38,7 @@ func TestDifferentNames(t *testing.T) {
 
 	for i := range results {
 		result, err := randomSnapshotName(testZone, testDisk, generator)
-		assert.Equal(t, err, nil, "Error should not happen when zone name is not to long")
+		assert.Nilf(t, err, "Error should not happen when zone name is not to long")
 		results[i] = result
 	}
 
@@ -57,7 +57,7 @@ func TestCorrectName(t *testing.T) {
 	expectedDisk := testDisk[:min(maxDisknameLen, len(testDisk))]
 
 	result, err := randomSnapshotName(testZone, testDisk, generator)
-	assert.Equal(t, err, nil, "Error should not happen when zone name is not to long")
+	assert.Nilf(t, err, "Error should not happen when zone name is not to long")
 
 	index := 0
 	assert.Equal(t, result[:min(maxDisknameLen, len(testDisk))], expectedDisk, "The first part of the snapshot name should  be a prefix of the disk name")
@@ -73,7 +73,7 @@ func TestCorrectName(t *testing.T) {
 	index = index + 1
 
 	_, err = time.Parse(timestampFormat, result[index:index+len(timestampFormat)])
-	assert.Equal(t, err, nil, "The format of the timestamp should be YYYYMMDDHHMMSS")
+	assert.Nilf(t, err, "The format of the timestamp should be YYYYMMDDHHMMSS")
 
 	index = index + len(timestampFormat)
 	assert.Equal(t, string(result[index]), "-", "The parts of snapshot name should be separeted with -")
@@ -88,7 +88,7 @@ func TestLongZoneName(t *testing.T) {
 	testDisk := ""
 
 	_, err := randomSnapshotName(testZone, testDisk, generator)
-	assert.NotEqual(t, err, nil, "When zone name is to long an error should be returned")
+	assert.EqualErrorf(t, err, fmt.Sprintf("length of the zone name must not exceed %d", maxZonenameLen), "When zone name is to long an error should be returned")
 }
 
 // Tests that the returned name is not to long if the disk name is long
@@ -98,7 +98,7 @@ func TestLongDiskName(t *testing.T) {
 	testDisk := strings.Repeat("a", 2*maxSnapshotnameLen)
 
 	result, err := randomSnapshotName(testZone, testDisk, generator)
-	assert.Equal(t, err, nil, "Error should not happen when zone name is not to long")
+	assert.Nilf(t, err, "Error should not happen when zone name is not to long")
 
 	assert.LessOrEqual(t, len(result), maxSnapshotnameLen, fmt.Sprintf("The length of the returned snapshot name must be less than %d", maxSnapshotnameLen))
 }
