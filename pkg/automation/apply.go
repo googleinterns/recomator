@@ -53,7 +53,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			}
 
 			if result == false {
-				return testError()
+				return errors.New("testing of the machine type failed")
 			}
 		case "/status":
 			path := operation.Resource
@@ -68,10 +68,10 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			}
 
 			if result == false {
-				return testError()
+				return errors.New("testing of the status failed")
 			}
 		default:
-			return errors.New("The opperation is not supported")
+			return errors.New("the opperation is not supported")
 		}
 	case "replace":
 		switch operation.Path {
@@ -79,7 +79,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			path1 := operation.Resource
 			path2, ok := operation.Value.(string)
 			if !ok {
-				return typeError()
+				return errors.New("wrong value type for operation replace machine type")
 			}
 
 			project := extractFromURL(path1, "projects")
@@ -100,14 +100,14 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 				return err
 			}
 		default:
-			return errors.New("The opperation is not supported")
+			return errors.New("the opperation is not supported")
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
 			value, ok := operation.Value.(valueAddSnapshot)
 			if !ok {
-				return typeError()
+				return errors.New("wrong value type for operation add snapshot")
 			}
 			path := value.SourceDisk
 
@@ -126,7 +126,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 				return err
 			}
 		default:
-			return errors.New("The opperation is not supported")
+			return errors.New("the opperation is not supported")
 		}
 
 	case "remove":
@@ -144,11 +144,11 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			}
 
 		default:
-			return operationUnsupportedError()
+			return errors.New("the opperation is not supported")
 		}
 
 	default:
-		return errors.New("The opperation is not supported")
+		return errors.New("the opperation is not supported")
 	}
 
 	return nil
@@ -165,15 +165,13 @@ func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
 	// this may somehow be concurrent
 	// if test fails, just proceed to the next group? Or what?
 	for _, operationGroup := range recommendation.Content.OperationGroups {
-		go func(nextOperationGroup *gcloudOperationGroup) {
-			for _, operation := range nextOperationGroup.Operations {
-				err := s.DoOperation(operation)
-				if err != nil {
-					// mark failed
-					return
-				}
+		for _, operation := range operationGroup.Operations {
+			err := s.DoOperation(operation)
+			if err != nil {
+				// mark failed
+				return err
 			}
-		}(operationGroup)
+		}
 	}
 	// mark succedeed
 	return nil
