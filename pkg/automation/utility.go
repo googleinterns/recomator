@@ -17,10 +17,40 @@ limitations under the License.
 package automation
 
 import (
+	"math/rand"
 	"regexp"
+	"time"
 )
 
-// TODO change to returning error
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+
+	return b
+}
+
+// Returns current time in the format YYYYMMDDHHMMSS
+func getTimestamp() string {
+	t := time.Now().UTC()
+	return t.Format(timestampFormat)
+}
+
+// Returns a random string of the given length
+// generated using the given generator.
+// This function will only be thread safe, if the given
+// generator is thread safe.
+func randomString(sequenceLen int, generator *rand.Rand) string {
+	result := make([]byte, sequenceLen)
+	for i := range result {
+		result[i] = characters[generator.Intn(len(characters))]
+	}
+
+	return string(result)
+}
+
+// Given an url, extracts the value
+// of the parameter with the given name
 func extractFromURL(url, parameterName string) string {
 	// Panic if doesn't compile - which should not happen
 	r := regexp.MustCompile("/" + parameterName + "/[a-zA-Z0-9]+/")

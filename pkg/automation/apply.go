@@ -17,7 +17,9 @@ limitations under the License.
 package automation
 
 import (
+	"math/rand"
 	"strings"
+	"time"
 
 	"google.golang.org/api/recommender/v1"
 )
@@ -108,7 +110,13 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 			zone := extractFromURL(path, "zones")
 			disk := extractFromURL(path, "disks")
 
-			err := s.CreateSnapshot(project, zone, disk)
+			generator := rand.New(rand.NewSource(time.Now().UnixNano()))
+			name, err := randomSnapshotName(zone, disk, generator)
+			if err != nil {
+				return err
+			}
+
+			err = s.CreateSnapshot(project, zone, disk, name)
 			if err != nil {
 				return err
 			}
