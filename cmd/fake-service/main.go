@@ -353,8 +353,8 @@ func main() {
 		return
 	})
 
-	router.POST("/recommendations/:name/apply", func(c *gin.Context) {
-		name := c.Param("name")
+	router.POST("/recommendations/apply", func(c *gin.Context) {
+		name := c.Query("name")
 		service, loaded := applyRequestsInProcess.LoadOrStore(name, &mockApplyService{name: name, callsDone: 0, numberOfCalls: 1})
 		if !loaded {
 			go service.Apply()
@@ -362,8 +362,8 @@ func main() {
 		return
 	})
 
-	router.GET("/recommendations/:name/checkStatus", func(c *gin.Context) {
-		name := c.Param("name")
+	router.GET("/recommendations/checkStatus", func(c *gin.Context) {
+		name := c.Query("name")
 		service, ok := applyRequestsInProcess.Load(name)
 		status := notAppliedStatus
 		if ok {

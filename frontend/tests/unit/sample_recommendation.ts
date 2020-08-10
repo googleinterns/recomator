@@ -12,9 +12,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { Recommendation } from "@/store/model";
+import { RecommendationRaw } from "@/store/model";
 
-const sampleRecommendation: Recommendation = {
+const sampleRawRecommendation: RecommendationRaw = {
   content: {
     operationGroups: [
       {
@@ -55,7 +55,9 @@ const sampleRecommendation: Recommendation = {
   }
 };
 
-export function freshSampleRecommendation(): Recommendation {
+export function freshSampleRawRecommendation(): RecommendationRaw {
   // deep copy
-  return JSON.parse(JSON.stringify(sampleRecommendation)) as Recommendation;
+  return JSON.parse(
+    JSON.stringify(sampleRawRecommendation)
+  ) as RecommendationRaw;
 }
