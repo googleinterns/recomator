@@ -46,8 +46,8 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import GroupingHint from "@/components/grouping_hint.vue";
-import CoreTable from "@/components/core_table.vue";
+import GroupingHint from "@/components/GroupingHint.vue";
+import CoreTable from "@/components/CoreTable.vue";
 
 @Component({
   components: { GroupingHint, CoreTable }
