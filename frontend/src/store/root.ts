@@ -13,28 +13,50 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import Vue from "vue";
-import Vuex, { StoreOptions, Store } from "vuex";
+import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
 import {
   RecommendationsStore,
   IRecommendationsStoreState
 } from "./recommendations";
 
+import {
+  CoreTableStore,
+  ICoreTableStoreState,
+  isRecommendationInResults
+} from "./core_table";
+import { RecommendationExtra } from "./model";
+
 Vue.use(Vuex);
 
 export interface IRootStoreState {
-  // Static type checking needs to know of this property (which is added dynamically)
-  //  so it is added as optional as a workaround:
+  // Static type checking needs to know of these properties (added dynamically)
+  //  so they are added as optional as a workaround:
   //  related issue: https://forum.vuejs.org/t/vuex-submodules-with-typescript/40903
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
+  coreTableStore?: ICoreTableStoreState;
 }
+
+const getters: GetterTree<IRootStoreState, IRootStoreState> = {
+  filteredRecommendationsWithExtras(state): RecommendationExtra[] {
+    return state
+      .recommendationsStore!.recommendations.map(
+        rec => new RecommendationExtra(rec)
+      )
+      .filter((recExtra: RecommendationExtra) =>
+        isRecommendationInResults(state.coreTableStore!, recExtra)
+      );
+  }
+};
 
 export function rootStoreFactory(): Store<IRootStoreState> {
   const storeOptions: StoreOptions<IRootStoreState> = {
     state: {},
+    getters: getters,
     modules: {
-      recommendationsStore: RecommendationsStore
+      recommendationsStore: RecommendationsStore,
+      coreTableStore: CoreTableStore
     }
   };
   return new Store<IRootStoreState>(storeOptions);
