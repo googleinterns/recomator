@@ -17,6 +17,7 @@ limitations under the License.
 package automation
 
 import (
+	"errors"
 	"math/rand"
 	"strings"
 	"time"
@@ -24,11 +25,15 @@ import (
 	"google.golang.org/api/recommender/v1"
 )
 
+// The type, that the value field of operation should be
+// interpretable as in add snapshot operation
 type valueAddSnapshot struct {
 	Name             string
 	SourceDisk       string
 	StorageLocations string
 }
+
+type gcloudOperationGroup = recommender.GoogleCloudRecommenderV1OperationGroup
 
 // DoOperation does the action specified in the operation.
 func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommenderV1Operation) error {
@@ -66,7 +71,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 				return testError()
 			}
 		default:
-			return operationUnsupportedError()
+			return errors.New("The opperation is not supported")
 		}
 	case "replace":
 		switch operation.Path {
@@ -95,7 +100,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 				return err
 			}
 		default:
-			return operationUnsupportedError()
+			return errors.New("The opperation is not supported")
 		}
 	case "add":
 		switch operation.ResourceType {
@@ -121,7 +126,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 				return err
 			}
 		default:
-			return operationUnsupportedError()
+			return errors.New("The opperation is not supported")
 		}
 
 	case "remove":
@@ -143,7 +148,7 @@ func (s *googleService) DoOperation(operation *recommender.GoogleCloudRecommende
 		}
 
 	default:
-		return operationUnsupportedError()
+		return errors.New("The opperation is not supported")
 	}
 
 	return nil
@@ -160,13 +165,15 @@ func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
 	// this may somehow be concurrent
 	// if test fails, just proceed to the next group? Or what?
 	for _, operationGroup := range recommendation.Content.OperationGroups {
-		for _, operation := range operationGroup.Operations {
-			err := s.DoOperation(operation)
-			if err != nil {
-				// mark failed
-				return err
+		go func(nextOperationGroup *gcloudOperationGroup) {
+			for _, operation := range nextOperationGroup.Operations {
+				err := s.DoOperation(operation)
+				if err != nil {
+					// mark failed
+					return
+				}
 			}
-		}
+		}(operationGroup)
 	}
 	// mark succedeed
 	return nil

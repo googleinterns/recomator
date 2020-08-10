@@ -27,10 +27,6 @@ const maxDisknameLen = 20
 const maxZonenameLen = 26
 const maxSnapshotnameLen = 63
 
-const characters = "abcdefghijklmnopqrstuvwxyz" +
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-const timestampFormat = "20060102150405"
-
 // Returns the name of the snapshot, generated using the given generator
 // following the convention described here:
 // https://cloud.google.com/compute/docs/disks/scheduled-snapshots#names_for_scheduled_snapshots

@@ -22,6 +22,10 @@ import (
 	"time"
 )
 
+const characters = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const timestampFormat = "20060102150405"
+
 func min(a int, b int) int {
 	if a < b {
 		return a
