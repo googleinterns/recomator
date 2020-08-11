@@ -20,6 +20,14 @@ import vuetify from "./plugins/vuetify";
 
 Vue.config.productionTip = false;
 
+/* In order for this fetch to work with the fake middleware service,
+run: `go run cmd/fake-service/*.go` first from the root folder.
+It might initially help to run it repeatedly until the installing 
+errors disappear, make sure that Go is in the latest version too. */
+
+// Asynchronously request and receive recommendations from the middleware
+store.dispatch("recommendationsStore/fetchRecommendations");
+
 new Vue({
   router,
   store,

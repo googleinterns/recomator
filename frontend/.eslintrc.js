@@ -22,7 +22,10 @@ module.exports = {
 
     // As described in store/root.ts, we need the ! operator
     //  to make the type-checker happy with dynamically-added modules
-    "@typescript-eslint/no-non-null-assertion": "off"
+    "@typescript-eslint/no-non-null-assertion": "off",
+
+    // Sometimes it is useful so that no additional interface is needed
+    "@typescript-eslint/no-explicit-any": "off"
   },
   overrides: [
     {

@@ -17,7 +17,7 @@ import { extractFromResource } from "./utils";
 // Follows data model from:
 //    https://cloud.google.com/recommender/docs/reference/rest/v1beta1/projects.locations.recommenders.recommendations
 
-export interface Recommendation {
+export interface RecommendationRaw {
   name: string;
   description: string;
   recommenderSubtype: string;
@@ -38,7 +38,8 @@ export interface CostProjection {
 
 export interface Money {
   currencyCode: string;
-  units: string;
+  units?: string;
+  nanos?: number;
 }
 
 export interface RecommendationStateInfo {
@@ -69,14 +70,14 @@ export interface Operation {
 
 // -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
 export function getRecommendationResource(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
 // -> "timus-test-for-probers-n2-std-4-idling"
 export function getRecommendationResourceShortName(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   const resource = getRecommendationResource(recommendation);
   return extractFromResource("instances", resource);
@@ -84,7 +85,7 @@ export function getRecommendationResourceShortName(
 
 // -> "rightsizer-test"
 export function getRecommendationProject(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   const resource = getRecommendationResource(recommendation);
   return extractFromResource("projects", resource);
@@ -93,22 +94,22 @@ export function getRecommendationProject(
 // TODO: remove ignoring Eslint, once these methods are actually used somewhere
 
 // Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRecomendationDescription(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   return recommendation.description;
 }
 
-// "3.5$ per week"
+// "3.5" ($ per week)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function getRecommendationCostString(
-  recommendation: Recommendation
-): string {
+export function getRecommendationCostPerWeek(
+  recommendation: RecommendationRaw
+): number {
+  const costObject = recommendation.primaryImpact.costProjection.cost;
   console.assert(
-    recommendation.primaryImpact.costProjection.cost.currencyCode === "USD",
+    costObject.currencyCode === "USD",
     "Only USD supported, got %s",
-    recommendation.primaryImpact.costProjection.cost.currencyCode
+    costObject.currencyCode
   );
 
   // As a month doesn't have a fixed number of seconds, weekly cost is used
@@ -116,10 +117,75 @@ export function getRecommendationCostString(
   const secs = parseInt(
     recommendation.primaryImpact.costProjection.duration.slice(0, -1)
   );
-  // example units: "-73"
-  const cost = parseInt(recommendation.primaryImpact.costProjection.cost.units);
+  // example units: "-73", example nanos: 4200000000 => -73.42
+  // Sometimes we will only get the 'nanos' field
+  //  (only observed for snaphshots for now)
 
-  const costPerWeek = (cost * 60 * 60 * 24 * 7) / secs;
+  let cost = 0;
 
-  return `${costPerWeek.toFixed(2)} USD per week`;
+  if (costObject.units !== undefined) cost += parseInt(costObject.units!);
+  if (costObject.nanos !== undefined)
+    cost += costObject.nanos! / (1000 * 1000 * 1000);
+
+  return (cost * 60 * 60 * 24 * 7) / secs;
+}
+
+// "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
+export function getRecommendationType(recommendation: RecommendationRaw) {
+  return recommendation.recommenderSubtype;
+}
+
+export const internalStatusMap: Record<string, string> = {
+  ACTIVE: "Applicable",
+  CLAIMED: "In progress",
+  SUCCEEDED: "Success",
+  FAILED: "Failed",
+  DISMISSED: "Dismissed"
+};
+
+export function throwIfInvalidStatus(statusName: string): void {
+  if (!(statusName in internalStatusMap))
+    throw `invalid status name passed: ${statusName}`;
+}
+
+export function getInternalStatusMapping(statusName: string): string {
+  throwIfInvalidStatus(statusName);
+  return internalStatusMap[statusName];
+}
+
+// All data maintained for each recommendation
+export class RecommendationExtra implements RecommendationRaw {
+  // These should not be modified (including inner fields) outside of tests:
+  readonly name: string;
+  readonly description: string;
+  readonly recommenderSubtype: string;
+  readonly primaryImpact: Impact;
+  readonly content: RecommendationContent;
+  readonly stateInfo: RecommendationStateInfo; // original status
+
+  // need to remember them so that v-data-table knows what to sort by
+  readonly costCol: number;
+  readonly projectCol: string;
+  readonly resourceCol: string;
+  readonly typeCol: string;
+
+  // These can be modified:
+  statusCol: string; // follows the current recommendation status
+  errorHeader?: string;
+  errorDescription?: string;
+
+  constructor(rec: RecommendationRaw) {
+    this.name = rec.name;
+    this.description = rec.description;
+    this.recommenderSubtype = rec.recommenderSubtype;
+    this.primaryImpact = rec.primaryImpact;
+    this.content = rec.content;
+    this.stateInfo = rec.stateInfo;
+
+    this.costCol = getRecommendationCostPerWeek(rec);
+    this.projectCol = getRecommendationProject(rec);
+    this.resourceCol = getRecommendationResourceShortName(rec);
+    this.typeCol = getRecommendationType(rec);
+    this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
+  }
 }

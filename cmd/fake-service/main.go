@@ -39,7 +39,7 @@ const (
 	numberOfFakeRecommendations = 60
 	expectedListTime            = time.Second * 10
 	expectedApplyTime           = time.Second * 10
-	probablityOfErrorList       = 1.0
+	probablityOfErrorList       = 0.0
 	probablityOfErrorApply      = 0.3
 )
 
@@ -362,8 +362,8 @@ func main() {
 		return
 	})
 
-	router.GET("/recommendations/:name/checkStatus", func(c *gin.Context) {
-		name := c.Param("name")
+	router.GET("/recommendations/checkStatus", func(c *gin.Context) {
+		name := c.Query("name")
 		service, ok := applyRequestsInProcess.Load(name)
 		status := notAppliedStatus
 		if ok {
