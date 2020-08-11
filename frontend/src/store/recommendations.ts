@@ -315,5 +315,3 @@ export function recommendationStoreFactory(): Module<
     getters: getters
   };
 }
-
-export const RecommendationsStore = recommendationStoreFactory();
