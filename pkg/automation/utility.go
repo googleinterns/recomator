@@ -17,6 +17,7 @@ limitations under the License.
 package automation
 
 import (
+	"errors"
 	"math/rand"
 	"regexp"
 	"time"
@@ -55,16 +56,31 @@ func randomString(sequenceLen int, generator *rand.Rand) string {
 
 // Given an url, extracts the value
 // of the parameter with the given name
-func extractFromURL(url, parameterName string) string {
+func extractFromURL(url, parameterName string) (string, error) {
 	// Panic if doesn't compile - which should not happen
-	r := regexp.MustCompile("/" + parameterName + "/[a-zA-Z0-9]+/")
+	r, err := regexp.Compile("/" + parameterName + "/[a-zA-Z0-9]+/")
+	if err == nil {
+		return "", err
+	}
 
 	partialResult := r.FindString(url)
 	if len(partialResult) == 0 {
-		return ""
+		return "", errors.New("The given url does not contain the given parameter name")
 	}
 
 	stringResult := string(partialResult)
 	result := stringResult[len(parameterName)+2 : len(stringResult)-1]
-	return result
+	return result, nil
+}
+
+// Given a list of errors, the function returns one
+// that is not nil. If all of the are nil, then it returns nil
+func chooseNotNil(errorList ...error) error {
+	for _, err := range errorList {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
