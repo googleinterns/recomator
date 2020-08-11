@@ -26,7 +26,7 @@ import { IRootStoreState } from "./root";
 // TODO: move all of this to config in some next PR
 const SERVER_ADDRESS: string = getServerAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100;
-//CHANGE FROM THE FUTURE: const APPLY_PROGRESS_WAIT_TIME = 200;
+const APPLY_PROGRESS_WAIT_TIME = 200;
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
@@ -137,17 +137,26 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       context.commit("addRecommendation", recommendation);
     }
 
+    // start watchers for all added recommendations already in progress
+    for (const recommendation of context.state.recommendations) {
+      if (recommendation.statusCol == getInternalStatusMapping("CLAIMED"))
+        context.dispatch("watchStatus", recommendation);
+    }
+
     context.commit("endFetching");
-  }
-  /* [[FUTURE CHANGES, TO BE REVIEWED IN FURTHER PR-S TO KEEP THIS ONE SMALLER]]
+  },
+
   // we need names, not references so that we can find them in the state fast
-  applyGivenRecommendations(context, selectedNames: string[]): void {
+  applyGivenRecommendations(
+    { dispatch, state },
+    selectedNames: string[]
+  ): void {
     // if selected has duplicates
     if (new Set(selectedNames).size !== selectedNames.length)
       throw "Duplicates found among given recommendation names";
 
     const selectedRecs = selectedNames.map(name =>
-      context.state.recommendationsByName.get(name)
+      state.recommendationsByName.get(name)
     );
 
     // if name not found
@@ -156,16 +165,15 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
     // If we find out that preparing the requests takes too long and
     // blocks the UI, we can wrap dispatches in setTimeout(...,0)
-    selectedRecs.forEach(rec =>
-      context.dispatch("_applySingleRecommendation", rec)
-    );
+    selectedRecs.forEach(rec => dispatch("applySingleRecommendation", rec));
   },
+
   // should return nearly immediately
-  async _applySingleRecommendation(
-    context,
+  async applySingleRecommendation(
+    { commit, dispatch },
     rec: RecommendationExtra
   ): Promise<void> {
-    context.commit("setRecommendationStatus", {
+    commit("setRecommendationStatus", {
       recName: rec.name,
       newStatus: "CLAIMED"
     });
@@ -175,13 +183,13 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       { method: "POST" }
     );
 
-    if (response.status === HTTP_OK_CODE) context.dispatch("_watchStatus", rec);
+    if (response.status === HTTP_OK_CODE) dispatch("watchStatus", rec);
     else {
-      context.commit("setRecommendationStatus", {
+      commit("setRecommendationStatus", {
         recName: rec.name,
         newStatus: "FAILED"
       });
-      context.commit("setRecommendationError", {
+      commit("setRecommendationError", {
         recName: rec.name,
         header: `HTTP ERROR(${response.status})`,
         desc: `Couldn't reach the Recomator API:\n${response.statusText}`
@@ -189,22 +197,27 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
   },
   //  should return nearly immediately, assumes "CLAIMED" status
-  async _watchStatus(context, rec: RecommendationExtra): Promise<void> {
-    if (rec.statusCol !== getInternalStatusMapping("CLAIMED"))
-      throw "You can only watch claimed recommendations";
-
+  async watchStatus(
+    { commit, dispatch },
+    rec: RecommendationExtra
+  ): Promise<void> {
     const response = await fetch(
       `${SERVER_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
+
     if (response.status === HTTP_OK_CODE) {
       const responseJson = (await response.json()) as ICheckStatusResponse;
       switch (responseJson.status) {
         case "IN PROGRESS":
+          commit("setRecommendationStatus", {
+            recName: rec.name,
+            newStatus: "CLAIMED"
+          });
           // continue following the progress
           break;
 
         case "SUCCEEDED":
-          context.commit("setRecommendationStatus", {
+          commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "SUCCEEDED"
           });
@@ -213,36 +226,37 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         // Now we know it failed, tell the user why
 
         case "NOT APPLIED":
-          context.commit("setRecommendationStatus", {
+          commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "FAILED"
           });
-          context.commit("setRecommendationError", {
+          commit("setRecommendationError", {
             recName: rec.name,
             header: "Server hasn't acknowledged the request",
             desc:
-              "Recomator API has not received the request to apply this recommendation. You can try sending it again."
+              "Recomator API has not received the request to apply this recommendation. You can try applying it again."
           });
           return;
 
         case "FAILED":
-          context.commit("setRecommendationStatus", {
+          commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "FAILED"
           });
-          context.commit("setRecommendationError", {
+          commit("setRecommendationError", {
             recName: rec.name,
-            header: "Applying recommendation failed server-side",
+            header:
+              "Applying recommendation failed server-side. You can try applying it again.",
             desc: `${responseJson.errorMessage}`
           });
           return;
 
         default:
-          context.commit("setRecommendationStatus", {
+          commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "FAILED"
           });
-          context.commit("setRecommendationError", {
+          commit("setRecommendationError", {
             recName: rec.name,
             header: `Bad status(${responseJson.status})`,
             desc: "Recomator API status not recognized."
@@ -251,31 +265,24 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       }
     } else {
       // Non-200 HTTP code
-      context.commit("setRecommendationStatus", {
+      commit("setRecommendationStatus", {
         recName: rec.name,
         newStatus: "FAILED"
       });
       rec.errorHeader = `Status query failed (HTTP:${response.status})`;
-      rec.errorHeader =
+      rec.errorDescription =
         "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment.";
     }
 
     // ask the event loop to check the status once again in a bit
-    setTimeout(
-      () => context.dispatch("_watchStatus", rec),
-      APPLY_PROGRESS_WAIT_TIME
-    );
+    setTimeout(() => dispatch("watchStatus", rec), APPLY_PROGRESS_WAIT_TIME);
   }
-}; 
-
+};
 
 interface ICheckStatusResponse {
   status: string;
   errorMessage: string;
 }
-
-END OF FUTURE CHANGES */
-};
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
   allProjects(state): string[] {
