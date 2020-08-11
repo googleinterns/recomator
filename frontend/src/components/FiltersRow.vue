@@ -14,22 +14,13 @@ limitations under the License. -->
 <template>
   <tr>
     <td />
-    <td class="pb-5">
-      <v-text-field
-        v-model="resourceNameSearchText"
-        append-icon="mdi-magnify"
-        label="Search resources"
-        single-line
-        hide-details
-      />
-    </td>
+    <td />
     <td>
       <v-combobox
         v-model="projectsSelected"
         :items="allProjects"
         label="Select projects"
         multiple
-        reverse
       >
       </v-combobox>
     </td>
@@ -39,18 +30,10 @@ limitations under the License. -->
         :items="allTypes"
         label="Select types"
         multiple
-        reverse
       >
       </v-combobox>
     </td>
-    <td>
-      <v-text-field
-        v-model="descriptionSearchText"
-        append-icon="mdi-magnify"
-        label="Search descriptions"
-        single-line
-      ></v-text-field>
-    </td>
+    <td />
     <td></td>
     <td>
       <v-combobox
@@ -58,7 +41,6 @@ limitations under the License. -->
         :items="allStatuses"
         label="Select status"
         multiple
-        reverse
       >
       </v-combobox>
     </td>
@@ -70,28 +52,6 @@ import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root";
 @Component
 export default class FiltersRow extends Vue {
-  // resource name
-
-  get resourceNameSearchText(): string {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .resourceNameSearchText;
-  }
-
-  set resourceNameSearchText(text: string) {
-    this.$store.commit("coreTableStore/setResourceNameSearchText", text);
-  }
-
-  // description
-
-  get descriptionSearchText(): string {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .descriptionSearchText;
-  }
-
-  set descriptionSearchText(text: string) {
-    this.$store.commit("coreTableStore/setDescriptionSearchText", text);
-  }
-
   // projects
 
   get allProjects(): string[] {

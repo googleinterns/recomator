@@ -22,9 +22,7 @@ import {
 import {
   projectFilterAccepted,
   typeFilterAccepted,
-  statusFilterAccepted,
-  resourceFilterAccepted,
-  descriptionFilterAccepted
+  statusFilterAccepted
 } from "@/store/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import {
@@ -142,44 +140,5 @@ describe("Filtering predicates individually", () => {
 
     recommendation.stateInfo.state = "CLAIMED"; // this maps to "In progress"
     expect(statusFilterAccepted(tableState, extra())).toBeTruthy();
-  });
-
-  test("resource filter", () => {
-    // Making sure that possible delimiters are handled properly,
-    //  especially because we are ignoring cases
-    recommendation.content.operationGroups[0].operations[0].resource =
-      "//compute.googleapis.com/projects/Facebook/zones/us-east1-b/instances/bob-_~.vm0";
-
-    tableState.resourceNameSearchText = "";
-    expect(resourceFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.resourceNameSearchText = "B-_~.Vm";
-    expect(resourceFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.resourceNameSearchText = "B-_.Vm";
-    expect(resourceFilterAccepted(tableState, extra())).toBeFalsy();
-
-    tableState.resourceNameSearchText = "aLiCe";
-    expect(resourceFilterAccepted(tableState, extra())).toBeFalsy();
-  });
-
-  test("description filter", () => {
-    recommendation.description = "Oh no, you use barely any CPUs you pay for.";
-
-    tableState.descriptionSearchText = "";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.descriptionSearchText = "CPU";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeTruthy();
-
-    // making sure that cases are ignored and spaces are taken into account
-    tableState.descriptionSearchText = " cPu";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.descriptionSearchText = "  cPu";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeFalsy();
-
-    tableState.descriptionSearchText = "gpu";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeFalsy();
   });
 });

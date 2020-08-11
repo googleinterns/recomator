@@ -15,11 +15,9 @@ limitations under the License. */
 jest.mock("@/store/core_table_filter_utils");
 
 import {
-  descriptionFilterAccepted,
   statusFilterAccepted,
   projectFilterAccepted,
-  typeFilterAccepted,
-  resourceFilterAccepted
+  typeFilterAccepted
 } from "@/store/core_table_filter_utils";
 
 import {
@@ -40,12 +38,10 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
     ) as boolean;
 
   test("project filter", () => {
-    let isOn = [true, true, true, true, true];
-    (descriptionFilterAccepted as any).mockImplementation(() => isOn[0]);
-    (projectFilterAccepted as any).mockImplementation(() => isOn[1]);
-    (typeFilterAccepted as any).mockImplementation(() => isOn[2]);
-    (resourceFilterAccepted as any).mockImplementation(() => isOn[3]);
-    (statusFilterAccepted as any).mockImplementation(() => isOn[4]);
+    let isOn = [true, true, true];
+    (projectFilterAccepted as any).mockImplementation(() => isOn[0]);
+    (typeFilterAccepted as any).mockImplementation(() => isOn[1]);
+    (statusFilterAccepted as any).mockImplementation(() => isOn[2]);
 
     for (let i = 0; i < isOn.length; i++) {
       expect(passesAll()).toBeTruthy();
@@ -54,7 +50,7 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
       isOn[i] = true;
     }
 
-    isOn = [false, false, false, false];
+    isOn = [false, false, false];
     expect(passesAll()).toBeFalsy();
   });
 });

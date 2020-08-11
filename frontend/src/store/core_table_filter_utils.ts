@@ -56,23 +56,3 @@ export function statusFilterAccepted(
     tableState.statusesSelected.includes(recExtra.statusCol)
   );
 }
-
-export function resourceFilterAccepted(
-  tableState: ICoreTableStoreState,
-  recExtra: RecommendationExtra
-) {
-  return (
-    tableState.resourceNameSearchText.length === 0 ||
-    isSearchTextInCell(tableState.resourceNameSearchText, recExtra.resourceCol)
-  );
-}
-
-export function descriptionFilterAccepted(
-  tableState: ICoreTableStoreState,
-  recExtra: RecommendationExtra
-) {
-  return (
-    tableState.descriptionSearchText.length === 0 ||
-    isSearchTextInCell(tableState.descriptionSearchText, recExtra.description)
-  );
-}
