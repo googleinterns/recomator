@@ -17,7 +17,7 @@ import { extractFromResource } from "./utils";
 // Follows data model from:
 //    https://cloud.google.com/recommender/docs/reference/rest/v1beta1/projects.locations.recommenders.recommendations
 
-export interface Recommendation {
+export interface RecommendationRaw {
   name: string;
   description: string;
   recommenderSubtype: string;
@@ -70,14 +70,14 @@ export interface Operation {
 
 // -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
 export function getRecommendationResource(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
 // -> "timus-test-for-probers-n2-std-4-idling"
 export function getRecommendationResourceShortName(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   const resource = getRecommendationResource(recommendation);
   return extractFromResource("instances", resource);
@@ -85,7 +85,7 @@ export function getRecommendationResourceShortName(
 
 // -> "rightsizer-test"
 export function getRecommendationProject(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   const resource = getRecommendationResource(recommendation);
   return extractFromResource("projects", resource);
@@ -95,7 +95,7 @@ export function getRecommendationProject(
 
 // Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
 export function getRecomendationDescription(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): string {
   return recommendation.description;
 }
@@ -103,7 +103,7 @@ export function getRecomendationDescription(
 // "3.5" ($ per week)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRecommendationCostPerWeek(
-  recommendation: Recommendation
+  recommendation: RecommendationRaw
 ): number {
   const costObject = recommendation.primaryImpact.costProjection.cost;
   console.assert(
@@ -131,14 +131,14 @@ export function getRecommendationCostPerWeek(
 }
 
 // "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
-export function getRecommendationType(recommendation: Recommendation) {
+export function getRecommendationType(recommendation: RecommendationRaw) {
   return recommendation.recommenderSubtype;
 }
 
 export const internalStatusMap: Record<string, string> = {
   ACTIVE: "Applicable",
   CLAIMED: "In progress",
-  SUCCEDED: "Success",
+  SUCCEEDED: "Success",
   FAILED: "Failed",
   DISMISSED: "Dismissed"
 };
@@ -153,26 +153,35 @@ export function getInternalStatusMapping(statusName: string): string {
   return internalStatusMap[statusName];
 }
 
-// Class for cacheing extra fields that are used for grouping or sorting
-export class RecommendationExtra implements Recommendation {
-  name: string;
-  description: string;
-  recommenderSubtype: string;
-  primaryImpact: Impact;
-  content: RecommendationContent;
-  stateInfo: RecommendationStateInfo;
-  costCol: number;
-  projectCol: string;
-  resourceCol: string;
-  typeCol: string;
-  statusCol: string;
-  constructor(rec: Recommendation) {
+// All data maintained for each recommendation
+export class RecommendationExtra implements RecommendationRaw {
+  // These should not be modified (including inner fields) outside of tests:
+  readonly name: string;
+  readonly description: string;
+  readonly recommenderSubtype: string;
+  readonly primaryImpact: Impact;
+  readonly content: RecommendationContent;
+  readonly stateInfo: RecommendationStateInfo; // original status
+
+  // need to remember them so that v-data-table knows what to sort by
+  readonly costCol: number;
+  readonly projectCol: string;
+  readonly resourceCol: string;
+  readonly typeCol: string;
+
+  // These can be modified:
+  statusCol: string; // follows the current recommendation status
+  errorHeader?: string;
+  errorDescription?: string;
+
+  constructor(rec: RecommendationRaw) {
     this.name = rec.name;
     this.description = rec.description;
     this.recommenderSubtype = rec.recommenderSubtype;
     this.primaryImpact = rec.primaryImpact;
     this.content = rec.content;
     this.stateInfo = rec.stateInfo;
+
     this.costCol = getRecommendationCostPerWeek(rec);
     this.projectCol = getRecommendationProject(rec);
     this.resourceCol = getRecommendationResourceShortName(rec);

@@ -30,15 +30,44 @@ limitations under the License. -->
       rounded
       small
       label
-      v-if="checkStatus('SUCCEDED')"
+      v-if="checkStatus('SUCCEEDED')"
       color="green"
       block
     >
       <v-icon color="white" left dark>mdi-check-circle</v-icon>
-      {{ internalStatusName }}
+      {{ rowRecommendation.statusCol }}
     </v-btn>
+
+    <v-dialog
+      v-if="checkStatus('FAILED')"
+      v-model="errorDialogOpened"
+      max-width="600px"
+    >
+      <template v-slot:activator="{ on }">
+        <v-btn color="red darken-2" v-on="on" small rounded block>
+          <v-icon left color="white">mdi-alert-box</v-icon>
+          Show Error
+        </v-btn>
+      </template>
+      <v-card>
+        <v-card-title class="headline">
+          {{ rowRecommendation.errorHeader }}
+        </v-card-title>
+        <v-card-text>
+          {{ rowRecommendation.errorDescription }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark v-on:click="applyRecommendation()">
+            Retry
+          </v-btn>
+          <v-btn color="primary" dark v-on:click="errorDialogOpened = false">
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
-  <!-- TODO: Handle failed/dismissed -->
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
@@ -60,18 +89,20 @@ const ApplyAndStatusCellProps = Vue.extend({
 
 @Component
 export default class ApplyAndStatusCell extends ApplyAndStatusCellProps {
+  errorDialogOpened = false;
+
   // we don't want a typo in status name to go unnoticed
   checkStatus(statusName: string) {
     throwIfInvalidStatus(statusName);
-    return this.rowRecommendation.stateInfo.state == statusName;
-  }
-
-  get internalStatusName(): string {
-    return getInternalStatusMapping(this.rowRecommendation.stateInfo.state);
+    return (
+      this.rowRecommendation.statusCol === getInternalStatusMapping(statusName)
+    );
   }
 
   applyRecommendation(): void {
-    this.$store.dispatch("applySingleRecommendation", this.rowRecommendation);
+    this.$store.dispatch("recommendationsStore/applyGivenRecommendations", [
+      this.rowRecommendation.name
+    ]);
   }
 }
 </script>
