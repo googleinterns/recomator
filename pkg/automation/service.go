@@ -57,6 +57,15 @@ type GoogleService interface {
 	// listing every region available for the project methods
 	ListRegionsNames(project string) ([]string, error)
 
+	// marks recommendation for the project with given etag and name claimed
+	MarkRecommendationClaimed(name, etag string) error
+
+	// marks recommendation for the project with given etag and name succeded
+	MarkRecommendationSucceded(name, etag string) error
+
+	// marks recommendation for the project with given etag and name failed
+	MarkRecommendationFailed(name, etag string) error
+
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
 }
