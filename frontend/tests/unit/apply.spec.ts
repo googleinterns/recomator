@@ -24,8 +24,8 @@ let dispatch: jest.Mock;
 let firstRec: RecommendationExtra;
 
 beforeAll(() => {
-  enableFetchMocks();
-  fetchMock.dontMock();
+  enableFetchMocks(); // fetchMock instance visible
+  fetchMock.dontMock(); // fetches only mocked at request
 });
 
 beforeEach(() => {
@@ -33,8 +33,10 @@ beforeEach(() => {
   store = rootStoreFactory();
   const modState = store.state.recommendationsStore!;
 
-  // dispatch, commit are now spied on and do nothing
+  // dispatch is now spied on and does nothing
   dispatch = jest.fn();
+
+  // commit is converted to module form
   commit = (name: any, payload: any) => {
     store.commit("recommendationsStore/" + name, payload);
   };
@@ -58,6 +60,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fetchMock.dontMock();
+  // clear the spies
   fetchMock.mockClear();
   dispatch.mockClear();
 });
