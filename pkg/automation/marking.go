@@ -34,8 +34,8 @@ func (s *googleService) MarkRecommendationFailed(name, etag string) error {
 	return err
 }
 
-// Marks the recommendation defined by the given name and etag as succeded
-func (s *googleService) MarkRecommendationSucceded(name, etag string) error {
+// Marks the recommendation defined by the given name and etag as succeeded
+func (s *googleService) MarkRecommendationSucceeded(name, etag string) error {
 	r := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
 	request := gcloudSucceededRequest{
 		Etag: etag,

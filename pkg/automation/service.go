@@ -60,8 +60,8 @@ type GoogleService interface {
 	// marks recommendation for the project with given etag and name claimed
 	MarkRecommendationClaimed(name, etag string) error
 
-	// marks recommendation for the project with given etag and name succeded
-	MarkRecommendationSucceded(name, etag string) error
+	// marks recommendation for the project with given etag and name succeeded
+	MarkRecommendationSucceeded(name, etag string) error
 
 	// marks recommendation for the project with given etag and name failed
 	MarkRecommendationFailed(name, etag string) error
