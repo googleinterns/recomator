@@ -16,11 +16,80 @@ limitations under the License.
 
 package automation
 
-import "google.golang.org/api/compute/v1"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+
+	"google.golang.org/api/compute/v1"
+)
+
+const maxDisknameLen = 20
+const maxZonenameLen = 26
+const maxSnapshotnameLen = 63
+
+const characters = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const timestampFormat = "20060102150405"
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+
+	return b
+}
+
+// Returns current time in the format YYYYMMDDHHMMSS
+func getTimestamp() string {
+	t := time.Now().UTC()
+	return t.Format(timestampFormat)
+}
+
+// Returns a random string of the given length
+// generated using the given generator.
+// This function will only be thread safe, if the given
+// generator is thread safe.
+func randomString(sequenceLen int, generator *rand.Rand) string {
+	result := make([]byte, sequenceLen)
+	for i := range result {
+		result[i] = characters[generator.Intn(len(characters))]
+	}
+
+	return string(result)
+}
+
+// Returns the name of the snapshot, generated using the given generator
+// following the convention described here:
+// https://cloud.google.com/compute/docs/disks/scheduled-snapshots#names_for_scheduled_snapshots
+// This function will only be thread safe, if the given
+// generator is thread safe.
+func randomSnapshotName(zone string, disk string, generator *rand.Rand) (string, error) {
+	if len(zone) > maxZonenameLen {
+		return "", fmt.Errorf("length of the zone name must not exceed %d", maxZonenameLen)
+	}
+
+	result := ""
+	result += disk[:min(maxDisknameLen, len(disk))]
+	result += "-"
+	result += zone
+	result += "-"
+	result += getTimestamp()
+	result += "-"
+	randomSequenceLen := maxSnapshotnameLen - len(result)
+	result += randomString(randomSequenceLen, generator)
+
+	return result, nil
+}
 
 // CreateSnapshot calls the disks.createSnapshot method.
 // Requires compute.disks.createSnapshot or compute.snapshots.create permission.
+// For a given name, there can only be one snapshot having it.
+// The maximum name length is 63.
 func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
+	if len(name) > maxSnapshotnameLen {
+		return fmt.Errorf("length of the snapshot name must not exceed %d", maxSnapshotnameLen)
+	}
 	disksService := compute.NewDisksService(s.computeService)
 	snapshot := &compute.Snapshot{Name: name}
 	_, err := disksService.CreateSnapshot(project, zone, disk, snapshot).Do()
