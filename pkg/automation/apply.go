@@ -70,16 +70,17 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 // - google.compute.instance.MachineTypeRecommender
 func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
 	// check that status is active
-	// claim the recommendation
+	s.MarkRecommendationSucceded(recommendation.Name, recommendation.Etag)
 	for _, operationGroup := range recommendation.Content.OperationGroups {
 		for _, operation := range operationGroup.Operations {
 			err := s.DoOperation(operation)
 			if err != nil {
-				// mark failed
+				s.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
 				return err
 			}
 		}
 	}
-	// mark succedeed
+	s.MarkRecommendationSucceded(recommendation.Name, recommendation.Etag)
+
 	return nil
 }
