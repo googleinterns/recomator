@@ -21,9 +21,9 @@ type gcloudOperation = recommender.GoogleCloudRecommenderV1Operation
 func (s *googleService) testMachineType(operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, "projects")
-	zone, errZone := extractFromURL(path, "zones")
-	instance, errInstance := extractFromURL(path, "instance")
+	project, errProject := extractFromURL(path, projectPath)
+	zone, errZone := extractFromURL(path, zonePath)
+	instance, errInstance := extractFromURL(path, instancePath)
 	err := chooseNotNil(errProject, errZone, errInstance)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (s *googleService) testMachineType(operation *gcloudOperation) error {
 	}
 
 	if result == false {
-		return errors.New("testing of the machine type failed")
+		return errors.New("machine type is not as expected")
 	}
 
 	return nil
@@ -44,9 +44,9 @@ func (s *googleService) testMachineType(operation *gcloudOperation) error {
 func (s *googleService) testStatus(operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, "projects")
-	zone, errZone := extractFromURL(path, "zones")
-	instance, errInstance := extractFromURL(path, "instance")
+	project, errProject := extractFromURL(path, projectPath)
+	zone, errZone := extractFromURL(path, zonePath)
+	instance, errInstance := extractFromURL(path, instancePath)
 	err := chooseNotNil(errProject, errZone, errInstance)
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (s *googleService) testStatus(operation *gcloudOperation) error {
 	}
 
 	if result == false {
-		return errors.New("testing of the status failed")
+		return errors.New("status of instance is not as expected")
 	}
 
 	return nil
@@ -71,10 +71,11 @@ func (s *googleService) replaceMachineType(operation *gcloudOperation) error {
 		return errors.New("wrong value type for operation replace machine type")
 	}
 
-	project, errProject := extractFromURL(path1, "projects")
-	instance, errInstance := extractFromURL(path1, "instances")
-	machineType, errMachine := extractFromURL(path2, "machineTypes")
-	zone, errZone := extractFromURL(path2, "zones")
+	project, errProject := extractFromURL(path1, projectPath)
+	instance, errInstance := extractFromURL(path1, instancePath)
+
+	machineType, errMachine := extractFromURL(path2, machineTypePath)
+	zone, errZone := extractFromURL(path2, zonePath)
 	err := chooseNotNil(errProject, errInstance, errMachine, errZone)
 	if err != nil {
 		return err
@@ -86,9 +87,9 @@ func (s *googleService) replaceMachineType(operation *gcloudOperation) error {
 func (s *googleService) replaceStatus(operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, "projects")
-	zone, errZone := extractFromURL(path, "zones")
-	instance, errInstance := extractFromURL(path, "instance")
+	project, errProject := extractFromURL(path, projectPath)
+	zone, errZone := extractFromURL(path, zonePath)
+	instance, errInstance := extractFromURL(path, instancePath)
 	err := chooseNotNil(errProject, errZone, errInstance)
 	if err != nil {
 		return err
@@ -104,9 +105,9 @@ func (s *googleService) addSnapshot(operation *gcloudOperation) error {
 	}
 	path := value.SourceDisk
 
-	project, errProject := extractFromURL(path, "projects")
-	zone, errZone := extractFromURL(path, "zones")
-	disk, errDisk := extractFromURL(path, "disks")
+	project, errProject := extractFromURL(path, projectPath)
+	zone, errZone := extractFromURL(path, zonePath)
+	disk, errDisk := extractFromURL(path, diskPath)
 	err := chooseNotNil(errProject, errZone, errDisk)
 	if err != nil {
 		return err
@@ -124,9 +125,9 @@ func (s *googleService) addSnapshot(operation *gcloudOperation) error {
 func (s *googleService) removeDisk(operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, "projects")
-	zone, errZone := extractFromURL(path, "zones")
-	disk, errDisk := extractFromURL(path, "disks")
+	project, errProject := extractFromURL(path, projectPath)
+	zone, errZone := extractFromURL(path, zonePath)
+	disk, errDisk := extractFromURL(path, diskPath)
 	err := chooseNotNil(errProject, errZone, errDisk)
 	if err != nil {
 		return err
