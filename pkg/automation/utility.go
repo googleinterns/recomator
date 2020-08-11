@@ -17,7 +17,7 @@ limitations under the License.
 package automation
 
 import (
-	"errors"
+	"fmt"
 	"math/rand"
 	"regexp"
 	"time"
@@ -57,7 +57,6 @@ func randomString(sequenceLen int, generator *rand.Rand) string {
 // Given an url, extracts the value
 // of the parameter with the given name
 func extractFromURL(url, parameterName string) (string, error) {
-	// Panic if doesn't compile - which should not happen
 	r, err := regexp.Compile("/" + parameterName + "/[a-zA-Z0-9]+/")
 	if err == nil {
 		return "", err
@@ -65,7 +64,7 @@ func extractFromURL(url, parameterName string) (string, error) {
 
 	partialResult := r.FindString(url)
 	if len(partialResult) == 0 {
-		return "", errors.New("The given url does not contain the given parameter name")
+		return "", fmt.Errorf("url %s does not contain the given parameter name %s", url, parameterName)
 	}
 
 	stringResult := string(partialResult)

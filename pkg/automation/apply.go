@@ -19,35 +19,57 @@ package automation
 import (
 	"errors"
 	"strings"
+
+	"google.golang.org/api/recommender/v1"
+)
+
+type gcloudOperationGroup = recommender.GoogleCloudRecommenderV1OperationGroup
+
+const (
+	operationNotSupportedMessage = "the operation is not supported"
+)
+
+const (
+	projectPath     = "projects"
+	zonePath        = "zones"
+	instancePath    = "instances"
+	diskPath        = "disks"
+	machineTypePath = "machineTypes"
 )
 
 // DoOperation does the action specified in the operation.
 func (s *googleService) DoOperation(operation *gcloudOperation) error {
 	switch strings.ToLower(operation.Action) {
 	case "test":
+		if operation.ResourceType != "compute.googleapis.com/Instance" {
+			return errors.New(operationNotSupportedMessage)
+		}
 		switch operation.Path {
 		case "/machineType":
 			return s.testMachineType(operation)
 		case "/status":
 			return s.testStatus(operation)
 		default:
-			return errors.New("the opperation is not supported")
+			return errors.New(operationNotSupportedMessage)
 		}
 	case "replace":
+		if operation.ResourceType != "compute.googleapis.com/Instance" {
+			return errors.New(operationNotSupportedMessage)
+		}
 		switch operation.Path {
 		case "/machineType":
 			return s.replaceMachineType(operation)
 		case "/status":
 			return s.replaceStatus(operation)
 		default:
-			return errors.New("the opperation is not supported")
+			return errors.New(operationNotSupportedMessage)
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
 			return s.addSnapshot(operation)
 		default:
-			return errors.New("the opperation is not supported")
+			return errors.New(operationNotSupportedMessage)
 		}
 
 	case "remove":
@@ -55,11 +77,11 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 		case "compute.googleapis.com/Disk":
 			return s.removeDisk(operation)
 		default:
-			return errors.New("the opperation is not supported")
+			return errors.New(operationNotSupportedMessage)
 		}
 
 	default:
-		return errors.New("the opperation is not supported")
+		return errors.New(operationNotSupportedMessage)
 	}
 }
 
