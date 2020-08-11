@@ -12,9 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { rootStoreFactory } from "@/store/root";
 import {
-  isRecommendationInResults,
   coreTableStoreStateFactory,
   ICoreTableStoreState
 } from "@/store/core_table";
@@ -22,9 +20,7 @@ import {
 import {
   projectFilterAccepted,
   typeFilterAccepted,
-  statusFilterAccepted,
-  resourceFilterAccepted,
-  descriptionFilterAccepted
+  statusFilterAccepted
 } from "@/store/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import {
@@ -32,45 +28,6 @@ import {
   RecommendationRaw,
   getInternalStatusMapping
 } from "@/store/model";
-
-describe("Core Table store", () => {
-  test("Filtering results by resource with store mutations", () => {
-    // this is not really a unit test, but interaction tests are also useful
-    const fakeStore = rootStoreFactory();
-    const sampleRecommendation = freshSampleRawRecommendation();
-
-    // Check if we accept resoruce name: bob-vm0 when searching for bob
-    fakeStore.commit("coreTableStore/setResourceNameSearchText", "bob");
-    sampleRecommendation.content.operationGroups[0].operations[0].resource =
-      "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/bob-vm0";
-    expect(
-      isRecommendationInResults(
-        fakeStore.state.coreTableStore!,
-        new RecommendationExtra(sampleRecommendation)
-      )
-    ).toBeTruthy();
-
-    // Check if we accept resoruce name: alice-vm0 when searching for bob
-    sampleRecommendation.content.operationGroups[0].operations[0].resource =
-      "//compute.googleapis.com/projects/search/zones/us-east1-b/instances/alice-vm0";
-    expect(
-      isRecommendationInResults(
-        fakeStore.state.coreTableStore!,
-        new RecommendationExtra(sampleRecommendation)
-      )
-    ).toBeFalsy();
-
-    // Check if we accept resoruce name: alice-vm0 when searching for alice
-    //  - also checking if updating the search text works
-    fakeStore.commit("coreTableStore/setResourceNameSearchText", "alice");
-    expect(
-      isRecommendationInResults(
-        fakeStore.state.coreTableStore!,
-        new RecommendationExtra(sampleRecommendation)
-      )
-    ).toBeTruthy();
-  });
-});
 
 describe("Filtering predicates individually", () => {
   // Not using actual Vuex instances here, so we don't need to use mutations
@@ -142,44 +99,5 @@ describe("Filtering predicates individually", () => {
 
     recommendation.stateInfo.state = "CLAIMED"; // this maps to "In progress"
     expect(statusFilterAccepted(tableState, extra())).toBeTruthy();
-  });
-
-  test("resource filter", () => {
-    // Making sure that possible delimiters are handled properly,
-    //  especially because we are ignoring cases
-    recommendation.content.operationGroups[0].operations[0].resource =
-      "//compute.googleapis.com/projects/Facebook/zones/us-east1-b/instances/bob-_~.vm0";
-
-    tableState.resourceNameSearchText = "";
-    expect(resourceFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.resourceNameSearchText = "B-_~.Vm";
-    expect(resourceFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.resourceNameSearchText = "B-_.Vm";
-    expect(resourceFilterAccepted(tableState, extra())).toBeFalsy();
-
-    tableState.resourceNameSearchText = "aLiCe";
-    expect(resourceFilterAccepted(tableState, extra())).toBeFalsy();
-  });
-
-  test("description filter", () => {
-    recommendation.description = "Oh no, you use barely any CPUs you pay for.";
-
-    tableState.descriptionSearchText = "";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.descriptionSearchText = "CPU";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeTruthy();
-
-    // making sure that cases are ignored and spaces are taken into account
-    tableState.descriptionSearchText = " cPu";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeTruthy();
-
-    tableState.descriptionSearchText = "  cPu";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeFalsy();
-
-    tableState.descriptionSearchText = "gpu";
-    expect(descriptionFilterAccepted(tableState, extra())).toBeFalsy();
   });
 });

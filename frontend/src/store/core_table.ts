@@ -16,16 +16,12 @@ import { Module, MutationTree } from "vuex";
 import { IRootStoreState } from "./root";
 import { RecommendationExtra } from "./model";
 import {
-  descriptionFilterAccepted,
   projectFilterAccepted,
-  resourceFilterAccepted,
   typeFilterAccepted,
   statusFilterAccepted
 } from "./core_table_filter_utils";
 
 export interface ICoreTableStoreState {
-  resourceNameSearchText: string;
-  descriptionSearchText: string;
   projectsSelected: string[];
   typesSelected: string[];
   // status is the correct plural form, but this is clearer
@@ -35,8 +31,6 @@ export interface ICoreTableStoreState {
 
 export function coreTableStoreStateFactory(): ICoreTableStoreState {
   return {
-    resourceNameSearchText: "",
-    descriptionSearchText: "",
     projectsSelected: [],
     typesSelected: [],
     statusesSelected: [],
@@ -45,12 +39,6 @@ export function coreTableStoreStateFactory(): ICoreTableStoreState {
 }
 
 const mutations: MutationTree<ICoreTableStoreState> = {
-  setResourceNameSearchText(state, text: string): void {
-    state.resourceNameSearchText = text;
-  },
-  setDescriptionSearchText(state, text: string): void {
-    state.descriptionSearchText = text;
-  },
   setProjectsSelected(state, projects: string[]): void {
     state.projectsSelected = projects;
   },
@@ -85,8 +73,6 @@ export function isRecommendationInResults(
   return (
     projectFilterAccepted(tableState, recExtra) &&
     typeFilterAccepted(tableState, recExtra) &&
-    statusFilterAccepted(tableState, recExtra) &&
-    resourceFilterAccepted(tableState, recExtra) &&
-    descriptionFilterAccepted(tableState, recExtra)
+    statusFilterAccepted(tableState, recExtra)
   );
 }
