@@ -8,6 +8,7 @@ type gcloudClaimedRequest = recommender.GoogleCloudRecommenderV1MarkRecommendati
 type gcloudFailedRequest = recommender.GoogleCloudRecommenderV1MarkRecommendationFailedRequest
 type gcloudSucceededRequest = recommender.GoogleCloudRecommenderV1MarkRecommendationSucceededRequest
 
+// Marks the recommendation defined by the given name and etag as claimed
 func (s *googleService) MarkRecommendationClaimed(name, etag string) error {
 	r := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
 	request := gcloudClaimedRequest{
@@ -20,6 +21,7 @@ func (s *googleService) MarkRecommendationClaimed(name, etag string) error {
 	return err
 }
 
+// Marks the recommendation defined by the given name and etag as failed
 func (s *googleService) MarkRecommendationFailed(name, etag string) error {
 	r := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
 	request := gcloudFailedRequest{
@@ -32,6 +34,7 @@ func (s *googleService) MarkRecommendationFailed(name, etag string) error {
 	return err
 }
 
+// Marks the recommendation defined by the given name and etag as succeded
 func (s *googleService) MarkRecommendationSucceded(name, etag string) error {
 	r := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
 	request := gcloudSucceededRequest{
