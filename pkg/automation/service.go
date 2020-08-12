@@ -60,7 +60,11 @@ type GoogleService interface {
 	// marks recommendation for the project with given etag and name claimed
 	MarkRecommendationClaimed(name, etag string) error
 
+<<<<<<< HEAD
 	// marks recommendation for the project with given etag and name succeded
+=======
+	// marks recommendation for the project with given etag and name succeeded
+>>>>>>> 8485cc5538d2a398756ab930e34f30e9d633ff69
 	MarkRecommendationSucceeded(name, etag string) error
 
 	// marks recommendation for the project with given etag and name failed
