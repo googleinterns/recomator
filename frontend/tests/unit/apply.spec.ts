@@ -141,7 +141,7 @@ describe("watchStatus action", () => {
     await watchStatus(context, firstRec);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
 
-    // end the status updates cycle
+    // dispatch watchStatus in the future
     expect(setTimeout as any).toBeCalledTimes(1);
   });
 
@@ -151,7 +151,7 @@ describe("watchStatus action", () => {
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("SUCCEEDED"));
 
-    // dispatch watchStatus in the future
+    // end the status updates cycle
     expect(setTimeout as any).toBeCalledTimes(0);
   });
 
