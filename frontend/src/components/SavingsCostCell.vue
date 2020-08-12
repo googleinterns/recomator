@@ -54,7 +54,6 @@ export default class SavingsCostCell extends SavingsCostCellProps {
     return this.rowRecommendation.costCol;
   }
   get costRounded(): string {
-    console.log(this.cost.toFixed(2));
     return this.cost.toFixed(2);
   }
   get costColour(): string {
