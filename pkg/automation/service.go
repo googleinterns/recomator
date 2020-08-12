@@ -61,13 +61,16 @@ type GoogleService interface {
 	MarkRecommendationClaimed(name, etag string) error
 
 	// marks recommendation for the project with given etag and name succeded
-	MarkRecommendationSucceded(name, etag string) error
+	MarkRecommendationSucceeded(name, etag string) error
 
 	// marks recommendation for the project with given etag and name failed
 	MarkRecommendationFailed(name, etag string) error
 
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
+
+	// starts the specified instance
+	StartInstance(project, zone, instance string) error
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs.

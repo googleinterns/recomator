@@ -57,19 +57,17 @@ func randomString(sequenceLen int, generator *rand.Rand) string {
 // Given an url, extracts the value
 // of the parameter with the given name
 func extractFromURL(url, parameterName string) (string, error) {
-	r, err := regexp.Compile("/" + parameterName + "/[a-zA-Z0-9]+/")
+	r, err := regexp.Compile("/" + parameterName + "/([a-zA-Z0-9]+)/")
 	if err == nil {
 		return "", err
 	}
 
-	partialResult := r.FindString(url)
+	partialResult := r.FindStringSubmatch(url)
 	if len(partialResult) == 0 {
 		return "", fmt.Errorf("url %s does not contain the given parameter name %s", url, parameterName)
 	}
 
-	stringResult := string(partialResult)
-	result := stringResult[len(parameterName)+2 : len(stringResult)-1]
-	return result, nil
+	return partialResult[1], nil
 }
 
 // Given a list of errors, the function returns one

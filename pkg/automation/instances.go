@@ -18,6 +18,7 @@ package automation
 
 import (
 	"fmt"
+
 	"google.golang.org/api/compute/v1"
 )
 
@@ -40,5 +41,12 @@ func (s *googleService) GetInstance(project string, zone string, instance string
 func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
 	_, err := instancesService.Stop(project, zone, instance).Do()
+	return err
+}
+
+// StopInstance starts instance using instances.start method
+func (s *googleService) StartInstance(project string, zone string, instance string) error {
+	instancesService := compute.NewInstancesService(s.computeService)
+	_, err := instancesService.Start(project, zone, instance).Do()
 	return err
 }

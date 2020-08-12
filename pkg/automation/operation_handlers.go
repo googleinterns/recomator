@@ -81,7 +81,17 @@ func (s *googleService) replaceMachineType(operation *gcloudOperation) error {
 		return err
 	}
 
-	return s.ChangeMachineType(project, zone, instance, machineType)
+	err = s.StopInstance(project, zone, instance)
+	if err != nil {
+		return err
+	}
+
+	err = s.ChangeMachineType(project, zone, instance, machineType)
+	if err != nil {
+		return err
+	}
+
+	return s.StartInstance(project, zone, instance)
 }
 
 func (s *googleService) replaceStatus(operation *gcloudOperation) error {

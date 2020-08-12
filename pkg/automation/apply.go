@@ -91,8 +91,11 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 // - google.compute.instance.IdleResourceRecommender
 // - google.compute.instance.MachineTypeRecommender
 func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
-	// check that status is active
-	s.MarkRecommendationSucceded(recommendation.Name, recommendation.Etag)
+	if strings.ToLower(recommendation.StateInfo.State) != "active" {
+		return errors.New("to apply a recommendation, its status must be active")
+	}
+
+	s.MarkRecommendationClaimed(recommendation.Name, recommendation.Etag)
 	for _, operationGroup := range recommendation.Content.OperationGroups {
 		for _, operation := range operationGroup.Operations {
 			err := s.DoOperation(operation)
@@ -102,7 +105,7 @@ func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
 			}
 		}
 	}
-	s.MarkRecommendationSucceded(recommendation.Name, recommendation.Etag)
+	s.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
 
 	return nil
 }
