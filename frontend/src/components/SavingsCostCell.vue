@@ -23,7 +23,7 @@ limitations under the License. -->
           v-on="on"
           display="fill"
         >
-          {{ (cost >= 0 ? "" : "+") + Math.abs(costRounded) }}$
+          {{ (cost >= 0 ? "" : "+") + Math.abs(costRounded).toFixed(2) }}$
         </v-chip>
       </template>
       {{
@@ -54,6 +54,7 @@ export default class SavingsCostCell extends SavingsCostCellProps {
     return this.rowRecommendation.costCol;
   }
   get costRounded(): string {
+    console.log(this.cost.toFixed(2));
     return this.cost.toFixed(2);
   }
   get costColour(): string {

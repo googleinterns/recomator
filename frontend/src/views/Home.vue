@@ -40,6 +40,7 @@ limitations under the License. -->
           </v-col>
         </v-row>
       </v-container>
+      <FooterSummary> </FooterSummary>
     </v-main>
   </v-app>
 </template>
@@ -48,9 +49,10 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import GroupingHint from "@/components/GroupingHint.vue";
 import CoreTable from "@/components/CoreTable.vue";
+import FooterSummary from "@/components/FooterSummary.vue";
 
 @Component({
-  components: { GroupingHint, CoreTable }
+  components: { GroupingHint, CoreTable, FooterSummary }
 })
 export default class Home extends Vue {}
 </script>
