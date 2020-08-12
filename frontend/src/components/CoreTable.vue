@@ -11,29 +11,22 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
+
 <template>
   <v-data-table
     dense
     :headers="headers"
     :items="this.$store.getters['filteredRecommendationsWithExtras']"
-    show-group-by
-    v-on:update:group-by="onGroupByUpdated"
     :items-per-page="itemsPerPage"
     :single-select="false"
     v-model="selectedRows"
     show-select
     item-key="name"
   >
-    <!-- customFilter prop is not used, because its implementation executes it for each property -->
+    <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
+
     <template v-slot:body.prepend>
       <FiltersRow />
-    </template>
-
-    <!-- TODO: re-enable this warnings once these are implemented -->
-
-    <!-- eslint-disable-next-line vue/no-unused-vars -->
-    <template v-slot:group.summary="props">
-      <!-- TODO: Group summary -->
     </template>
 
     <template v-slot:item.resourceCol="{ item }">
@@ -91,40 +84,28 @@ export default class CoreTable extends Vue {
     {
       text: "Resource",
       value: "resourceCol",
-      groupable: false,
       sortable: true
     },
-    { text: "Project", value: "projectCol", groupable: true, sortable: true },
+    { text: "Project", value: "projectCol", sortable: true },
     {
       text: "Type",
       value: "typeCol",
-      groupable: true,
       sortable: true
     },
     {
       text: "Description",
       value: "description",
-      groupable: false,
       sortable: false
     },
     {
       text: "Savings/cost per week",
       value: "costCol",
-      groupable: false,
       sortable: true
     },
-    { text: "", value: "statusCol", groupable: false, sortable: false }
+    { text: "", value: "statusCol", sortable: false }
   ];
 
   itemsPerPage = 10;
-  // TODO: grouping should temporarily increase items shown to all
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onGroupByUpdated(groupByCategories: string[]): void {
-    // TODO: update itemsPerPage
-  }
-
-  // TODO: once there is a new non-empty groupBy, close (toggle) all opened projects/types
 
   get selectedRows(): RecommendationExtra[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;

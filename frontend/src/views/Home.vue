@@ -30,12 +30,6 @@ limitations under the License. -->
       >
         <v-row>
           <v-col>
-            <GroupingHint />
-          </v-col>
-        </v-row>
-
-        <v-row>
-          <v-col>
             <CoreTable />
           </v-col>
         </v-row>
@@ -46,11 +40,10 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import GroupingHint from "@/components/GroupingHint.vue";
 import CoreTable from "@/components/CoreTable.vue";
 
 @Component({
-  components: { GroupingHint, CoreTable }
+  components: { CoreTable }
 })
 export default class Home extends Vue {}
 </script>
