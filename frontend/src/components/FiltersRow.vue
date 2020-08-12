@@ -29,7 +29,6 @@ limitations under the License. -->
         :items="allProjects"
         label="Select projects"
         multiple
-        reverse
       >
       </v-combobox>
     </td>
@@ -39,7 +38,6 @@ limitations under the License. -->
         :items="allTypes"
         label="Select types"
         multiple
-        reverse
       >
       </v-combobox>
     </td>
@@ -58,7 +56,6 @@ limitations under the License. -->
         :items="allStatuses"
         label="Select status"
         multiple
-        reverse
       >
       </v-combobox>
     </td>
