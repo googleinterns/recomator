@@ -16,22 +16,55 @@ limitations under the License. -->
     <v-footer
       v-if="selectedRowsCount > 0"
       v-bind:fixed="true"
-      color="rgba(255, 200, 20, 100)"
+      color="rgba(255, 210, 20, 1)"
+      class="pa-6"
     >
-    <v-row class="px-5">
-      <v-spacer></v-spacer>
+      <v-row class="px-5">
+        <v-spacer></v-spacer>
 
-      <div class="font-weight-black">
-        {{ footerMessage }}
-      </div>
-      <v-spacer></v-spacer>
+        <div class="font-weight-black">
+          {{ footerMessage }}
+        </div>
+        <v-spacer></v-spacer>
       </v-row>
       <v-row class="px-5">
         <v-spacer></v-spacer>
-        <v-btn rounded color="primary" dark v-on:click="applySelectedRecommendations()">Apply Selected Recommendations</v-btn>
+        <v-btn rounded color="primary" dark v-on:click="dialog = true"
+          >Apply Selected Recommendation{{
+            selectedRowsCount == 1 ? "" : "s"
+          }}</v-btn
+        >
         <v-spacer></v-spacer>
       </v-row>
     </v-footer>
+
+    <v-dialog v-model="dialog" max-width="640px">
+      <v-card>
+        <v-card-title class="headline"
+          >
+            Are you sure you want to apply
+            {{ selectedRowsCount }} recommendation{{
+              selectedRowsCount == 1 ? "" : "s"
+            }}?
+          </v-card-title
+        >
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn
+            color="green white--text"
+            v-on:click="applySelectedRecommendations()"
+          >
+            Proceed
+          </v-btn>
+
+          <v-btn color="red white--text" v-on:click="dialog = false">
+            Resign
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -42,7 +75,9 @@ import { RecommendationExtra } from "../store/model";
 
 @Component
 export default class FooterSummary extends Vue {
-get selectedRows(): RecommendationExtra[] {
+  dialog = false;
+
+  get selectedRows(): RecommendationExtra[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;
   }
 
@@ -133,7 +168,10 @@ get selectedRows(): RecommendationExtra[] {
   }
 
   applySelectedRecommendations(): void {
-    this.$store.dispatch("recommendationsStore/applyGivenRecommendations", this.selectedRows);
+    this.$store.dispatch(
+      "recommendationsStore/applyGivenRecommendations",
+      this.selectedRows
+    );
   }
 }
 </script>
