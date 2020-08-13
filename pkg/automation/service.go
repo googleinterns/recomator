@@ -71,6 +71,12 @@ type GoogleService interface {
 
 	// starts the specified instance
 	StartInstance(project, zone, instance string) error
+
+	// tests if the machine type is correct
+	TestMachineType(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error)
+
+	// tests if the status is correct
+	TestStatus(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error)
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs.

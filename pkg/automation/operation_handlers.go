@@ -13,12 +13,12 @@ import (
 type valueAddSnapshot struct {
 	Name             string
 	SourceDisk       string
-	StorageLocations string
+	StorageLocations []string
 }
 
 type gcloudOperation = recommender.GoogleCloudRecommenderV1Operation
 
-func (s *googleService) testMachineType(operation *gcloudOperation) error {
+func testMachineType(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
 	project, errProject := extractFromURL(path, projectPath)
@@ -29,7 +29,7 @@ func (s *googleService) testMachineType(operation *gcloudOperation) error {
 		return err
 	}
 
-	result, err := s.TestMachineType(project, zone, instance, operation.Value, operation.ValueMatcher)
+	result, err := service.TestMachineType(project, zone, instance, operation.Value, operation.ValueMatcher)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (s *googleService) testMachineType(operation *gcloudOperation) error {
 	return nil
 }
 
-func (s *googleService) testStatus(operation *gcloudOperation) error {
+func testStatus(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
 	project, errProject := extractFromURL(path, projectPath)
@@ -52,7 +52,7 @@ func (s *googleService) testStatus(operation *gcloudOperation) error {
 		return err
 	}
 
-	result, err := s.TestStatus(project, zone, instance, operation.Value, operation.ValueMatcher)
+	result, err := service.TestStatus(project, zone, instance, operation.Value, operation.ValueMatcher)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (s *googleService) testStatus(operation *gcloudOperation) error {
 	return nil
 }
 
-func (s *googleService) replaceMachineType(operation *gcloudOperation) error {
+func replaceMachineType(service GoogleService, operation *gcloudOperation) error {
 	path1 := operation.Resource
 	path2, ok := operation.Value.(string)
 	if !ok {
@@ -81,20 +81,20 @@ func (s *googleService) replaceMachineType(operation *gcloudOperation) error {
 		return err
 	}
 
-	err = s.StopInstance(project, zone, instance)
+	err = service.StopInstance(project, zone, instance)
 	if err != nil {
 		return err
 	}
 
-	err = s.ChangeMachineType(project, zone, instance, machineType)
+	err = service.ChangeMachineType(project, zone, instance, machineType)
 	if err != nil {
 		return err
 	}
 
-	return s.StartInstance(project, zone, instance)
+	return service.StartInstance(project, zone, instance)
 }
 
-func (s *googleService) replaceStatus(operation *gcloudOperation) error {
+func stopInstance(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
 	project, errProject := extractFromURL(path, projectPath)
@@ -105,10 +105,10 @@ func (s *googleService) replaceStatus(operation *gcloudOperation) error {
 		return err
 	}
 
-	return s.StopInstance(project, zone, instance)
+	return service.StopInstance(project, zone, instance)
 }
 
-func (s *googleService) addSnapshot(operation *gcloudOperation) error {
+func addSnapshot(service GoogleService, operation *gcloudOperation) error {
 	value, ok := operation.Value.(valueAddSnapshot)
 	if !ok {
 		return errors.New("wrong value type for operation add snapshot")
@@ -129,10 +129,10 @@ func (s *googleService) addSnapshot(operation *gcloudOperation) error {
 		return err
 	}
 
-	return s.CreateSnapshot(project, zone, disk, name)
+	return service.CreateSnapshot(project, zone, disk, name)
 }
 
-func (s *googleService) removeDisk(operation *gcloudOperation) error {
+func removeDisk(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
 	project, errProject := extractFromURL(path, projectPath)
@@ -143,5 +143,5 @@ func (s *googleService) removeDisk(operation *gcloudOperation) error {
 		return err
 	}
 
-	return s.DeleteDisk(project, zone, disk)
+	return service.DeleteDisk(project, zone, disk)
 }

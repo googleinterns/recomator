@@ -38,7 +38,7 @@ const (
 )
 
 // DoOperation does the action specified in the operation.
-func (s *googleService) DoOperation(operation *gcloudOperation) error {
+func DoOperation(service GoogleService, operation *gcloudOperation) error {
 	switch strings.ToLower(operation.Action) {
 	case "test":
 		if operation.ResourceType != "compute.googleapis.com/Instance" {
@@ -46,9 +46,9 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 		}
 		switch operation.Path {
 		case "/machineType":
-			return s.testMachineType(operation)
+			return testMachineType(service, operation)
 		case "/status":
-			return s.testStatus(operation)
+			return testStatus(service, operation)
 		default:
 			return errors.New(operationNotSupportedMessage)
 		}
@@ -58,16 +58,20 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 		}
 		switch operation.Path {
 		case "/machineType":
-			return s.replaceMachineType(operation)
+			return replaceMachineType(service, operation)
 		case "/status":
-			return s.replaceStatus(operation)
+			if operation.Value != "TERMINATED" {
+				return errors.New(operationNotSupportedMessage)
+			}
+
+			return stopInstance(service, operation)
 		default:
 			return errors.New(operationNotSupportedMessage)
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
-			return s.addSnapshot(operation)
+			return addSnapshot(service, operation)
 		default:
 			return errors.New(operationNotSupportedMessage)
 		}
@@ -75,7 +79,7 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 	case "remove":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Disk":
-			return s.removeDisk(operation)
+			return removeDisk(service, operation)
 		default:
 			return errors.New(operationNotSupportedMessage)
 		}
@@ -90,22 +94,29 @@ func (s *googleService) DoOperation(operation *gcloudOperation) error {
 // - google.compute.disk.IdleResourceRecommender
 // - google.compute.instance.IdleResourceRecommender
 // - google.compute.instance.MachineTypeRecommender
-func (s *googleService) Apply(recommendation *gcloudRecommendation) error {
+func Apply(service GoogleService, recommendation *gcloudRecommendation) error {
 	if strings.ToLower(recommendation.StateInfo.State) != "active" {
 		return errors.New("to apply a recommendation, its status must be active")
 	}
 
-	s.MarkRecommendationClaimed(recommendation.Name, recommendation.Etag)
+	err := service.MarkRecommendationClaimed(recommendation.Name, recommendation.Etag)
+	if err != nil {
+		return err
+	}
+
 	for _, operationGroup := range recommendation.Content.OperationGroups {
 		for _, operation := range operationGroup.Operations {
-			err := s.DoOperation(operation)
+			err := DoOperation(service, operation)
 			if err != nil {
-				s.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
+				service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
 				return err
 			}
 		}
 	}
-	s.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
+	err = service.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
