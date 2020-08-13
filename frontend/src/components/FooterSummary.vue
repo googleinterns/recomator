@@ -40,14 +40,12 @@ limitations under the License. -->
 
     <v-dialog v-model="dialog" max-width="640px">
       <v-card>
-        <v-card-title class="headline"
-          >
-            Are you sure you want to apply
-            {{ selectedRowsCount }} recommendation{{
-              selectedRowsCount == 1 ? "" : "s"
-            }}?
-          </v-card-title
-        >
+        <v-card-title class="headline">
+          Are you sure you want to apply
+          {{ selectedRowsCount }} recommendation{{
+            selectedRowsCount == 1 ? "" : "s"
+          }}?
+        </v-card-title>
 
         <v-card-actions>
           <v-spacer></v-spacer>
