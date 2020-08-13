@@ -19,8 +19,10 @@ package automation
 import (
 	"context"
 
+	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
 	"google.golang.org/api/recommender/v1"
 	"google.golang.org/api/serviceusage/v1"
 )
@@ -40,10 +42,10 @@ type GoogleService interface {
 	GetInstance(project string, zone string, instance string) (*compute.Instance, error)
 
 	// lists whether the requirements have been met for all APIs (APIs enabled).
-	ListAPIRequirements(project string, apis []string) ([]Requirement, error)
+	ListAPIRequirements(project string, apis []string) ([]*Requirement, error)
 
 	// lists whether the requirements have been met for all required permissions.
-	ListPermissionRequirements(project string, permissions [][]string) ([]Requirement, error)
+	ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error)
 
 	// lists projects
 	ListProjects() ([]string, error)
@@ -72,8 +74,9 @@ type googleService struct {
 
 // NewGoogleService creates new googleServices.
 // If creation failed the error will be non-nil.
-func NewGoogleService(ctx context.Context) (GoogleService, error) {
-	computeService, err := compute.NewService(ctx)
+func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Token) (GoogleService, error) {
+	client := conf.Client(ctx, tok)
+	computeService, err := compute.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
