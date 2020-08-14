@@ -71,14 +71,14 @@ func testMatching(toTest string, value interface{}, valueMatcher *gcloudValueMat
 	return resultValue && resultValueMatcher, nil
 }
 
-// Checks if the machine type of the instance specified by given project, zone and instance
+// TestMachineType checks if the machine type of the instance specified by given project, zone and instance
 // matches the given value or valueMatcher.
 // According to Recommender API, in a test operation, either value or valueMatcher is specified.
 // The value specified by the path field in the operation struct must match value or valueMatcher,
 // depending on which one is defined. More can be read here:
 // https://cloud.google.com/recommender/docs/reference/rest/v1/projects.locations.recommenders.recommendations#operation
-func (s *googleService) TestMachineType(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
-	machineInstance, err := s.GetInstance(project, zone, instance)
+func TestMachineType(service GoogleService, project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
+	machineInstance, err := service.GetInstance(project, zone, instance)
 	if err != nil {
 		return false, err
 	}
@@ -86,14 +86,14 @@ func (s *googleService) TestMachineType(project string, zone string, instance st
 	return testMatching(machineInstance.MachineType, value, valueMatcher)
 }
 
-// Checks if the status of the instance specified by given project, zone and instance
+// TestStatus checks if the status of the instance specified by given project, zone and instance
 // matches the given value or valueMatcher.
 // According to Recommender API, in a test operation, either value or valueMatcher is specified.
 // The value specified by the path field in the operation struct must match value or valueMatcher,
 // depending on which one is defined. More can be read here:
 // https://cloud.google.com/recommender/docs/reference/rest/v1/projects.locations.recommenders.recommendations#operation
-func (s *googleService) TestStatus(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
-	machineInstance, err := s.GetInstance(project, zone, instance)
+func TestStatus(service GoogleService, project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
+	machineInstance, err := service.GetInstance(project, zone, instance)
 	if err != nil {
 		return false, err
 	}

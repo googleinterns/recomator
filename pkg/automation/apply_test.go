@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/recommender/v1"
 
 	"github.com/stretchr/testify/assert"
@@ -20,19 +21,14 @@ type calledFunction struct {
 
 type ApplyMockService struct {
 	GoogleService
-	calledFunctions []calledFunction
+	calledFunctions   []calledFunction
+	getInstanceResult *compute.Instance
 }
 
-func (s *ApplyMockService) TestMachineType(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
-	newCalledFunction := calledFunction{"TestMachineType", []interface{}{project, zone, instance, value, valueMatcher}, []interface{}{true, nil}}
+func (s *ApplyMockService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
+	newCalledFunction := calledFunction{"GetInstance", []interface{}{project, zone, instance}, []interface{}{nil, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return true, nil
-}
-
-func (s *ApplyMockService) TestStatus(project string, zone string, instance string, value interface{}, valueMatcher *gcloudValueMatcher) (bool, error) {
-	newCalledFunction := calledFunction{"TestStatus", []interface{}{project, zone, instance, value, valueMatcher}, []interface{}{true, nil}}
-	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return true, nil
+	return s.getInstanceResult, nil
 }
 
 func (s *ApplyMockService) StopInstance(project string, zone string, instance string) error {
@@ -124,13 +120,13 @@ func TestTestMachineTypeOperation(t *testing.T) {
 		ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/n1-standard-4"},
 	}
 
-	service := ApplyMockService{calledFunctions: []calledFunction{}}
+	service := ApplyMockService{calledFunctions: []calledFunction{}, getInstanceResult: &compute.Instance{MachineType: ".*zones/us-east1-b/machineTypes/n1-standard-4"}}
 	err := DoOperation(&service, &operation)
 	assert.Nilf(t, err, "DoOperation shouldn't return an error")
 
-	expectedFunctions := []string{"TestMachineType"}
-	expectedArguments := [][]interface{}{{"rightsizer-test", "us-east1-b", "alicja-test", nil, &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/n1-standard-4"}}}
-	expectedResults := [][]interface{}{{true, nil}}
+	expectedFunctions := []string{"GetInstance"}
+	expectedArguments := [][]interface{}{{"rightsizer-test", "us-east1-b", "alicja-test"}}
+	expectedResults := [][]interface{}{{nil, nil}}
 
 	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	compareCalledFunctions(t, expected, service.calledFunctions)
@@ -145,14 +141,13 @@ func TestTestStatusOperation(t *testing.T) {
 		Value:        "RUNNING",
 	}
 
-	service := ApplyMockService{calledFunctions: []calledFunction{}}
+	service := ApplyMockService{calledFunctions: []calledFunction{}, getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := DoOperation(&service, &operation)
 	assert.Nilf(t, err, "DoOperation shouldn't return an error")
-	var typedNil *gcloudValueMatcher = nil
 
-	expectedFunctions := []string{"TestStatus"}
-	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1", "RUNNING", typedNil}}
-	expectedResults := [][]interface{}{{true, nil}}
+	expectedFunctions := []string{"GetInstance"}
+	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
+	expectedResults := [][]interface{}{{nil, nil}}
 
 	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	compareCalledFunctions(t, expected, service.calledFunctions)
@@ -207,8 +202,7 @@ func TestReplaceStatusOperation(t *testing.T) {
 func TestAddSnapshotOperation(t *testing.T) {
 	operation := gcloudOperation{
 		Action:       "add",
-		Path:         "/",
-		Resource:     "//compute.googleapis.com/projects/rightsizer-test/global/snapshots/$snapshot-name",
+		Path:         "//compute.googleapis.com/projects/rightsizer-test/global/snapshots/$snapshot-name",
 		ResourceType: "compute.googleapis.com/Snapshot",
 		Value:        valueAddSnapshot{Name: "$snapshot-name", SourceDisk: "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress", StorageLocations: []string{"europe-west1-d"}},
 	}
@@ -274,26 +268,25 @@ func TestStopRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{calledFunctions: []calledFunction{}}
+	service := ApplyMockService{calledFunctions: []calledFunction{}, getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := Apply(&service, &recommendation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
-	var typedNil *gcloudValueMatcher = nil
+	assert.Nilf(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
-		"TestStatus",
+		"GetInstance",
 		"StopInstance",
 		"MarkRecommendationSucceeded",
 	}
 	expectedArguments := [][]interface{}{
 		{"projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.IdleResourceRecommender/recommendations/63378bdf-9ffe-4ea4-b8ee-04145f2a59c9", "\"9f58395697934a1a\""},
-		{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1", "RUNNING", typedNil},
+		{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"},
 		{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"},
 		{"projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.IdleResourceRecommender/recommendations/63378bdf-9ffe-4ea4-b8ee-04145f2a59c9", "\"9f58395697934a1a\""},
 	}
 	expectedResults := [][]interface{}{
 		{nil},
-		{true, nil},
+		{nil, nil},
 		{nil},
 		{nil},
 	}
@@ -332,7 +325,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 
 	service := ApplyMockService{calledFunctions: []calledFunction{}}
 	err := Apply(&service, &recommendation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.Nilf(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -386,13 +379,13 @@ func TestReplaceRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{calledFunctions: []calledFunction{}}
+	service := ApplyMockService{calledFunctions: []calledFunction{}, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := Apply(&service, &recommendation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.Nilf(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
-		"TestMachineType",
+		"GetInstance",
 		"StopInstance",
 		"ChangeMachineType",
 		"StartInstance",
@@ -400,7 +393,7 @@ func TestReplaceRecommendation(t *testing.T) {
 	}
 	expectedArguments := [][]interface{}{
 		{recommendation.Name, recommendation.Etag},
-		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver", nil, &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"}},
+		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
 		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver"},
 		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver", "e2-medium"},
 		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver"},
@@ -408,10 +401,364 @@ func TestReplaceRecommendation(t *testing.T) {
 	}
 	expectedResults := [][]interface{}{
 		{nil},
-		{true, nil},
+		{nil, nil},
 		{nil},
 		{nil},
 		{nil},
+		{nil},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	compareCalledFunctions(t, expected, service.calledFunctions)
+}
+
+func TestNotActiveRecommendation(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Claimed"},
+	}
+
+	service := ApplyMockService{calledFunctions: []calledFunction{}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, "to apply a recommendation, its status must be active")
+}
+
+type FailedClaimService struct {
+	GoogleService
+}
+
+func (s *FailedClaimService) MarkRecommendationClaimed(name string, etag string) error {
+	return errors.New("recommendation couldn't be marked claimed")
+}
+
+func TestFailedClaimRecommendation(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	service := FailedClaimService{}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, "recommendation couldn't be marked claimed")
+}
+
+func TestUnsupportedAction(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "copy",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	service := ApplyMockService{}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, operationNotSupportedMessage)
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name, recommendation.Etag},
+		{recommendation.Name, recommendation.Etag},
+	}
+	expectedResults := [][]interface{}{
+		{nil},
+		{nil},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	compareCalledFunctions(t, expected, service.calledFunctions)
+}
+
+func TestUnsupportedPath(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/coreCount",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, operationNotSupportedMessage)
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"GetInstance",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name, recommendation.Etag},
+		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
+		{recommendation.Name, recommendation.Etag},
+	}
+	expectedResults := [][]interface{}{
+		{nil},
+		{nil, nil},
+		{nil},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	compareCalledFunctions(t, expected, service.calledFunctions)
+}
+
+func TestUnsupportedResourceType(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/CPU",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, operationNotSupportedMessage)
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name, recommendation.Etag},
+		{recommendation.Name, recommendation.Etag},
+	}
+	expectedResults := [][]interface{}{
+		{nil},
+		{nil},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	compareCalledFunctions(t, expected, service.calledFunctions)
+}
+
+func TestUnsupportedReplaceValue(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/status",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/vkovalova-instance-memory-1",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "RUNNING",
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/status",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/vkovalova-instance-memory-1",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "CLOSED",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"da62b100443c341b\"",
+		Name:      "projects/323016592286/locations/us-east1-b/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/6dfd692f-14b7-499a-be95-a09fe0893911",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, operationNotSupportedMessage)
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"GetInstance",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name, recommendation.Etag},
+		{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"},
+		{recommendation.Name, recommendation.Etag},
+	}
+	expectedResults := [][]interface{}{
+		{nil},
+		{nil, nil},
+		{nil},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	compareCalledFunctions(t, expected, service.calledFunctions)
+}
+
+type FailedTestService struct {
+	GoogleService
+	calledFunctions []calledFunction
+}
+
+func (s *FailedTestService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
+	var result = &compute.Instance{Status: "a#2d0!", MachineType: "@#$%!E"}
+	newCalledFunction := calledFunction{"GetInstance", []interface{}{project, zone, instance}, []interface{}{result, nil}}
+	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
+	return result, nil
+}
+
+func (s *FailedTestService) MarkRecommendationClaimed(name string, etag string) error {
+	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
+	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
+	return nil
+}
+
+func (s *FailedTestService) MarkRecommendationFailed(name string, etag string) error {
+	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{nil}}
+	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
+	return nil
+}
+
+func TestFailedTest(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	service := FailedTestService{calledFunctions: []calledFunction{}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, "machine type is not as expected")
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"GetInstance",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name, recommendation.Etag},
+		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
+		{recommendation.Name, recommendation.Etag},
+	}
+	expectedResults := [][]interface{}{
+		{nil},
+		{&compute.Instance{Status: "a#2d0!", MachineType: "@#$%!E"}, nil},
 		{nil},
 	}
 

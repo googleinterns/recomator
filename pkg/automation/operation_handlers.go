@@ -29,7 +29,7 @@ func testMachineType(service GoogleService, operation *gcloudOperation) error {
 		return err
 	}
 
-	result, err := service.TestMachineType(project, zone, instance, operation.Value, operation.ValueMatcher)
+	result, err := TestMachineType(service, project, zone, instance, operation.Value, operation.ValueMatcher)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func testStatus(service GoogleService, operation *gcloudOperation) error {
 		return err
 	}
 
-	result, err := service.TestStatus(project, zone, instance, operation.Value, operation.ValueMatcher)
+	result, err := TestStatus(service, project, zone, instance, operation.Value, operation.ValueMatcher)
 	if err != nil {
 		return err
 	}
