@@ -16,7 +16,8 @@ import { rootStoreFactory } from "@/store/root";
 import {
   isRecommendationInResults,
   coreTableStoreStateFactory,
-  ICoreTableStoreState
+  ICoreTableStoreState,
+  costCategoriesNames
 } from "@/store/core_table";
 
 import {
@@ -24,7 +25,8 @@ import {
   typeFilterAccepted,
   statusFilterAccepted,
   resourceFilterAccepted,
-  descriptionFilterAccepted
+  descriptionFilterAccepted,
+  costFilterAccepted
 } from "@/store/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import {
@@ -142,6 +144,59 @@ describe("Filtering predicates individually", () => {
 
     recommendation.stateInfo.state = "CLAIMED"; // this maps to "In progress"
     expect(statusFilterAccepted(tableState, extra())).toBeTruthy();
+  });
+
+  test("cost categories filter", () => {
+    tableState.costCategoriesSelected = [];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+
+    // cost: -1/1000$ (this is a gain)
+    recommendation.primaryImpact.costProjection.cost.units = "0";
+    recommendation.primaryImpact.costProjection.cost.nanos = -1000000;
+    // selected: [costs]
+    tableState.costCategoriesSelected = [costCategoriesNames.costs];
+    expect(costFilterAccepted(tableState, extra())).toBeFalsy();
+    // selected: [gains]
+    tableState.costCategoriesSelected = [costCategoriesNames.gains];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+    // selected: [costs, gains]
+    tableState.typesSelected = [
+      costCategoriesNames.costs,
+      costCategoriesNames.gains
+    ];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+
+    // cost: 5.01$ (this is an actual cost)
+    recommendation.primaryImpact.costProjection.cost.units = "5";
+    recommendation.primaryImpact.costProjection.cost.nanos = 10 * 1000 * 1000;
+    // selected: [costs]
+    tableState.costCategoriesSelected = [costCategoriesNames.costs];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+    // selected: [gains]
+    tableState.costCategoriesSelected = [costCategoriesNames.gains];
+    expect(costFilterAccepted(tableState, extra())).toBeFalsy();
+    // selected: [costs, gains]
+    tableState.costCategoriesSelected = [
+      costCategoriesNames.costs,
+      costCategoriesNames.gains
+    ];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+
+    // cost: 0$
+    recommendation.primaryImpact.costProjection.cost.units = "0";
+    recommendation.primaryImpact.costProjection.cost.nanos = undefined;
+    // selected: [costs]
+    tableState.costCategoriesSelected = [costCategoriesNames.costs];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+    // selected: [gains]
+    tableState.costCategoriesSelected = [costCategoriesNames.gains];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
+    // selected: [costs, gains]
+    tableState.costCategoriesSelected = [
+      costCategoriesNames.costs,
+      costCategoriesNames.gains
+    ];
+    expect(costFilterAccepted(tableState, extra())).toBeTruthy();
   });
 
   test("resource filter", () => {

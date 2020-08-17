@@ -20,7 +20,8 @@ import {
   projectFilterAccepted,
   resourceFilterAccepted,
   typeFilterAccepted,
-  statusFilterAccepted
+  statusFilterAccepted,
+  costFilterAccepted
 } from "./core_table_filter_utils";
 
 export interface ICoreTableStoreState {
@@ -28,8 +29,8 @@ export interface ICoreTableStoreState {
   descriptionSearchText: string;
   projectsSelected: string[];
   typesSelected: string[];
-  // status is the correct plural form, but this is clearer
   statusesSelected: string[];
+  costCategoriesSelected: string[];
   selected: RecommendationExtra[];
 }
 
@@ -40,6 +41,7 @@ export function coreTableStoreStateFactory(): ICoreTableStoreState {
     projectsSelected: [],
     typesSelected: [],
     statusesSelected: [],
+    costCategoriesSelected: [],
     selected: []
   };
 }
@@ -59,6 +61,9 @@ const mutations: MutationTree<ICoreTableStoreState> = {
   },
   setStatusesSelected(state, statuses: string[]): void {
     state.statusesSelected = statuses;
+  },
+  setCostCategoriesSelected(state, costCategories: string[]): void {
+    state.costCategoriesSelected = costCategories;
   },
   setSelected(state, selected: RecommendationExtra[]) {
     state.selected = selected;
@@ -84,7 +89,10 @@ export function isRecommendationInResults(
     projectFilterAccepted(tableState, recExtra) &&
     typeFilterAccepted(tableState, recExtra) &&
     statusFilterAccepted(tableState, recExtra) &&
+    costFilterAccepted(tableState, recExtra) &&
     resourceFilterAccepted(tableState, recExtra) &&
     descriptionFilterAccepted(tableState, recExtra)
   );
 }
+
+export const costCategoriesNames = { costs: "Costs", gains: "Savings" };

@@ -49,7 +49,15 @@ limitations under the License. -->
         single-line
       ></v-text-field>
     </td>
-    <td></td>
+    <td>
+      <v-combobox
+        v-model="costCategoriesSelected"
+        :items="allCostCategories"
+        label="Savings/Costs"
+        multiple
+      >
+      </v-combobox>
+    </td>
     <td>
       <v-combobox
         v-model="statusesSelected"
@@ -65,6 +73,8 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root";
+import { costCategoriesNames } from "../store/core_table";
+
 @Component
 export default class FiltersRow extends Vue {
   // resource name
@@ -121,6 +131,10 @@ export default class FiltersRow extends Vue {
 
   // statuses
 
+  get allStatuses(): string[] {
+    return this.$store.getters["recommendationsStore/allStatuses"];
+  }
+
   get statusesSelected(): string[] {
     return (this.$store.state as IRootStoreState).coreTableStore!
       .statusesSelected;
@@ -130,8 +144,21 @@ export default class FiltersRow extends Vue {
     this.$store.commit("coreTableStore/setStatusesSelected", statuses);
   }
 
-  get allStatuses(): string[] {
-    return this.$store.getters["recommendationsStore/allStatuses"];
+  // costs
+
+  get allCostCategories(): string[] {
+    return Object.values(costCategoriesNames);
+  }
+
+  get costCategoriesSelected(): string[] {
+    return (this.$store.state as IRootStoreState).coreTableStore!
+      .costCategoriesSelected;
+  }
+  set costCategoriesSelected(costCategories: string[]) {
+    this.$store.commit(
+      "coreTableStore/setCostCategoriesSelected",
+      costCategories
+    );
   }
 }
 </script>
