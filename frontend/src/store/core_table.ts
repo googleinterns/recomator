@@ -76,8 +76,6 @@ export function coreTableStoreFactory(): Module<
   };
 }
 
-export const CoreTableStore = coreTableStoreFactory();
-
 export function isRecommendationInResults(
   tableState: ICoreTableStoreState,
   recExtra: RecommendationExtra
