@@ -41,10 +41,14 @@ limitations under the License. -->
     <v-dialog v-model="dialog" max-width="640px">
       <v-card>
         <v-card-title class="headline">
-          Are you sure you want to apply
-          {{ selectedRowsCount }} recommendation{{
-            selectedRowsCount == 1 ? "" : "s"
-          }}?
+          <v-row>
+            <v-col
+              >Are you sure you want to apply
+              {{ selectedRowsCount }} recommendation{{
+                selectedRowsCount == 1 ? "" : "s"
+              }}?</v-col
+            ></v-row
+          >
         </v-card-title>
 
         <v-card-actions>
@@ -52,7 +56,10 @@ limitations under the License. -->
 
           <v-btn
             color="green white--text"
-            v-on:click="applySelectedRecommendations()"
+            v-on:click="
+              applySelectedRecommendations();
+              dialog = false;
+            "
           >
             Proceed
           </v-btn>
@@ -85,20 +92,20 @@ export default class Footer extends Vue {
 
   get savingsFromSelected(): number {
     return this.selectedRows
-      .filter((recommendation) => recommendation.costCol < 0)
+      .filter(recommendation => recommendation.costCol < 0)
       .reduce((acc, cur) => acc - cur.costCol, 0);
   }
 
   get spendingsFromSelected(): number {
     return this.selectedRows
-      .filter((recommendation) => recommendation.costCol > 0)
+      .filter(recommendation => recommendation.costCol > 0)
       .reduce((acc, cur) => acc + cur.costCol, 0);
   }
 
   get performanceSelectedCount(): number {
     return this.selectedRows
-      .filter((recommendation) => recommendation.costCol > 0)
-      .reduce((acc) => acc + 1, 0);
+      .filter(recommendation => recommendation.costCol > 0)
+      .reduce(acc => acc + 1, 0);
   }
 
   get applyPart(): string {
@@ -135,8 +142,9 @@ export default class Footer extends Vue {
   applySelectedRecommendations(): void {
     this.$store.dispatch(
       "recommendationsStore/applyGivenRecommendations",
-      this.selectedRows
+      this.selectedRows.map(row => row.name)
     );
+    this.$store.commit("coreTableStore/setSelected", []);
   }
 }
 </script>
