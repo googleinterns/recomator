@@ -18,6 +18,7 @@ limitations under the License. -->
       v-bind:fixed="true"
       color="rgba(255, 210, 20, 1)"
       class="pa-xl-8 pa-lg-7 pa-md-6 pa-sm-3 pa-xs-0"
+      v-bind:app="true"
     >
       <v-row class="px-5">
         <v-col>

@@ -40,8 +40,8 @@ limitations under the License. -->
           </v-col>
         </v-row>
       </v-container>
-      <Footer />
     </v-main>
+      <Footer />
   </v-app>
 </template>
 
