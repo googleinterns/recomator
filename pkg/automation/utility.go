@@ -71,7 +71,7 @@ func extractFromURL(url, parameterName string) (string, error) {
 }
 
 // Given a list of errors, the function returns one
-// that is not nil. If all of the are nil, then it returns nil
+// that is not nil. If all of them are nil, then it returns nil
 func chooseNotNil(errorList ...error) error {
 	for _, err := range errorList {
 		if err != nil {

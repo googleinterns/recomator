@@ -18,12 +18,15 @@ type valueAddSnapshot struct {
 
 type gcloudOperation = recommender.GoogleCloudRecommenderV1Operation
 
+// Assumes, that the operation's action is test and path is /machineType.
+// Tests if the machine type is equal to operation's value, or matches the
+// operation's value matcher.
 func testMachineType(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, projectPath)
-	zone, errZone := extractFromURL(path, zonePath)
-	instance, errInstance := extractFromURL(path, instancePath)
+	project, errProject := extractFromURL(path, projectParam)
+	zone, errZone := extractFromURL(path, zoneParam)
+	instance, errInstance := extractFromURL(path, instanceParam)
 	err := chooseNotNil(errProject, errZone, errInstance)
 	if err != nil {
 		return err
@@ -41,12 +44,15 @@ func testMachineType(service GoogleService, operation *gcloudOperation) error {
 	return nil
 }
 
+// Assumes, that the operation's action is test and path is /status.
+// Tests if the status is equal to operation's value, or matches the
+// operation's value matcher.
 func testStatus(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, projectPath)
-	zone, errZone := extractFromURL(path, zonePath)
-	instance, errInstance := extractFromURL(path, instancePath)
+	project, errProject := extractFromURL(path, projectParam)
+	zone, errZone := extractFromURL(path, zoneParam)
+	instance, errInstance := extractFromURL(path, instanceParam)
 	err := chooseNotNil(errProject, errZone, errInstance)
 	if err != nil {
 		return err
@@ -64,6 +70,8 @@ func testStatus(service GoogleService, operation *gcloudOperation) error {
 	return nil
 }
 
+// Assumes, that the operation's action is replace and path is /machineType.
+// Replaces the machine type with a new one.
 func replaceMachineType(service GoogleService, operation *gcloudOperation) error {
 	path1 := operation.Resource
 	path2, ok := operation.Value.(string)
@@ -71,11 +79,11 @@ func replaceMachineType(service GoogleService, operation *gcloudOperation) error
 		return errors.New("wrong value type for operation replace machine type")
 	}
 
-	project, errProject := extractFromURL(path1, projectPath)
-	instance, errInstance := extractFromURL(path1, instancePath)
+	project, errProject := extractFromURL(path1, projectParam)
+	instance, errInstance := extractFromURL(path1, instanceParam)
 
-	machineType, errMachine := extractFromURL(path2, machineTypePath)
-	zone, errZone := extractFromURL(path2, zonePath)
+	machineType, errMachine := extractFromURL(path2, machineTypeParam)
+	zone, errZone := extractFromURL(path2, zoneParam)
 	err := chooseNotNil(errProject, errInstance, errMachine, errZone)
 	if err != nil {
 		return err
@@ -94,12 +102,14 @@ func replaceMachineType(service GoogleService, operation *gcloudOperation) error
 	return service.StartInstance(project, zone, instance)
 }
 
+// Assumes that operation's action is replace, path is status and value
+// is terminated. Stops the given machine.
 func stopInstance(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, projectPath)
-	zone, errZone := extractFromURL(path, zonePath)
-	instance, errInstance := extractFromURL(path, instancePath)
+	project, errProject := extractFromURL(path, projectParam)
+	zone, errZone := extractFromURL(path, zoneParam)
+	instance, errInstance := extractFromURL(path, instanceParam)
 	err := chooseNotNil(errProject, errZone, errInstance)
 	if err != nil {
 		return err
@@ -108,6 +118,8 @@ func stopInstance(service GoogleService, operation *gcloudOperation) error {
 	return service.StopInstance(project, zone, instance)
 }
 
+// Assumes that operation's action is add, and ResourceType
+// is compute.googleapis.com/Snapshot. Adds a snapshot of the given machine.
 func addSnapshot(service GoogleService, operation *gcloudOperation) error {
 	value, ok := operation.Value.(valueAddSnapshot)
 	if !ok {
@@ -115,9 +127,9 @@ func addSnapshot(service GoogleService, operation *gcloudOperation) error {
 	}
 	path := value.SourceDisk
 
-	project, errProject := extractFromURL(path, projectPath)
-	zone, errZone := extractFromURL(path, zonePath)
-	disk, errDisk := extractFromURL(path, diskPath)
+	project, errProject := extractFromURL(path, projectParam)
+	zone, errZone := extractFromURL(path, zoneParam)
+	disk, errDisk := extractFromURL(path, diskParam)
 	err := chooseNotNil(errProject, errZone, errDisk)
 	if err != nil {
 		return err
@@ -132,12 +144,14 @@ func addSnapshot(service GoogleService, operation *gcloudOperation) error {
 	return service.CreateSnapshot(project, zone, disk, name)
 }
 
+// Assumes that the operation's action is remove and its resource type
+// is compute.googleapis.com/Disk. Removes the given disk.
 func removeDisk(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
-	project, errProject := extractFromURL(path, projectPath)
-	zone, errZone := extractFromURL(path, zonePath)
-	disk, errDisk := extractFromURL(path, diskPath)
+	project, errProject := extractFromURL(path, projectParam)
+	zone, errZone := extractFromURL(path, zoneParam)
+	disk, errDisk := extractFromURL(path, diskParam)
 	err := chooseNotNil(errProject, errZone, errDisk)
 	if err != nil {
 		return err

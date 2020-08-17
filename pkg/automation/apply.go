@@ -30,11 +30,11 @@ const (
 )
 
 const (
-	projectPath     = "projects"
-	zonePath        = "zones"
-	instancePath    = "instances"
-	diskPath        = "disks"
-	machineTypePath = "machineTypes"
+	projectParam     = "projects"
+	zoneParam        = "zones"
+	instanceParam    = "instances"
+	diskParam        = "disks"
+	machineTypeParam = "machineTypes"
 )
 
 // DoOperation does the action specified in the operation.
@@ -108,7 +108,11 @@ func Apply(service GoogleService, recommendation *gcloudRecommendation) error {
 		for _, operation := range operationGroup.Operations {
 			err := DoOperation(service, operation)
 			if err != nil {
-				service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
+				errMark := service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
+				if errMark != nil {
+					return errMark
+				}
+
 				return err
 			}
 		}
