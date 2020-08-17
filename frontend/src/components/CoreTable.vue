@@ -22,6 +22,7 @@ limitations under the License. -->
     v-model="selectedRows"
     show-select
     item-key="name"
+    :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
 
