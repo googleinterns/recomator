@@ -62,10 +62,31 @@ export interface OperationsList {
   [index: number]: Operation;
 }
 
+export interface ValueAddSnapshot {
+  name: string;
+  source_disk: string;
+  storage_locations: string[];
+}
+
 export interface Operation {
   resource: string;
   resourceType: string;
   path: string;
+  value?: string | ValueAddSnapshot;
+}
+
+function isValueAddSnapshot(
+  value: string | ValueAddSnapshot | undefined
+): value is ValueAddSnapshot {
+  if (value === undefined) {
+    return false;
+  }
+
+  if (typeof value === "string") {
+    return false;
+  }
+
+  return true;
 }
 
 // -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
@@ -75,12 +96,48 @@ export function getRecommendationResource(
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
+// -> "compute.googleapis.com/Snapshot"
+export function getRecommendationResourceType(
+  recommendation: RecommendationRaw
+): string {
+  return recommendation.content.operationGroups[0].operations[0].resourceType;
+}
+
+export function getRecommendationValue(
+  recommendation: RecommendationRaw
+): string | ValueAddSnapshot | undefined {
+  return recommendation.content.operationGroups[0].operations[0].value;
+}
+
 // -> "timus-test-for-probers-n2-std-4-idling"
 export function getRecommendationResourceShortName(
   recommendation: RecommendationRaw
 ): string {
-  const resource = getRecommendationResource(recommendation);
-  return extractFromResource("instances", resource);
+  const resourceType = getRecommendationResourceType(recommendation);
+
+  switch (resourceType) {
+    case "compute.googleapis.com/Instance": {
+      const resource = getRecommendationResource(recommendation);
+      return extractFromResource("instances", resource);
+    }
+    case "compute.googleapis.com/Disk": {
+      const resource = getRecommendationResource(recommendation);
+      return extractFromResource("disks", resource);
+    }
+    case "compute.googleapis.com/Snapshot": {
+      const value = getRecommendationValue(recommendation);
+
+      if (isValueAddSnapshot(value)) {
+        console.log(value.source_disk);
+
+        return extractFromResource("disks", value.source_disk);
+      }
+
+      throw "the given recommendation's value parameter does not match its resourceType";
+    }
+    default:
+      throw "the given recommendation has an unsupported resourceType";
+  }
 }
 
 // -> "rightsizer-test"
