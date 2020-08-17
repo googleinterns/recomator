@@ -15,14 +15,14 @@ limitations under the License. */
 import Vue from "vue";
 import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
 import {
-  RecommendationsStore,
-  IRecommendationsStoreState
+  IRecommendationsStoreState,
+  recommendationStoreFactory
 } from "./recommendations";
 
 import {
-  CoreTableStore,
   ICoreTableStoreState,
-  isRecommendationInResults
+  isRecommendationInResults,
+  coreTableStoreFactory
 } from "./core_table";
 import { RecommendationExtra } from "./model";
 
@@ -52,8 +52,8 @@ export function rootStoreFactory(): Store<IRootStoreState> {
     state: {},
     getters: getters,
     modules: {
-      recommendationsStore: RecommendationsStore,
-      coreTableStore: CoreTableStore
+      recommendationsStore: recommendationStoreFactory(),
+      coreTableStore: coreTableStoreFactory()
     }
   };
   return new Store<IRootStoreState>(storeOptions);
