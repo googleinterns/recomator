@@ -85,29 +85,26 @@ export default class Footer extends Vue {
 
   get savingsFromSelected(): number {
     return this.selectedRows
-      .filter(recommendation => recommendation.costCol < 0)
+      .filter((recommendation) => recommendation.costCol < 0)
       .reduce((acc, cur) => acc - cur.costCol, 0);
   }
 
   get spendingsFromSelected(): number {
     return this.selectedRows
-      .filter(recommendation => recommendation.costCol > 0)
+      .filter((recommendation) => recommendation.costCol > 0)
       .reduce((acc, cur) => acc + cur.costCol, 0);
   }
 
   get performanceSelectedCount(): number {
     return this.selectedRows
-      .filter(recommendation => recommendation.costCol > 0)
-      .reduce(acc => acc + 1, 0);
+      .filter((recommendation) => recommendation.costCol > 0)
+      .reduce((acc) => acc + 1, 0);
   }
 
   get applyPart(): string {
-    const count = this.selectedRowsCount;
-    if (count === 1) {
-      return `Apply ${count} recommendation.`;
-    }
-
-    return `Apply ${count} recommendations.`;
+    return `Apply ${this.selectedRowsCount} recommendation${
+      this.selectedRowsCount == 1 ? "" : "s"
+    }.`;
   }
 
   get savingsPart(): string {
@@ -122,22 +119,13 @@ export default class Footer extends Vue {
   }
 
   get spendingsPart(): string {
-    const count = this.performanceSelectedCount;
-    const spendings = this.spendingsFromSelected;
-
-    if (count === 0) {
+    if (this.performanceSelectedCount === 0) {
       return "";
     }
 
-    if (count === 1) {
-      return ` Increase performance of ${count} machine, by spending ${spendings.toFixed(
-        2
-      )}$ more each week.`;
-    }
-
-    return ` Increase performance of ${count} machines, by spending ${spendings.toFixed(
-      2
-    )}$ more each week.`;
+    return ` Increase performance of ${this.performanceSelectedCount} machine${
+      this.performanceSelectedCount == 1 ? "" : "s"
+    }, by spending ${this.spendingsFromSelected.toFixed(2)}$ more each week.`;
   }
 
   get footerMessage(): string {
