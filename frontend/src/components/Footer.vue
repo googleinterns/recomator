@@ -17,24 +17,23 @@ limitations under the License. -->
       v-if="selectedRowsCount > 0"
       v-bind:fixed="true"
       color="rgba(255, 210, 20, 1)"
-      class="pa-6"
+      class="pa-xl-8 pa-lg-7 pa-md-6 pa-sm-3 pa-xs-0"
     >
       <v-row class="px-5">
-        <v-spacer></v-spacer>
-
-        <div class="font-weight-black">
-          {{ footerMessage }}
-        </div>
-        <v-spacer></v-spacer>
+        <v-col>
+          <div class="font-weight-black">
+            {{ footerMessage }}
+          </div>
+        </v-col>
       </v-row>
       <v-row class="px-5">
-        <v-spacer></v-spacer>
-        <v-btn rounded color="primary" dark v-on:click="dialog = true"
-          >Apply Selected Recommendation{{
-            selectedRowsCount == 1 ? "" : "s"
-          }}</v-btn
-        >
-        <v-spacer></v-spacer>
+        <v-col>
+          <v-btn rounded color="primary" dark v-on:click="dialog = true"
+            >Apply Selected Recommendation{{
+              selectedRowsCount == 1 ? "" : "s"
+            }}</v-btn
+          >
+        </v-col>
       </v-row>
     </v-footer>
 
@@ -48,7 +47,7 @@ limitations under the License. -->
         </v-card-title>
 
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
 
           <v-btn
             color="green white--text"
@@ -72,7 +71,7 @@ import { IRootStoreState } from "../store/root";
 import { RecommendationExtra } from "../store/model";
 
 @Component
-export default class FooterSummary extends Vue {
+export default class Footer extends Vue {
   dialog = false;
 
   get selectedRows(): RecommendationExtra[] {
@@ -84,42 +83,21 @@ export default class FooterSummary extends Vue {
   }
 
   get savingsFromSelected(): number {
-    const selectedRecommendations = this.selectedRows;
-
-    let result = 0;
-    for (const recommendation of selectedRecommendations) {
-      if (recommendation.costCol < 0) {
-        result -= recommendation.costCol; // Minus to have absolute value
-      }
-    }
-
-    return result;
+    return this.selectedRows
+      .filter(recommendation => recommendation.costCol < 0)
+      .reduce((acc, cur) => acc - cur.costCol, 0);
   }
 
   get spendingsFromSelected(): number {
-    const selectedRecommendations = this.selectedRows;
-
-    let result = 0;
-    for (const recommendation of selectedRecommendations) {
-      if (recommendation.costCol > 0) {
-        result += recommendation.costCol;
-      }
-    }
-
-    return result;
+    return this.selectedRows
+      .filter(recommendation => recommendation.costCol > 0)
+      .reduce((acc, cur) => acc + cur.costCol, 0);
   }
 
   get performanceSelectedCount(): number {
-    const selectedRecommendations = this.selectedRows;
-
-    let result = 0;
-    for (const recommendation of selectedRecommendations) {
-      if (recommendation.costCol > 0) {
-        result++;
-      }
-    }
-
-    return result;
+    return this.selectedRows
+      .filter(recommendation => recommendation.costCol > 0)
+      .reduce(acc => acc + 1, 0);
   }
 
   get applyPart(): string {
@@ -139,7 +117,7 @@ export default class FooterSummary extends Vue {
 
     return ` Save ${savings.toFixed(
       2
-    )}$ each week by not using unnecessary resources.`;
+    )}$ each week by using only the necessary resources.`;
   }
 
   get spendingsPart(): string {
