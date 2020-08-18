@@ -12,153 +12,69 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <tr>
+  <tr v-if="isMobile">
+    <td>
+      <ResourceFilter />
+      <ProjectFilter />
+      <TypeFilter />
+      <DescriptionFilter />
+      <CostFilter />
+      <StatusFilter />
+    </td>
+  </tr>
+
+  <tr v-else>
     <td />
     <td class="pb-5">
-      <v-text-field
-        v-model="resourceNameSearchText"
-        append-icon="mdi-magnify"
-        label="Search resources"
-        single-line
-        hide-details
-      />
+      <ResourceFilter />
     </td>
     <td>
-      <v-combobox
-        v-model="projectsSelected"
-        :items="allProjects"
-        label="Select projects"
-        multiple
-      >
-      </v-combobox>
+      <ProjectFilter />
     </td>
     <td>
-      <v-combobox
-        v-model="typesSelected"
-        :items="allTypes"
-        label="Select types"
-        multiple
-      >
-      </v-combobox>
+      <TypeFilter />
+    </td>
+    <td class="pb-5">
+      <DescriptionFilter />
     </td>
     <td>
-      <v-text-field
-        v-model="descriptionSearchText"
-        append-icon="mdi-magnify"
-        label="Search descriptions"
-        single-line
-      ></v-text-field>
+      <CostFilter />
     </td>
     <td>
-      <v-combobox
-        v-model="costCategoriesSelected"
-        :items="allCostCategories"
-        label="Savings/Costs"
-        multiple
-      >
-      </v-combobox>
-    </td>
-    <td>
-      <v-combobox
-        v-model="statusesSelected"
-        :items="allStatuses"
-        label="Select status"
-        multiple
-      >
-      </v-combobox>
+      <StatusFilter />
     </td>
   </tr>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { IRootStoreState } from "../store/root";
-import { costCategoriesNames } from "../store/core_table";
+import CostFilter from "./filters/CostFilter.vue";
+import DescriptionFilter from "./filters/DescriptionFilter.vue";
+import ProjectFilter from "./filters/ProjectFilter.vue";
+import ResourceFilter from "./filters/ResourceFilter.vue";
+import StatusFilter from "./filters/StatusFilter.vue";
+import TypeFilter from "./filters/TypeFilter.vue";
 
-@Component
-export default class FiltersRow extends Vue {
-  // resource name
+import Vue from "vue";
+import { Component } from "vue-property-decorator";
 
-  get resourceNameSearchText(): string {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .resourceNameSearchText;
+const FiltersRowProps = Vue.extend({
+  props: {
+    isMobile: {
+      type: Boolean,
+      required: true
+    }
   }
+});
 
-  set resourceNameSearchText(text: string) {
-    this.$store.commit("coreTableStore/setResourceNameSearchText", text);
+@Component({
+  components: {
+    CostFilter,
+    DescriptionFilter,
+    ProjectFilter,
+    ResourceFilter,
+    StatusFilter,
+    TypeFilter
   }
-
-  // description
-
-  get descriptionSearchText(): string {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .descriptionSearchText;
-  }
-
-  set descriptionSearchText(text: string) {
-    this.$store.commit("coreTableStore/setDescriptionSearchText", text);
-  }
-
-  // projects
-
-  get allProjects(): string[] {
-    // We could cache these, but filtering is the bottleneck so there is no point to bother
-    return this.$store.getters["recommendationsStore/allProjects"];
-  }
-
-  get projectsSelected(): string[] {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .projectsSelected;
-  }
-
-  set projectsSelected(projects: string[]) {
-    this.$store.commit("coreTableStore/setProjectsSelected", projects);
-  }
-
-  // types
-
-  get allTypes(): string[] {
-    return this.$store.getters["recommendationsStore/allTypes"];
-  }
-
-  get typesSelected(): string[] {
-    return (this.$store.state as IRootStoreState).coreTableStore!.typesSelected;
-  }
-
-  set typesSelected(types: string[]) {
-    this.$store.commit("coreTableStore/setTypesSelected", types);
-  }
-
-  // statuses
-
-  get allStatuses(): string[] {
-    return this.$store.getters["recommendationsStore/allStatuses"];
-  }
-
-  get statusesSelected(): string[] {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .statusesSelected;
-  }
-
-  set statusesSelected(statuses: string[]) {
-    this.$store.commit("coreTableStore/setStatusesSelected", statuses);
-  }
-
-  // costs
-
-  get allCostCategories(): string[] {
-    return Object.values(costCategoriesNames);
-  }
-
-  get costCategoriesSelected(): string[] {
-    return (this.$store.state as IRootStoreState).coreTableStore!
-      .costCategoriesSelected;
-  }
-  set costCategoriesSelected(costCategories: string[]) {
-    this.$store.commit(
-      "coreTableStore/setCostCategoriesSelected",
-      costCategories
-    );
-  }
-}
+})
+export default class FiltersRow extends FiltersRowProps {}
 </script>

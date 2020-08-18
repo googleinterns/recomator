@@ -25,8 +25,8 @@ limitations under the License. -->
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
 
-    <template v-slot:body.prepend>
-      <FiltersRow />
+    <template v-slot:body.prepend="{ isMobile }">
+      <FiltersRow :isMobile="isMobile" />
     </template>
 
     <template v-slot:item.resourceCol="{ item }">
