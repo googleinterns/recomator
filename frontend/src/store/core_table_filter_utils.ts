@@ -61,13 +61,12 @@ export function costFilterAccepted(
   tableState: ICoreTableStoreState,
   recExtra: RecommendationExtra
 ) {
-  const catgsSelected = tableState.costCategoriesSelected;
-  const costsAlias = costCategoriesNames.costs;
-  const gainsAlias = costCategoriesNames.gains;
   return (
-    catgsSelected.length == 0 ||
-    (recExtra.costCol >= 0 && catgsSelected.includes(costsAlias)) ||
-    (recExtra.costCol <= 0 && catgsSelected.includes(gainsAlias))
+    tableState.costCategoriesSelected.length == 0 ||
+    (recExtra.costCol >= 0 &&
+      tableState.costCategoriesSelected.includes(costCategoriesNames.costs)) ||
+    (recExtra.costCol <= 0 &&
+      tableState.costCategoriesSelected.includes(costCategoriesNames.gains))
   );
 }
 
