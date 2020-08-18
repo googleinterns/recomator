@@ -166,12 +166,9 @@ func ListProjectRequirements(s GoogleService, project string) ([]*Requirement, e
 }
 
 // ListRequirements lists the requirements and their statuses for every project.
-func ListRequirements(s GoogleService, projects []string, tasks ...*Task) ([]*ProjectRequirements, error) {
-	var task *Task
-	if len(tasks) != 0 {
-		task = tasks[0]
-	}
-	task.AddSubtasks(len(projects))
+// task structure tracks how many projects have been processed already.
+func ListRequirements(s GoogleService, projects []string, task *Task) ([]*ProjectRequirements, error) {
+	task.SetNumberOfSubtasks(len(projects))
 	var result []*ProjectRequirements
 	for _, project := range projects {
 		requirements, err := ListProjectRequirements(s, project)
@@ -181,6 +178,6 @@ func ListRequirements(s GoogleService, projects []string, tasks ...*Task) ([]*Pr
 		result = append(result, &ProjectRequirements{project, requirements})
 		task.IncrementDone()
 	}
-	defer task.SetAllDone()
+	task.SetAllDone()
 	return result, nil
 }

@@ -91,11 +91,8 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 // Requires the recommender.*.list IAM permission for the specified recommender.
 // numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
 // non-positive values are ignored, instead the default value is used.
-func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int, tasks ...*Task) ([]*gcloudRecommendation, error) {
-	var task *Task
-	if len(tasks) != 0 {
-		task = tasks[0]
-	}
+// task structure tracks how many locations have been processed already.
+func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int, task *Task) ([]*gcloudRecommendation, error) {
 
 	zones, err := service.ListZonesNames(project)
 	if err != nil {
@@ -110,7 +107,7 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	locations := append(zones, regions...)
 	numberOfLocations := len(locations)
 
-	task.AddSubtasks(numberOfLocations)
+	task.SetNumberOfSubtasks(numberOfLocations)
 
 	numWorkers := numConcurrentCalls
 	const defaultNumWorkers = 16
@@ -124,7 +121,7 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 	}
 
 	results := make(chan result, numberOfLocations)
-  	locationsJobs := make(chan string, numberOfLocations)
+	locationsJobs := make(chan string, numberOfLocations)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
@@ -165,13 +162,10 @@ var googleRecommenders = []string{
 	"google.compute.instance.MachineTypeRecommender",
 }
 
-// ListAllRecommendersRecommendations lists recommendations for all googleRecommenders
-func ListAllRecommendersRecommendations(service GoogleService, project string, numConcurrentCalls int, tasks ...*Task) ([]*gcloudRecommendation, error) {
-	var task *Task
-	if len(tasks) != 0 {
-		task = tasks[0]
-	}
-	task.AddSubtasks(len(googleRecommenders))
+// ListAllRecommendersRecommendations lists recommendations for all googleRecommenders.
+// task structure tracks how many recommenders have been processed already.
+func ListAllRecommendersRecommendations(service GoogleService, project string, numConcurrentCalls int, task *Task) ([]*gcloudRecommendation, error) {
+	task.SetNumberOfSubtasks(len(googleRecommenders))
 	var recommendations []*gcloudRecommendation
 	for _, recommender := range googleRecommenders {
 
@@ -183,7 +177,7 @@ func ListAllRecommendersRecommendations(service GoogleService, project string, n
 
 		task.IncrementDone()
 	}
-	defer task.SetAllDone()
+	task.SetAllDone()
 	return recommendations, nil
 }
 
@@ -195,12 +189,8 @@ type ListResult struct {
 	failedProjects  []*ProjectRequirements
 }
 
-func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsRequirements []*ProjectRequirements, numConcurrentCalls int, tasks ...*Task) (*ListResult, error) {
-	var task *Task
-	if len(tasks) != 0 {
-		task = tasks[0]
-	}
-	task.AddSubtasks(len(projectsRequirements))
+func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsRequirements []*ProjectRequirements, numConcurrentCalls int, task *Task) (*ListResult, error) {
+	task.SetNumberOfSubtasks(len(projectsRequirements))
 
 	var listResult ListResult
 	for _, projectRequirements := range projectsRequirements {
@@ -224,24 +214,21 @@ func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsR
 		task.IncrementDone()
 	}
 
-	defer task.SetAllDone()
+	task.SetAllDone()
 	return &listResult, nil
 }
 
 // ListAllProjectsRecommendations gets all projects for which user has projects.get permission.
 // If the user has enough permissions to apply and list recommendations, recommendations for projects are listed.
 // Otherwise, projects requirements, including failed ones, are added to `failedProjects` to help show warnings to the user.
-func ListAllProjectsRecommendations(service GoogleService, numConcurrentCalls int, tasks ...*Task) (*ListResult, error) {
-	var task *Task
-	if len(tasks) != 0 {
-		task = tasks[0]
-	}
+// task structure tracks how many subtasks have been done already.
+func ListAllProjectsRecommendations(service GoogleService, numConcurrentCalls int, task *Task) (*ListResult, error) {
 	projects, err := service.ListProjects()
 	if err != nil {
 		return nil, err
 	}
 
-	task.AddSubtasks(2)
+	task.SetNumberOfSubtasks(2)
 
 	projectsRequirements, err := ListRequirements(service, projects, task.GetNextSubtask())
 	if err != nil {
@@ -257,6 +244,6 @@ func ListAllProjectsRecommendations(service GoogleService, numConcurrentCalls in
 	}
 	task.IncrementDone()
 
-	defer task.SetAllDone()
+	task.SetAllDone()
 	return listResult, nil
 }

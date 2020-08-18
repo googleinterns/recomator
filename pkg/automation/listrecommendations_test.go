@@ -55,7 +55,7 @@ func TestListRecommendations(t *testing.T) {
 		zones := []string{"zone1", "zone2", "zone3"}
 		regions := []string{"region1", "region2", "region3"}
 		mock := &MockService{zones: zones, regions: regions}
-		result, err := ListRecommendations(mock, "", "", numConcurrentCalls)
+		result, err := ListRecommendations(mock, "", "", numConcurrentCalls, &Task{})
 
 		if assert.NoError(t, err, "Unexpected error from ListRecommendations") {
 			assert.Equal(t, 0, len(result), "No recommendations expected")
@@ -83,7 +83,7 @@ func TestErrorInListZones(t *testing.T) {
 	errorMessage := "error listing zones"
 	regions := []string{"region1", "region2", "region3"}
 
-	_, err := ListRecommendations(&ErrorZonesService{err: fmt.Errorf(errorMessage), regions: regions}, "", "", 2)
+	_, err := ListRecommendations(&ErrorZonesService{err: fmt.Errorf(errorMessage), regions: regions}, "", "", 2, &Task{})
 	assert.EqualError(t, err, errorMessage, "Expected error calling ListZones")
 }
 
@@ -105,7 +105,7 @@ func TestErrorInListRegions(t *testing.T) {
 	errorMessage := "error listing regions"
 	zones := []string{"zone1", "zone2", "zone3"}
 
-	_, err := ListRecommendations(&ErrorRegionsService{err: fmt.Errorf(errorMessage), zones: zones}, "", "", 2)
+	_, err := ListRecommendations(&ErrorRegionsService{err: fmt.Errorf(errorMessage), zones: zones}, "", "", 2, &Task{})
 	assert.EqualError(t, err, errorMessage, "Expected error calling ListRegions")
 }
 
@@ -161,7 +161,7 @@ func TestErrorInRecommendations(t *testing.T) {
 				errorLocation: location,
 			}
 
-			_, err := ListRecommendations(service, "", "", numConcurrentCalls)
+			_, err := ListRecommendations(service, "", "", numConcurrentCalls, &Task{})
 			assert.EqualError(t, err, errorMessage, "Expected error calling ListRecommendations")
 			assert.Equal(t, len(locations), service.numberOfTimesCalled, "ListRecommendations called wrong number of times")
 		}
@@ -197,7 +197,7 @@ func BenchmarkGoroutines(b *testing.B) {
 	for _, numConcurrentCalls := range []int{4, 8, 16, 32, 64} {
 		b.Run(fmt.Sprintf("%d goroutines:", numConcurrentCalls), func(b *testing.B) {
 			s := &BenchmarkService{}
-			ListRecommendations(s, "", "", numConcurrentCalls)
+			ListRecommendations(s, "", "", numConcurrentCalls, &Task{})
 		})
 	}
 }

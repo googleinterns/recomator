@@ -28,11 +28,8 @@ type Task struct {
 	mutex        sync.Mutex
 }
 
-// AddSubtasks is used to add subtasks to the task
-func (t *Task) AddSubtasks(num int) {
-	if t == nil {
-		return
-	}
+// SetNumberOfSubtasks is used to set number of subtasks in the task
+func (t *Task) SetNumberOfSubtasks(num int) {
 	t.mutex.Lock()
 	t.subtasks = make([]Task, num)
 	t.mutex.Unlock()
@@ -40,9 +37,6 @@ func (t *Task) AddSubtasks(num int) {
 
 // IncrementDone increments subtasksDone
 func (t *Task) IncrementDone() {
-	if t == nil {
-		return
-	}
 	t.mutex.Lock()
 	t.subtasksDone++
 	t.mutex.Unlock()
@@ -50,9 +44,6 @@ func (t *Task) IncrementDone() {
 
 // GetNextSubtask returns the pointer to next not done subtask
 func (t *Task) GetNextSubtask() *Task {
-	if t == nil {
-		return nil
-	}
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	if t.subtasksDone >= len(t.subtasks) {
@@ -63,35 +54,42 @@ func (t *Task) GetNextSubtask() *Task {
 
 // SetAllDone sets the task done
 func (t *Task) SetAllDone() {
-	if t == nil {
-		return
-	}
 	t.mutex.Lock()
 	t.taskDone = true
 	t.mutex.Unlock()
 }
 
-func floatToInts(x float64) (int32, int32) {
-	all := 1000000
-	return int32(x * float64(all)), int32(all)
+// floatToFraction returns fraction approximation to float value x.
+// Returned values are numerator and denominator of that fraction.
+func floatToFraction(x float64) (int32, int32) {
+	denominator := 1000000
+	numerator := x * float64(denominator)
+	return int32(numerator), int32(denominator)
 }
 
-// GetProgress returns the fraction of work done
+// GetProgress returns the fraction of work done.
+// Returned values are numerator and denominator of that fraction.
+// If not all work is done numerator is garantueed to be less than denominator.
 func (t *Task) GetProgress() (int32, int32) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	if t.taskDone {
 		return 1, 1
 	}
-	answer := 0.0
+
+	fractionOfWorkDone := 0.0
 	if len(t.subtasks) != 0 {
-		answer += float64(t.subtasksDone) / float64(len(t.subtasks))
+		oneSubtaskWeight := 1.0 / float64(len(t.subtasks))
+		fractionOfWorkDone += float64(t.subtasksDone) * oneSubtaskWeight
+
 		if t.subtasksDone < len(t.subtasks) {
-			done, all := t.subtasks[t.subtasksDone].GetProgress()
-			answer += float64(done) / float64(all) / float64(len(t.subtasks))
+			unfinishedSubtask := &t.subtasks[t.subtasksDone]
+			done, all := unfinishedSubtask.GetProgress()
+			fractionOfWorkDone += float64(done) / float64(all) * oneSubtaskWeight
 		}
 	}
-	done, all := floatToInts(answer)
+
+	done, all := floatToFraction(fractionOfWorkDone)
 	if done >= all {
 		done = all - 1
 	}
