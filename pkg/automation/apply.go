@@ -89,6 +89,20 @@ func DoOperation(service GoogleService, operation *gcloudOperation) error {
 	}
 }
 
+// DoOperations calls DoOperatiojn for each operation specified in the recommendation
+func DoOperations(service GoogleService, recommendation *gcloudRecommendation) error {
+	for _, operationGroup := range recommendation.Content.OperationGroups {
+		for _, operation := range operationGroup.Operations {
+			err := DoOperation(service, operation)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // Apply is the method used to apply recommendations from Recommender API.
 // Supports recommendations from the following recommenders:
 // - google.compute.disk.IdleResourceRecommender
@@ -105,20 +119,17 @@ func Apply(service GoogleService, recommendation *gcloudRecommendation) error {
 	}
 	*recommendation = *newRecommendation
 
-	for _, operationGroup := range recommendation.Content.OperationGroups {
-		for _, operation := range operationGroup.Operations {
-			err := DoOperation(service, operation)
-			if err != nil {
-				newRecommendation, errMark := service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
-				if errMark != nil {
-					return errMark
-				}
-				*recommendation = *newRecommendation
-
-				return err
-			}
+	err = DoOperations(service, recommendation)
+	if err != nil {
+		newRecommendation, errMark := service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
+		if errMark != nil {
+			return errMark
 		}
+		*recommendation = *newRecommendation
+
+		return err
 	}
+
 	newRecommendation, err = service.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
 	if err != nil {
 		return err
