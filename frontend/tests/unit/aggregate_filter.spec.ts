@@ -41,7 +41,8 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
     ) as boolean;
 
   test("project filter", () => {
-    let isOn = new Array(6).fill(true);
+    const numberOfFilters = 6;
+    let isOn = new Array(numberOfFilters).fill(true);
     (descriptionFilterAccepted as any).mockImplementation(() => isOn[0]);
     (projectFilterAccepted as any).mockImplementation(() => isOn[1]);
     (typeFilterAccepted as any).mockImplementation(() => isOn[2]);
@@ -49,14 +50,14 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
     (statusFilterAccepted as any).mockImplementation(() => isOn[4]);
     (costFilterAccepted as any).mockImplementation(() => isOn[5]);
 
-    for (let i = 0; i < isOn.length; i++) {
+    for (let i = 0; i < numberOfFilters; i++) {
       expect(passesAll()).toBeTruthy();
       isOn[i] = false;
       expect(passesAll()).toBeFalsy();
       isOn[i] = true;
     }
 
-    isOn = new Array(isOn.length).fill(false);
+    isOn = new Array(numberOfFilters).fill(false);
     expect(passesAll()).toBeFalsy();
   });
 });
