@@ -2,6 +2,8 @@ package automation
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,22 +29,26 @@ func (s *mockAllCompletedService) ListPermissionRequirements(project string, per
 	return result, nil
 }
 
+func checkAllRequirementsCompleted(t *testing.T, reqs []*Requirement) {
+	var actualNames, expectedNames []string
+	for _, req := range reqs {
+		assert.Equal(t, RequirementCompleted, req.Status, "Requirements should be compeleted")
+		actualNames = append(actualNames, req.Name)
+	}
+	for _, api := range requiredAPIs {
+		expectedNames = append(expectedNames, api)
+	}
+	for _, perm := range requiredPermissions {
+		expectedNames = append(expectedNames, perm[0])
+	}
+	assert.EqualValues(t, expectedNames, actualNames, "Requirements should contain all APIs and permissions")
+}
+
 func TestAllCompleted(t *testing.T) {
 	mock := &mockAllCompletedService{}
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "No error from ListProjectrequierements expected") {
-		var actualNames, expectedNames []string
-		for _, req := range reqs {
-			assert.Equal(t, RequirementCompleted, req.Status, "Requirements should be compeleted")
-			actualNames = append(actualNames, req.Name)
-		}
-		for _, api := range requiredAPIs {
-			expectedNames = append(expectedNames, api)
-		}
-		for _, perm := range requiredPermissions {
-			expectedNames = append(expectedNames, perm[0])
-		}
-		assert.EqualValues(t, expectedNames, actualNames, "Requirements should contain all APIs and permissions")
+		checkAllRequirementsCompleted(t, reqs)
 	}
 }
 
@@ -114,5 +120,81 @@ func TestErrorAPIRequirements(t *testing.T) {
 		if assert.Error(t, err, "ListProjectRequirements should result in error") {
 			assert.Nil(t, reqs, "Only one of returned values should be non-nil")
 		}
+	}
+}
+
+const (
+	errorProject  = "err"
+	failedProject = "fail"
+)
+
+type mockProjectService struct {
+	GoogleService
+}
+
+func getService(project string) GoogleService {
+	var service GoogleService
+	switch project {
+	case errorProject:
+		service = &errorAPIService{err: errors.New("")}
+	case failedProject:
+		service = &mockService{apiReqs: failedRequirements}
+	default:
+		service = &mockAllCompletedService{}
+	}
+	return service
+}
+
+func (s *mockProjectService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
+	rec, err := getService(project).ListAPIRequirements(project, apis)
+	return rec, err
+}
+
+func (s *mockProjectService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
+	rec, err := getService(project).ListPermissionRequirements(project, permissions)
+	return rec, err
+}
+
+func TestListRequirements(t *testing.T) {
+	rand.Seed(42)
+	for numProjects := 0; numProjects < 5; numProjects++ {
+		for i := 0; i < 100; i++ {
+			var projects []string
+			for ind := 0; ind < numProjects; ind++ {
+				project := fmt.Sprintf("project %d", ind)
+				if rand.Int()%2 == 0 {
+					project = failedProject
+				}
+				projects = append(projects, project)
+			}
+
+			task := &Task{}
+			reqs, err := ListRequirements(&mockProjectService{}, projects, task)
+			if assert.NoError(t, err, "No error expected from ListRequirements") {
+				var actualProjects []string
+				for _, req := range reqs {
+					actualProjects = append(actualProjects, req.Project)
+					if req.Project == failedProject {
+						assert.EqualValues(t, failedRequirements, req.Requirements, "Should be equal to failed requirements for this project")
+					} else {
+						checkAllRequirementsCompleted(t, req.Requirements)
+					}
+				}
+				assert.EqualValues(t, projects, actualProjects, "Should contain the same projects")
+				done, all := task.GetProgress()
+				assert.True(t, done == all, "ListRequirements should be done now")
+			}
+		}
+	}
+}
+
+func TestErrorListRequirements(t *testing.T) {
+	projects := []string{"ok", errorProject, failedProject}
+	task := &Task{}
+	reqs, err := ListRequirements(&mockProjectService{}, projects, task)
+	if assert.Error(t, err) {
+		assert.Nil(t, reqs, "Only one value should be non-nil")
+		done, all := task.GetProgress()
+		assert.True(t, done < all, "ListRequirements should not be done because of error")
 	}
 }
