@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { RecommendationExtra } from "./model";
-import { ICoreTableStoreState } from "./core_table";
+import { ICoreTableStoreState, costCategoriesNames } from "./core_table";
 
 // The primary motivation for having these in a separate file is so that
 //  they can be mocked by Jest:
@@ -54,6 +54,19 @@ export function statusFilterAccepted(
   return (
     tableState.statusesSelected.length === 0 ||
     tableState.statusesSelected.includes(recExtra.statusCol)
+  );
+}
+
+export function costFilterAccepted(
+  tableState: ICoreTableStoreState,
+  recExtra: RecommendationExtra
+) {
+  return (
+    tableState.costCategoriesSelected.length == 0 ||
+    (recExtra.costCol >= 0 &&
+      tableState.costCategoriesSelected.includes(costCategoriesNames.costs)) ||
+    (recExtra.costCol <= 0 &&
+      tableState.costCategoriesSelected.includes(costCategoriesNames.gains))
   );
 }
 

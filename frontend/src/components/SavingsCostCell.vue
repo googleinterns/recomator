@@ -28,8 +28,8 @@ limitations under the License. -->
       </template>
       {{
         cost >= 0
-          ? `Save ${costRounded}$ per week by applying this recommendation`
-          : `Applying this recommendation will cost an additional ${-costRounded}$ per week`
+          ? `Applying this recommendation will cost an additional ${costRounded}$ per week`
+          : `Save ${-costRounded}$ per week by applying this recommendation`
       }}
     </v-tooltip>
   </div>
