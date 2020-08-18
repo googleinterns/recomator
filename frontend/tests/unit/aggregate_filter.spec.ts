@@ -40,7 +40,7 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
     ) as boolean;
 
   test("project filter", () => {
-    let isOn = [true, true, true, true, true];
+    let isOn = new Array(5).fill(true);
     (descriptionFilterAccepted as any).mockImplementation(() => isOn[0]);
     (projectFilterAccepted as any).mockImplementation(() => isOn[1]);
     (typeFilterAccepted as any).mockImplementation(() => isOn[2]);
@@ -54,7 +54,7 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
       isOn[i] = true;
     }
 
-    isOn = [false, false, false, false];
+    isOn = new Array(5).fill(false);
     expect(passesAll()).toBeFalsy();
   });
 });
