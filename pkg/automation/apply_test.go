@@ -62,22 +62,22 @@ func (s *ApplyMockService) DeleteDisk(project string, zone string, disk string) 
 	return nil
 }
 
-func (s *ApplyMockService) MarkRecommendationClaimed(name string, etag string) error {
+func (s *ApplyMockService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return nil
+	return nil, nil
 }
 
-func (s *ApplyMockService) MarkRecommendationSucceeded(name string, etag string) error {
+func (s *ApplyMockService) MarkRecommendationSucceeded(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationSucceeded", []interface{}{name, etag}, []interface{}{nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return nil
+	return nil, nil
 }
 
-func (s *ApplyMockService) MarkRecommendationFailed(name string, etag string) error {
+func (s *ApplyMockService) MarkRecommendationFailed(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return nil
+	return nil, nil
 }
 
 // Creates an array of type calledFunction, given arrays of functions,
@@ -126,14 +126,14 @@ func TestTestMachineTypeOperation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/n1-standard-4"}}
 	err := DoOperation(&service, &operation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"GetInstance"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-east1-b", "alicja-test"}}
 	expectedResults := [][]interface{}{{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/n1-standard-4"}, nil}}
 
 	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
-	compareCalledFunctions(t, expected, service.calledFunctions)
+	assert.Equal(t, expected, service.calledFunctions)
 }
 
 // Checks if the test status operation works as expected.
@@ -148,7 +148,7 @@ func TestTestStatusOperation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := DoOperation(&service, &operation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"GetInstance"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
@@ -170,7 +170,7 @@ func TestReplaceMachineTypeOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"StopInstance", "ChangeMachineType", "StartInstance"}
 	expectedArguments := [][]interface{}{
@@ -196,7 +196,7 @@ func TestReplaceStatusOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"StopInstance"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
@@ -217,7 +217,7 @@ func TestAddSnapshotOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"CreateSnapshot"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "europe-west1-d", "vertical-scaling-krzysztofk-wordpress", ""}}
@@ -238,7 +238,7 @@ func TestRemoveDiskOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.Nilf(t, err, "DoOperation shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"DeleteDisk"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "europe-west1-d", "vertical-scaling-krzysztofk-wordpress"}}
@@ -248,7 +248,7 @@ func TestRemoveDiskOperation(t *testing.T) {
 	compareCalledFunctions(t, expected, service.calledFunctions)
 }
 
-// Checks if receiveing an operation without necessary parameter
+// Checks if receiving an operation without necessary parameter
 // returns the correct error.
 func TestResourceWithoutNecessaryParams(t *testing.T) {
 	operation := gcloudOperation{
@@ -303,7 +303,7 @@ func TestStopRecommendation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := Apply(&service, &recommendation)
-	assert.Nilf(t, err, "Apply shouldn't return an error")
+	assert.NoErrorf(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -360,7 +360,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 
 	service := ApplyMockService{calledFunctions: []calledFunction{}}
 	err := Apply(&service, &recommendation)
-	assert.Nilf(t, err, "Apply shouldn't return an error")
+	assert.NoErrorf(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -418,7 +418,7 @@ func TestReplaceRecommendation(t *testing.T) {
 
 	service := ApplyMockService{calledFunctions: []calledFunction{}, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := Apply(&service, &recommendation)
-	assert.Nilf(t, err, "Apply shouldn't return an error")
+	assert.NoErrorf(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -809,8 +809,8 @@ type FailedClaimService struct {
 	GoogleService
 }
 
-func (s *FailedClaimService) MarkRecommendationClaimed(name string, etag string) error {
-	return errors.New("recommendation couldn't be marked claimed")
+func (s *FailedClaimService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
+	return nil, errors.New("recommendation couldn't be marked claimed")
 }
 
 // Checks, that a failure to mark a recommendation as claimed
@@ -879,13 +879,13 @@ func (s *FailedSucceedService) StartInstance(project string, zone string, instan
 	return nil
 }
 
-func (s *FailedSucceedService) MarkRecommendationClaimed(name string, etag string) error {
+func (s *FailedSucceedService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return nil
 }
 
-func (s *FailedSucceedService) MarkRecommendationSucceeded(name string, etag string) error {
+func (s *FailedSucceedService) MarkRecommendationSucceeded(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationSucceeded", []interface{}{name, etag}, []interface{}{errors.New("recommendation couldn't be marked succeeded")}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return errors.New("recommendation couldn't be marked succeeded")
@@ -961,13 +961,13 @@ type FailedFailedService struct {
 	getInstanceResult *compute.Instance
 }
 
-func (s *FailedFailedService) MarkRecommendationClaimed(name string, etag string) error {
+func (s *FailedFailedService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return nil
 }
 
-func (s *FailedFailedService) MarkRecommendationFailed(name string, etag string) error {
+func (s *FailedFailedService) MarkRecommendationFailed(name string, etag string) (*gcloudRecommendation, error) {
 	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{errors.New("recommendation couldn't be marked failed")}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return errors.New("recommendation couldn't be marked failed")

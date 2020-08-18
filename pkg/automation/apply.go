@@ -99,28 +99,31 @@ func Apply(service GoogleService, recommendation *gcloudRecommendation) error {
 		return errors.New("to apply a recommendation, its status must be active")
 	}
 
-	err := service.MarkRecommendationClaimed(recommendation.Name, recommendation.Etag)
+	newRecommendation, err := service.MarkRecommendationClaimed(recommendation.Name, recommendation.Etag)
 	if err != nil {
 		return err
 	}
+	*recommendation = *newRecommendation
 
 	for _, operationGroup := range recommendation.Content.OperationGroups {
 		for _, operation := range operationGroup.Operations {
 			err := DoOperation(service, operation)
 			if err != nil {
-				errMark := service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
+				newRecommendation, errMark := service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
 				if errMark != nil {
 					return errMark
 				}
+				*recommendation = *newRecommendation
 
 				return err
 			}
 		}
 	}
-	err = service.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
+	newRecommendation, err = service.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
 	if err != nil {
 		return err
 	}
+	*recommendation = *newRecommendation
 
 	return nil
 }

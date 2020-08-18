@@ -58,13 +58,13 @@ type GoogleService interface {
 	ListRegionsNames(project string) ([]string, error)
 
 	// marks recommendation for the project with given etag and name claimed
-	MarkRecommendationClaimed(name, etag string) error
+	MarkRecommendationClaimed(name, etag string) (*gcloudRecommendation, error)
 
 	// marks recommendation for the project with given etag and name succeeded
-	MarkRecommendationSucceeded(name, etag string) error
+	MarkRecommendationSucceeded(name, etag string) (*gcloudRecommendation, error)
 
 	// marks recommendation for the project with given etag and name failed
-	MarkRecommendationFailed(name, etag string) error
+	MarkRecommendationFailed(name, etag string) (*gcloudRecommendation, error)
 
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
