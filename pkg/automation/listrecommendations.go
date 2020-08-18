@@ -117,7 +117,7 @@ type recommendationsResult struct {
 
 // concatResults receives numberOfResults values from results channel.
 // Returns concatenated slice of all recommendations. If one of results contains error, returns error.
-// Exactly one of returned values will be non-nil.
+// At most one of returned values will be non-nil.
 func concatResults(results <-chan recommendationsResult, numberOfResults int) ([]*gcloudRecommendation, error) {
 	var err error
 	var recommendations []*gcloudRecommendation
