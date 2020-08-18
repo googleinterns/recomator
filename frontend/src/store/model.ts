@@ -108,7 +108,7 @@ function isValueAddSnapshot(
   if (typeof value.storage_locations !== "object") {
     return false;
   }
-  
+
   for (const field of value.storage_locations) {
     if (typeof field !== "string") {
       return false;
