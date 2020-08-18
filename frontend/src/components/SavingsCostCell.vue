@@ -23,7 +23,7 @@ limitations under the License. -->
           v-on="on"
           display="fill"
         >
-          {{ (cost >= 0 ? "" : "+") + Math.abs(costRounded) }}$
+          {{ (cost >= 0 ? "" : "+") + Math.abs(costRounded).toFixed(2) }}$
         </v-chip>
       </template>
       {{

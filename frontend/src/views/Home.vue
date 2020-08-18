@@ -35,15 +35,17 @@ limitations under the License. -->
         </v-row>
       </v-container>
     </v-main>
+    <Footer />
   </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
+import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { CoreTable }
+  components: { CoreTable, Footer }
 })
 export default class Home extends Vue {}
 </script>

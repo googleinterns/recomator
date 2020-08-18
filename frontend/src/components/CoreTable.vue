@@ -17,11 +17,11 @@ limitations under the License. -->
     dense
     :headers="headers"
     :items="this.$store.getters['filteredRecommendationsWithExtras']"
-    :items-per-page="itemsPerPage"
     :single-select="false"
     v-model="selectedRows"
     show-select
     item-key="name"
+    :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
 
@@ -104,8 +104,6 @@ export default class CoreTable extends Vue {
     },
     { text: "", value: "statusCol", sortable: false }
   ];
-
-  itemsPerPage = 10;
 
   get selectedRows(): RecommendationExtra[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;
