@@ -78,12 +78,41 @@ export interface Operation {
 function isValueAddSnapshot(
   value: string | ValueAddSnapshot | undefined
 ): value is ValueAddSnapshot {
-  if (value === undefined) {
+  if (typeof value !== "object") {
+    return false;
+  }
+  const valueExpectedProperties = ["name", "source_disk", "storage_locations"];
+
+  for (const property in value) {
+    if (Object.prototype.hasOwnProperty.call(value, property)) {
+      if (!valueExpectedProperties.includes(property)) {
+        return false;
+      }
+    }
+  }
+
+  for (const property of valueExpectedProperties) {
+    if (!Object.prototype.hasOwnProperty.call(value, property)) {
+      return false;
+    }
+  }
+
+  if (typeof value.name !== "string") {
     return false;
   }
 
-  if (typeof value === "string") {
+  if (typeof value.source_disk !== "string") {
     return false;
+  }
+
+  if (typeof value.storage_locations !== "object") {
+    return false;
+  }
+  
+  for (const field of value.storage_locations) {
+    if (typeof field !== "string") {
+      return false;
+    }
   }
 
   return true;
@@ -126,10 +155,7 @@ export function getRecommendationResourceShortName(
     }
     case "compute.googleapis.com/Snapshot": {
       const value = getRecommendationValue(recommendation);
-
       if (isValueAddSnapshot(value)) {
-        console.log(value.source_disk);
-
         return extractFromResource("disks", value.source_disk);
       }
 
