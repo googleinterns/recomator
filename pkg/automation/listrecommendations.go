@@ -87,13 +87,9 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 	return regions, nil
 }
 
-// ListRecommendations returns the list of recommendations for a Cloud project.
-// Requires the recommender.*.list IAM permission for the specified recommender.
-// numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
-// non-positive values are ignored, instead the default value is used.
-// task structure tracks how many locations have been processed already.
-func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int, task *Task) ([]*gcloudRecommendation, error) {
-
+// ListLocations return the list of all locations per project(zones and regions).
+// Exactly one of returned values will be non-nil.
+func ListLocations(service GoogleService, project string) ([]string, error) {
 	zones, err := service.ListZonesNames(project)
 	if err != nil {
 		return nil, err
@@ -101,59 +97,11 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 
 	regions, err := service.ListRegionsNames(project)
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 
 	locations := append(zones, regions...)
-	numberOfLocations := len(locations)
-
-	task.SetNumberOfSubtasks(numberOfLocations)
-
-	numWorkers := numConcurrentCalls
-	const defaultNumWorkers = 16
-	if numWorkers <= 0 {
-		numWorkers = defaultNumWorkers
-	}
-
-	type result struct {
-		recommendations []*gcloudRecommendation
-		err             error
-	}
-
-	results := make(chan result, numberOfLocations)
-	locationsJobs := make(chan string, numberOfLocations)
-
-	for i := 0; i < numWorkers; i++ {
-		go func() {
-			for location := range locationsJobs {
-				recs, err := service.ListRecommendations(project, location, recommenderID)
-				results <- result{recs, err}
-				task.IncrementDone()
-			}
-		}()
-	}
-
-	for _, location := range locations {
-		locationsJobs <- location
-	}
-
-	close(locationsJobs)
-
-	var recommendations []*gcloudRecommendation
-	err = nil
-	for range locations {
-		locationResult := <-results
-		if locationResult.err != nil {
-			err = locationResult.err
-		} else {
-			recommendations = append(recommendations, locationResult.recommendations...)
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer task.SetAllDone()
-	return recommendations, nil
+	return locations, nil
 }
 
 var googleRecommenders = []string{
@@ -162,23 +110,83 @@ var googleRecommenders = []string{
 	"google.compute.instance.MachineTypeRecommender",
 }
 
-// ListAllRecommendersRecommendations lists recommendations for all googleRecommenders.
-// task structure tracks how many recommenders have been processed already.
-func ListAllRecommendersRecommendations(service GoogleService, project string, numConcurrentCalls int, task *Task) ([]*gcloudRecommendation, error) {
-	task.SetNumberOfSubtasks(len(googleRecommenders))
+type recommendationsResult struct {
+	recommendations []*gcloudRecommendation
+	err             error
+}
+
+// concatResults receives numberOfResults values from results channel.
+// Returns concatenated slice of all recommendations. If one of results contains error, returns error.
+// Exactly one of returned values will be non-nil.
+func concatResults(results <-chan recommendationsResult, numberOfResults int) ([]*gcloudRecommendation, error) {
+	var err error
 	var recommendations []*gcloudRecommendation
-	for _, recommender := range googleRecommenders {
-
-		newRecommendations, err := ListRecommendations(service, project, recommender, numConcurrentCalls, task.GetNextSubtask())
-		if err != nil {
-			return nil, err
+	for i := 0; i < numberOfResults; i++ {
+		result := <-results
+		if result.err != nil {
+			err = result.err
+		} else {
+			recommendations = append(recommendations, result.recommendations...)
 		}
-		recommendations = append(recommendations, newRecommendations...)
-
-		task.IncrementDone()
 	}
-	task.SetAllDone()
+
+	if err != nil {
+		return nil, err
+	}
 	return recommendations, nil
+}
+
+// ListRecommendations returns the list of recommendations for a Cloud project from googleRecommenders.
+// Requires the recommender.*.list IAM permissions for the recommenders.
+// numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
+// non-positive values are ignored, instead the default value is used.
+// task structure tracks the progress of the function.
+func ListRecommendations(service GoogleService, project string, numConcurrentCalls int, task *Task) ([]*gcloudRecommendation, error) {
+	locations, err := ListLocations(service, project)
+	if err != nil {
+		return nil, err
+	}
+
+	numWorkers := numConcurrentCalls
+	const defaultNumWorkers = 16
+	if numWorkers <= 0 {
+		numWorkers = defaultNumWorkers
+	}
+
+	type query struct {
+		location      string
+		recommenderID string
+	}
+
+	numberOfQueries := len(locations) * len(googleRecommenders)
+	task.SetNumberOfSubtasks(numberOfQueries)
+
+	results := make(chan recommendationsResult, numberOfQueries)
+	queries := make(chan query, numberOfQueries)
+
+	for i := 0; i < numWorkers; i++ {
+		go func() {
+			for q := range queries {
+				recs, err := service.ListRecommendations(project, q.location, q.recommenderID)
+				results <- recommendationsResult{recs, err}
+				task.IncrementDone()
+			}
+		}()
+	}
+
+	for _, recommenderID := range googleRecommenders {
+		for _, location := range locations {
+			queries <- query{location: location, recommenderID: recommenderID}
+		}
+	}
+
+	close(queries)
+
+	recommendations, err := concatResults(results, numberOfQueries)
+	if err == nil {
+		task.SetAllDone()
+	}
+	return recommendations, err
 }
 
 // ListResult contains information about listing recommendations for all projects.
@@ -202,7 +210,7 @@ func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsR
 			}
 		}
 		if ok {
-			newRecs, err := ListAllRecommendersRecommendations(service, projectRequirements.Project, numConcurrentCalls, task.GetNextSubtask())
+			newRecs, err := ListRecommendations(service, projectRequirements.Project, numConcurrentCalls, task.GetNextSubtask())
 			if err != nil {
 				return nil, err
 			}

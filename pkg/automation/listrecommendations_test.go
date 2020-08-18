@@ -31,15 +31,20 @@ type MockService struct {
 	numberOfTimesListRecommendationsCalls int
 	zones                                 []string
 	regions                               []string
-	locationsCalled                       []string
+	callsToList                           []query
+}
+
+type query struct {
+	location      string
+	recommenderID string
 }
 
 func (s *MockService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
 	s.mutex.Lock()
 	s.numberOfTimesListRecommendationsCalls++
-	s.locationsCalled = append(s.locationsCalled, location)
+	s.callsToList = append(s.callsToList, query{location, recommenderID})
 	s.mutex.Unlock()
-	return []*gcloudRecommendation{}, nil
+	return []*gcloudRecommendation{nil}, nil
 }
 
 func (s *MockService) ListZonesNames(project string) ([]string, error) {
@@ -50,17 +55,33 @@ func (s *MockService) ListRegionsNames(project string) ([]string, error) {
 	return s.regions, nil
 }
 
+func makeQueries(locations []string) []query {
+	var queries []query
+	for _, rec := range googleRecommenders {
+		for _, loc := range locations {
+			queries = append(queries, query{loc, rec})
+		}
+	}
+	return queries
+}
+
 func TestListRecommendations(t *testing.T) {
 	for numConcurrentCalls := 0; numConcurrentCalls <= 7; numConcurrentCalls++ {
 		zones := []string{"zone1", "zone2", "zone3"}
 		regions := []string{"region1", "region2", "region3"}
 		mock := &MockService{zones: zones, regions: regions}
-		result, err := ListRecommendations(mock, "", "", numConcurrentCalls, &Task{})
+		task := &Task{}
+		result, err := ListRecommendations(mock, "", numConcurrentCalls, task)
 
 		if assert.NoError(t, err, "Unexpected error from ListRecommendations") {
-			assert.Equal(t, 0, len(result), "No recommendations expected")
-			assert.Equal(t, len(zones)+len(regions), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
-			assert.ElementsMatch(t, append(mock.zones, mock.regions...), mock.locationsCalled, "ListRecommendations was called for different locations")
+			locations := append(mock.zones, mock.regions...)
+			queries := makeQueries(locations)
+			assert.Equal(t, len(queries), len(result), "One recommendation from each query was expected")
+			assert.Equal(t, len(queries), mock.numberOfTimesListRecommendationsCalls, "Wrong number of ListRecommendations calls")
+			assert.ElementsMatch(t, queries, mock.callsToList, "ListRecommendations was called for different locations and recommenders")
+
+			done, all := task.GetProgress()
+			assert.True(t, done == all, "List recommendations task should be done already")
 		}
 	}
 }
@@ -83,8 +104,12 @@ func TestErrorInListZones(t *testing.T) {
 	errorMessage := "error listing zones"
 	regions := []string{"region1", "region2", "region3"}
 
-	_, err := ListRecommendations(&ErrorZonesService{err: fmt.Errorf(errorMessage), regions: regions}, "", "", 2, &Task{})
+	task := &Task{}
+	_, err := ListRecommendations(&ErrorZonesService{err: fmt.Errorf(errorMessage), regions: regions}, "", 2, task)
 	assert.EqualError(t, err, errorMessage, "Expected error calling ListZones")
+
+	done, all := task.GetProgress()
+	assert.True(t, done < all, "List recommendations task should be not finished because of error")
 }
 
 type ErrorRegionsService struct {
@@ -105,8 +130,12 @@ func TestErrorInListRegions(t *testing.T) {
 	errorMessage := "error listing regions"
 	zones := []string{"zone1", "zone2", "zone3"}
 
-	_, err := ListRecommendations(&ErrorRegionsService{err: fmt.Errorf(errorMessage), zones: zones}, "", "", 2, &Task{})
+	task := &Task{}
+	_, err := ListRecommendations(&ErrorRegionsService{err: fmt.Errorf(errorMessage), zones: zones}, "", 2, task)
 	assert.EqualError(t, err, errorMessage, "Expected error calling ListRegions")
+
+	done, all := task.GetProgress()
+	assert.True(t, done < all, "List recommendations task should be not finished because of error")
 }
 
 type ErrorRecommendationService struct {
@@ -161,9 +190,14 @@ func TestErrorInRecommendations(t *testing.T) {
 				errorLocation: location,
 			}
 
-			_, err := ListRecommendations(service, "", "", numConcurrentCalls, &Task{})
+			task := &Task{}
+			_, err := ListRecommendations(service, "", numConcurrentCalls, task)
 			assert.EqualError(t, err, errorMessage, "Expected error calling ListRecommendations")
-			assert.Equal(t, len(locations), service.numberOfTimesCalled, "ListRecommendations called wrong number of times")
+			numQueries := len(locations) * len(googleRecommenders)
+			assert.Equal(t, numQueries, service.numberOfTimesCalled, "ListRecommendations called wrong number of times")
+
+			done, all := task.GetProgress()
+			assert.True(t, done < all, "List recommendations task should be not finished because of error")
 		}
 	}
 }
@@ -194,10 +228,10 @@ func (s *BenchmarkService) ListRegionsNames(project string) ([]string, error) {
 }
 
 func BenchmarkGoroutines(b *testing.B) {
-	for _, numConcurrentCalls := range []int{4, 8, 16, 32, 64} {
+	for _, numConcurrentCalls := range []int{4, 8, 16, 32, 64, 128} {
 		b.Run(fmt.Sprintf("%d goroutines:", numConcurrentCalls), func(b *testing.B) {
 			s := &BenchmarkService{}
-			ListRecommendations(s, "", "", numConcurrentCalls, &Task{})
+			ListRecommendations(s, "", numConcurrentCalls, &Task{})
 		})
 	}
 }
