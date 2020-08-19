@@ -1,6 +1,7 @@
 package automation
 
 import (
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -71,5 +72,56 @@ func TestSubSubtasks(t *testing.T) {
 		done, all = task.GetProgress()
 		fraction = float64(done) / float64(all)
 		assert.InEpsilon(t, 1.0/float64(numSubtasks)/float64(numSubtasks), fraction, epsilon, "incorrect progress for task")
+	}
+}
+
+func TestThreadsTask(t *testing.T) {
+	for numGoroutines := 1; numGoroutines < 20; numGoroutines++ {
+		for numSubtasks := 0; numSubtasks < 5; numSubtasks++ {
+			var task Task
+			task.SetNumberOfSubtasks(numSubtasks)
+			ch := make(chan bool)
+			var tasks int32
+			for i := 0; i < numGoroutines; i++ {
+				go func() {
+					for task.GetNextSubtask() != nil {
+						task.IncrementDone()
+						atomic.AddInt32(&tasks, 1)
+					}
+					ch <- true
+				}()
+			}
+			for i := 0; i < numGoroutines; i++ {
+				<-ch
+			}
+			task.SetAllDone()
+			done, all := task.GetProgress()
+			assert.True(t, done == all, "Task should be finished")
+			assert.Equal(t, int32(numSubtasks), tasks, "Wrong number of done subtasks")
+		}
+	}
+}
+
+func TestThreadsGetProgress(t *testing.T) {
+	for numGoroutines := 1; numGoroutines < 10; numGoroutines++ {
+		for numSubtasks := 0; numSubtasks < 10; numSubtasks++ {
+			task := &Task{}
+			task.SetNumberOfSubtasks(numSubtasks)
+			for i := 0; i < numGoroutines; i++ {
+				go func() {
+					var progress []float64
+					done, all := 0, 1
+					for done < all {
+						done, all := task.GetProgress()
+						progress = append(progress, float64(done)/float64(all))
+					}
+					assert.IsNonDecreasing(t, progress, "Progress should not decrease")
+				}()
+			}
+			for i := 0; i < numSubtasks; i++ {
+				task.IncrementDone()
+			}
+		}
+
 	}
 }

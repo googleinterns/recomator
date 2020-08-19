@@ -47,7 +47,7 @@ func checkAllRequirementsCompleted(t *testing.T, reqs []*Requirement) {
 func TestAllCompleted(t *testing.T) {
 	mock := &mockAllCompletedService{}
 	reqs, err := ListProjectRequirements(mock, "")
-	if assert.NoError(t, err, "No error from ListProjectrequierements expected") {
+	if assert.NoError(t, err, "No error from ListProjectRequirements expected") {
 		checkAllRequirementsCompleted(t, reqs)
 	}
 }

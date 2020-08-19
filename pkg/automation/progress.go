@@ -20,12 +20,17 @@ import (
 	"sync"
 )
 
-// Task is the structure that helps get the percentage of work done
+// Task is the structure that helps get the percentage of work done.
+// GetProgress method is thread-safe.
+// IncrementDone and GetNextSubtask is thread-safe,
+// but GetProgress is calculated in assumption that all subtasks, except lower-level subtasks with no subtasks,
+// will be done consequently.
 type Task struct {
-	subtasks     []Task
-	subtasksDone int
-	taskDone     bool
-	mutex        sync.Mutex
+	subtasks        []Task
+	subtasksStarted int
+	subtasksDone    int
+	taskDone        bool
+	mutex           sync.Mutex
 }
 
 // SetNumberOfSubtasks is used to set number of subtasks in the task
@@ -46,10 +51,12 @@ func (t *Task) IncrementDone() {
 func (t *Task) GetNextSubtask() *Task {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	if t.subtasksDone >= len(t.subtasks) {
+	if t.subtasksStarted >= len(t.subtasks) {
 		return nil
 	}
-	return &t.subtasks[t.subtasksDone]
+	taskIndex := t.subtasksStarted
+	t.subtasksStarted++
+	return &t.subtasks[taskIndex]
 }
 
 // SetAllDone sets the task done
@@ -68,6 +75,7 @@ func floatToFraction(x float64) (int32, int32) {
 }
 
 // GetProgress returns the fraction of work done.
+// Assumes that all subtasks, except the subtasks, that don't have their own subtasks are done subseequently
 // Returned values are numerator and denominator of that fraction.
 // If not all work is done numerator is garantueed to be less than denominator.
 func (t *Task) GetProgress() (int32, int32) {

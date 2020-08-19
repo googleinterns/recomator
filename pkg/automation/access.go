@@ -149,19 +149,17 @@ func ListProjectRequirements(s GoogleService, project string) ([]*Requirement, e
 	if err != nil {
 		return nil, err
 	}
-	ok := true
 	for _, req := range requirements {
 		if req.Status == RequirementFailed {
-			ok = false
+			return requirements, nil
 		}
 	}
-	if ok {
-		permissions, err := s.ListPermissionRequirements(project, requiredPermissions)
-		if err != nil {
-			return nil, err
-		}
-		requirements = append(requirements, permissions...)
+
+	permissions, err := s.ListPermissionRequirements(project, requiredPermissions)
+	if err != nil {
+		return nil, err
 	}
+	requirements = append(requirements, permissions...)
 	return requirements, nil
 }
 
