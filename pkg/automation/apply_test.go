@@ -3,6 +3,7 @@ package automation
 import (
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 
 	"google.golang.org/api/compute/v1"
@@ -28,18 +29,18 @@ type ApplyMockService struct {
 
 // Creates an array of type calledFunction, given arrays of functions,
 // their arguments and results
-func newCalledFunctions(functions []string, arguments [][]interface{}, results [][]interface{}) ([]calledFunction, error) {
+func newCalledFunctions(functions []string, arguments [][]interface{}, results [][]interface{}) []calledFunction {
 	result := []calledFunction{}
 
 	if len(functions) != len(arguments) || len(arguments) != len(results) {
-		return nil, errors.New("lengths of the arguments must be equal")
+		log.Fatalln("In function newCalledFunctions all the argument arrays must have equal lengths")
 	}
 
 	for i := range functions {
 		result = append(result, calledFunction{functions[i], arguments[i], results[i]})
 	}
 
-	return result, nil
+	return result
 }
 
 func newEtag(etag string) string {
@@ -128,7 +129,7 @@ func TestTestMachineTypeOperation(t *testing.T) {
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-east1-b", "alicja-test"}}
 	expectedResults := [][]interface{}{{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/n1-standard-4"}, nil}}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -150,7 +151,7 @@ func TestTestStatusOperation(t *testing.T) {
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
 	expectedResults := [][]interface{}{{&compute.Instance{Status: "RUNNING"}, nil}}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -176,7 +177,7 @@ func TestReplaceMachineTypeOperation(t *testing.T) {
 	}
 	expectedResults := [][]interface{}{{nil}, {nil}, {nil}}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -198,7 +199,7 @@ func TestReplaceStatusOperation(t *testing.T) {
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
 	expectedResults := [][]interface{}{{nil}}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -219,7 +220,7 @@ func TestAddSnapshotOperation(t *testing.T) {
 	expectedArguments := [][]interface{}{{"rightsizer-test", "europe-west1-d", "vertical-scaling-krzysztofk-wordpress", ""}}
 	expectedResults := [][]interface{}{{nil}}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -240,7 +241,7 @@ func TestRemoveDiskOperation(t *testing.T) {
 	expectedArguments := [][]interface{}{{"rightsizer-test", "europe-west1-d", "vertical-scaling-krzysztofk-wordpress"}}
 	expectedResults := [][]interface{}{{nil}}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -310,7 +311,7 @@ func TestStopRecommendation(t *testing.T) {
 		{nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -361,7 +362,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 		{nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -419,7 +420,7 @@ func TestReplaceRecommendation(t *testing.T) {
 		{nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -547,7 +548,7 @@ func TestUnsupportedPath(t *testing.T) {
 		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}, nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -634,7 +635,7 @@ func TestUnsupportedReplaceValue(t *testing.T) {
 		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}, nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -726,7 +727,64 @@ func TestFailedTest(t *testing.T) {
 		{&compute.Instance{MachineType: "@#$%!E"}, nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	assert.Equal(t, expected, service.calledFunctions)
+}
+
+// Test checking  if apply function which encounters error
+// works as expected
+func TestApplyFailed(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	recommendationCopy := recommendation
+
+	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, assert.Error(t, err, "machine type is not as expected"))
+
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"GetInstance",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendationCopy.Name, recommendationCopy.Etag},
+		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
+		{recommendationCopy.Name, newEtag(recommendationCopy.Etag)},
+	}
+	expectedResults := [][]interface{}{
+		{recommendationNewEtag(recommendationCopy), nil},
+		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}, nil},
+		{recommendation, nil},
+	}
+
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -787,7 +845,7 @@ func TestFailedClaimRecommendation(t *testing.T) {
 		{nil, errors.New("recommendation couldn't be marked claimed")},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -897,7 +955,7 @@ func TestFailedSucceedRecommendation(t *testing.T) {
 		{nil, errors.New("recommendation couldn't be marked succeeded")},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -970,7 +1028,7 @@ func TestFailedFailedRecommendation(t *testing.T) {
 		{nil, errors.New("recommendation couldn't be marked failed")},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
@@ -1036,63 +1094,6 @@ func TestApplySucceeded(t *testing.T) {
 		{recommendation, nil},
 	}
 
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
-	assert.Equal(t, expected, service.calledFunctions)
-}
-
-// Test checking  if apply function which encounters error
-// works as expected
-func TestApplyFailed(t *testing.T) {
-	recommendation := gcloudRecommendation{
-		Content: &gcloudContent{
-			OperationGroups: []*gcloudOperationGroup{
-				&gcloudOperationGroup{
-					Operations: []*gcloudOperation{
-						&gcloudOperation{
-							Action:       "test",
-							Path:         "/machineType",
-							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
-							ResourceType: "compute.googleapis.com/Instance",
-							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
-						},
-						&gcloudOperation{
-							Action:       "replace",
-							Path:         "/machineType",
-							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
-							ResourceType: "compute.googleapis.com/Instance",
-							Value:        "zones/us-central1-a/machineTypes/e2-medium",
-						},
-					},
-				},
-			},
-		},
-		Etag:      "\"40204a1000e5befe\"",
-		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
-		StateInfo: &gcloudStateInfo{State: "Active"},
-	}
-
-	recommendationCopy := recommendation
-
-	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}}
-	err := Apply(&service, &recommendation)
-	assert.Error(t, err, assert.Error(t, err, "machine type is not as expected"))
-
-	expectedFunctions := []string{
-		"MarkRecommendationClaimed",
-		"GetInstance",
-		"MarkRecommendationFailed",
-	}
-	expectedArguments := [][]interface{}{
-		{recommendationCopy.Name, recommendationCopy.Etag},
-		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
-		{recommendationCopy.Name, newEtag(recommendationCopy.Etag)},
-	}
-	expectedResults := [][]interface{}{
-		{recommendationNewEtag(recommendationCopy), nil},
-		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}, nil},
-		{recommendation, nil},
-	}
-
-	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
 }
