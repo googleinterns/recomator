@@ -62,22 +62,25 @@ export interface OperationsList {
   [index: number]: Operation;
 }
 
-export interface ValueAddSnapshot {
+export interface Operation {
+  action: string;
+  resource: string;
+  resourceType: string;
+  path: string;
+  // This is a part of a union field, which other version
+  // (ValueMatcher) is not currently in use
+  value?: string | AddOperationValue;
+}
+
+export interface AddOperationValue {
   name: string;
   source_disk: string;
   storage_locations: string[];
 }
 
-export interface Operation {
-  resource: string;
-  resourceType: string;
-  path: string;
-  value?: string | ValueAddSnapshot;
-}
-
-function isValueAddSnapshot(
-  value: string | ValueAddSnapshot | undefined
-): value is ValueAddSnapshot {
+function isAddOperationValue(
+  value: string | AddOperationValue | undefined
+): value is AddOperationValue {
   if (typeof value !== "object") {
     return false;
   }
@@ -118,23 +121,30 @@ function isValueAddSnapshot(
   return true;
 }
 
+// -> "add"
+export function getExampleRecommendationAction(
+  recommendation: RecommendationRaw
+): string {
+  return recommendation.content.operationGroups[0].operations[0].action;
+}
+
 // -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
-export function getRecommendationResource(
+export function getExampleRecommendationResource(
   recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
 // -> "compute.googleapis.com/Snapshot"
-export function getRecommendationResourceType(
+export function getExampleRecommendationResourceType(
   recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resourceType;
 }
 
-export function getRecommendationValue(
+export function getExampleRecommendationValue(
   recommendation: RecommendationRaw
-): string | ValueAddSnapshot | undefined {
+): string | AddOperationValue | undefined {
   return recommendation.content.operationGroups[0].operations[0].value;
 }
 
@@ -142,27 +152,31 @@ export function getRecommendationValue(
 export function getRecommendationResourceShortName(
   recommendation: RecommendationRaw
 ): string {
-  const resourceType = getRecommendationResourceType(recommendation);
+  const action = getExampleRecommendationAction(recommendation);
 
-  switch (resourceType) {
-    case "compute.googleapis.com/Instance": {
-      const resource = getRecommendationResource(recommendation);
-      return extractFromResource("instances", resource);
-    }
-    case "compute.googleapis.com/Disk": {
-      const resource = getRecommendationResource(recommendation);
-      return extractFromResource("disks", resource);
-    }
-    case "compute.googleapis.com/Snapshot": {
-      const value = getRecommendationValue(recommendation);
-      if (isValueAddSnapshot(value)) {
+  switch (action) {
+    case "add": {
+      const value = getExampleRecommendationValue(recommendation);
+      if (isAddOperationValue(value)) {
         return extractFromResource("disks", value.source_disk);
       }
 
-      throw "the given recommendation's value parameter does not match its resourceType";
+      throw "the given value parameter doesn't match the action";
+    }
+    case "remove": {
+      const resource = getExampleRecommendationResource(recommendation);
+      return extractFromResource("disks", resource);
+    }
+    case "replace": {
+      const resource = getExampleRecommendationResource(recommendation);
+      return extractFromResource("instances", resource);
+    }
+    case "test": {
+      const resource = getExampleRecommendationResource(recommendation);
+      return extractFromResource("instances", resource);
     }
     default:
-      throw "the given recommendation has an unsupported resourceType";
+      throw "the given recommendation contains an unsupported action";
   }
 }
 
@@ -170,7 +184,7 @@ export function getRecommendationResourceShortName(
 export function getRecommendationProject(
   recommendation: RecommendationRaw
 ): string {
-  const resource = getRecommendationResource(recommendation);
+  const resource = getExampleRecommendationResource(recommendation);
   return extractFromResource("projects", resource);
 }
 
