@@ -235,3 +235,109 @@ func BenchmarkGoroutines(b *testing.B) {
 		})
 	}
 }
+
+type projectRecommender struct {
+	project       string
+	recommenderID string
+}
+
+type MockProjectsService struct {
+	GoogleService
+	queries                          []projectRecommender
+	numberOfListRecommendationsCalls int
+	apiCalls                         []string
+	permissionCalls                  []string
+	mutex                            sync.Mutex
+	projects                         []string
+}
+
+func (s *MockProjectsService) ListProjects() ([]string, error) {
+	return s.projects, nil
+}
+
+func (s *MockProjectsService) ListZonesNames(project string) ([]string, error) {
+	return []string{"one zone"}, nil
+}
+
+func (s *MockProjectsService) ListRegionsNames(project string) ([]string, error) {
+	return nil, nil
+}
+
+func (s *MockProjectsService) ListRecommendations(project, location, recommenderID string) ([]*gcloudRecommendation, error) {
+	s.mutex.Lock()
+	s.numberOfListRecommendationsCalls++
+	s.queries = append(s.queries, projectRecommender{project, recommenderID})
+	s.mutex.Unlock()
+	return []*gcloudRecommendation{nil}, nil
+}
+
+func makeProjectsQueries(projects []string) []projectRecommender {
+	var result []projectRecommender
+	for _, pr := range projects {
+		for _, rec := range googleRecommenders {
+			result = append(result, projectRecommender{pr, rec})
+		}
+	}
+	return result
+}
+
+var okRequirements = []*Requirement{&Requirement{Status: RequirementCompleted}}
+
+func (s *MockProjectsService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.apiCalls = append(s.apiCalls, project)
+	if project == failedProject {
+		return failedRequirements, nil
+	}
+	return okRequirements, nil
+}
+
+func (s *MockProjectsService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.permissionCalls = append(s.permissionCalls, project)
+	if project == failedProject {
+		return failedRequirements, nil
+	}
+	return okRequirements, nil
+}
+
+func TestListAllProjectsRecommendations(t *testing.T) {
+	for numConcurrentCalls := 0; numConcurrentCalls < 10; numConcurrentCalls++ {
+		for numProjects := 0; numProjects < 5; numProjects++ {
+			for numFailed := 0; numFailed <= numProjects; numFailed++ {
+				var okProjects, failedProjects []string
+				for i := 0; i < numFailed; i++ {
+					failedProjects = append(failedProjects, failedProject)
+				}
+				numOk := numProjects - numFailed
+				for i := 0; i < numOk; i++ {
+					okProjects = append(okProjects, fmt.Sprintf("project %d", i))
+				}
+				projects := append(okProjects, failedProjects...)
+				task := &Task{}
+				mock := &MockProjectsService{projects: projects}
+				res, err := ListAllProjectsRecommendations(mock, numConcurrentCalls, task)
+				if assert.NoError(t, err) {
+					done, all := task.GetProgress()
+					assert.True(t, done == all, "Task List all recommendations should be finished already")
+
+					queries := makeProjectsQueries(okProjects)
+					assert.Equal(t, len(queries), mock.numberOfListRecommendationsCalls, "List recommendations called wrong number of times")
+					assert.ElementsMatch(t, queries, mock.queries, "List Recommendations was called with wrong parameters")
+
+					assert.ElementsMatch(t, projects, mock.apiCalls, "List api requirements was called for different projects")
+					assert.ElementsMatch(t, okProjects, mock.permissionCalls, "List permission requirements was called for different projects")
+
+					assert.Equal(t, len(queries), len(res.recommendations), "Wrong number of overall recommendations")
+					var failedProjectsRequirements []*ProjectRequirements
+					for i := 0; i < numFailed; i++ {
+						failedProjectsRequirements = append(failedProjectsRequirements, &ProjectRequirements{Project: failedProject, Requirements: failedRequirements})
+					}
+					assert.ElementsMatch(t, failedProjectsRequirements, res.failedProjects, "Wrong failed projects requirements list")
+				}
+			}
+		}
+	}
+}

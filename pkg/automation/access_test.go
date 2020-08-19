@@ -41,7 +41,7 @@ func checkAllRequirementsCompleted(t *testing.T, reqs []*Requirement) {
 	for _, perm := range requiredPermissions {
 		expectedNames = append(expectedNames, perm[0])
 	}
-	assert.EqualValues(t, expectedNames, actualNames, "Requirements should contain all APIs and permissions")
+	assert.ElementsMatch(t, expectedNames, actualNames, "Requirements should contain all APIs and permissions")
 }
 
 func TestAllCompleted(t *testing.T) {
@@ -75,7 +75,7 @@ func TestFailAPIRequirements(t *testing.T) {
 
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "ListProjectRequirements should not return error") {
-		assert.EqualValues(t, mock.apiReqs, reqs, "ListProjectRequirements should return api requirements")
+		assert.ElementsMatch(t, mock.apiReqs, reqs, "ListProjectRequirements should return api requirements")
 		assert.False(t, mock.listPermissionsCalled, "ListPermissionRequirements should not be called if api reqs are failed")
 	}
 }
@@ -86,7 +86,7 @@ func TestFailPermissionRequirements(t *testing.T) {
 
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "ListProjectRequirements should not return error") {
-		assert.EqualValues(t, append(mock.apiReqs, mock.permissionReqs...), reqs,
+		assert.ElementsMatch(t, append(mock.apiReqs, mock.permissionReqs...), reqs,
 			"ListProjectRequirements should return api & permission requirements, if api requirements are completed")
 	}
 }
@@ -175,12 +175,12 @@ func TestListRequirements(t *testing.T) {
 				for _, req := range reqs {
 					actualProjects = append(actualProjects, req.Project)
 					if req.Project == failedProject {
-						assert.EqualValues(t, failedRequirements, req.Requirements, "Should be equal to failed requirements for this project")
+						assert.ElementsMatch(t, failedRequirements, req.Requirements, "Should be equal to failed requirements for this project")
 					} else {
 						checkAllRequirementsCompleted(t, req.Requirements)
 					}
 				}
-				assert.EqualValues(t, projects, actualProjects, "Should contain the same projects")
+				assert.ElementsMatch(t, projects, actualProjects, "Should contain the same projects")
 				done, all := task.GetProgress()
 				assert.True(t, done == all, "ListRequirements should be done now")
 			}
