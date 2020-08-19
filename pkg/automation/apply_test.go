@@ -23,7 +23,33 @@ type ApplyMockService struct {
 	GoogleService
 	calledFunctions   []calledFunction
 	getInstanceResult *compute.Instance
-	recommendation    *gcloudRecommendation
+	recommendation    gcloudRecommendation
+}
+
+// Creates an array of type calledFunction, given arrays of functions,
+// their arguments and results
+func newCalledFunctions(functions []string, arguments [][]interface{}, results [][]interface{}) ([]calledFunction, error) {
+	result := []calledFunction{}
+
+	if len(functions) != len(arguments) || len(arguments) != len(results) {
+		return nil, errors.New("lengths of the arguments must be equal")
+	}
+
+	for i := range functions {
+		result = append(result, calledFunction{functions[i], arguments[i], results[i]})
+	}
+
+	return result, nil
+}
+
+func newEtag(etag string) string {
+	return etag + "1"
+}
+
+func recommendationNewEtag(recommendation gcloudRecommendation) gcloudRecommendation {
+	result := recommendation
+	result.Etag = newEtag(recommendation.Etag)
+	return result
 }
 
 func (s *ApplyMockService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
@@ -64,37 +90,24 @@ func (s *ApplyMockService) DeleteDisk(project string, zone string, disk string) 
 }
 
 func (s *ApplyMockService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
+	s.recommendation = recommendationNewEtag(s.recommendation)
+	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{s.recommendation, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return s.recommendation, nil
+	return &s.recommendation, nil
 }
 
 func (s *ApplyMockService) MarkRecommendationSucceeded(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationSucceeded", []interface{}{name, etag}, []interface{}{nil}}
+	s.recommendation = recommendationNewEtag(s.recommendation)
+	newCalledFunction := calledFunction{"MarkRecommendationSucceeded", []interface{}{name, etag}, []interface{}{s.recommendation, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return s.recommendation, nil
+	return &s.recommendation, nil
 }
 
 func (s *ApplyMockService) MarkRecommendationFailed(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{nil}}
+	s.recommendation = recommendationNewEtag(s.recommendation)
+	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{s.recommendation, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return s.recommendation, nil
-}
-
-// Creates an array of type calledFunction, given arrays of functions,
-// their arguments and results
-func newCalledFunctions(functions []string, arguments [][]interface{}, results [][]interface{}) ([]calledFunction, error) {
-	result := []calledFunction{}
-
-	if len(functions) != len(arguments) || len(arguments) != len(results) {
-		return nil, errors.New("lengths of the arguments must be equal")
-	}
-
-	for i := range functions {
-		result = append(result, calledFunction{functions[i], arguments[i], results[i]})
-	}
-
-	return result, nil
+	return &s.recommendation, nil
 }
 
 // Checks if the test machine type operation works as expected.
@@ -280,9 +293,9 @@ func TestStopRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation, getInstanceResult: &compute.Instance{Status: "RUNNING"}}
+	service := ApplyMockService{getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := DoOperations(&service, &recommendation)
-	assert.NoErrorf(t, err, "Apply shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"GetInstance",
@@ -331,9 +344,9 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation}
+	service := ApplyMockService{}
 	err := DoOperations(&service, &recommendation)
-	assert.NoErrorf(t, err, "Apply shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"CreateSnapshot",
@@ -383,9 +396,9 @@ func TestReplaceRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
-	assert.NoErrorf(t, err, "Apply shouldn't return an error")
+	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"GetInstance",
@@ -482,7 +495,7 @@ func TestUnsupportedAction(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation}
+	service := ApplyMockService{}
 	err := DoOperations(&service, &recommendation)
 	assert.Error(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
@@ -521,7 +534,7 @@ func TestUnsupportedPath(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
 	assert.Error(t, err, operationNotSupportedMessage)
 	expectedFunctions := []string{
@@ -569,7 +582,7 @@ func TestUnsupportedResourceType(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
 	assert.Error(t, err, operationNotSupportedMessage)
 	var nilCalledFunctions []calledFunction = nil
@@ -608,7 +621,7 @@ func TestUnsupportedReplaceValue(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
 	assert.Error(t, err, operationNotSupportedMessage)
 	expectedFunctions := []string{
@@ -661,7 +674,7 @@ func TestUnsupportedAddResourceType(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation}
+	service := ApplyMockService{}
 	err := DoOperations(&service, &recommendation)
 	assert.Error(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
@@ -700,23 +713,17 @@ func TestFailedTest(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{recommendation: &recommendation, getInstanceResult: &compute.Instance{MachineType: "@#$%!E"}}
-	err := Apply(&service, &recommendation)
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "@#$%!E"}}
+	err := DoOperations(&service, &recommendation)
 	assert.Error(t, err, "machine type is not as expected")
 	expectedFunctions := []string{
-		"MarkRecommendationClaimed",
 		"GetInstance",
-		"MarkRecommendationFailed",
 	}
 	expectedArguments := [][]interface{}{
-		{recommendation.Name, recommendation.Etag},
 		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
-		{recommendation.Name, recommendation.Etag},
 	}
 	expectedResults := [][]interface{}{
-		{recommendation, nil},
 		{&compute.Instance{MachineType: "@#$%!E"}, nil},
-		{recommendation, nil},
 	}
 
 	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
@@ -725,9 +732,13 @@ func TestFailedTest(t *testing.T) {
 
 type FailedClaimService struct {
 	GoogleService
+	calledFunctions []calledFunction
 }
 
 func (s *FailedClaimService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
+	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil, errors.New("recommendation couldn't be marked claimed")}}
+	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
+
 	return nil, errors.New("recommendation couldn't be marked claimed")
 }
 
@@ -765,13 +776,26 @@ func TestFailedClaimRecommendation(t *testing.T) {
 	service := FailedClaimService{}
 	err := Apply(&service, &recommendation)
 	assert.Error(t, err, "recommendation couldn't be marked claimed")
+
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name, recommendation.Etag},
+	}
+	expectedResults := [][]interface{}{
+		{nil, errors.New("recommendation couldn't be marked claimed")},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	assert.Equal(t, expected, service.calledFunctions)
 }
 
 type FailedSucceedService struct {
 	GoogleService
 	calledFunctions   []calledFunction
 	getInstanceResult *compute.Instance
-	recommendation    *gcloudRecommendation
+	recommendation    gcloudRecommendation
 }
 
 func (s *FailedSucceedService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
@@ -799,13 +823,14 @@ func (s *FailedSucceedService) StartInstance(project string, zone string, instan
 }
 
 func (s *FailedSucceedService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
+	s.recommendation = recommendationNewEtag(s.recommendation)
+	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{s.recommendation, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
-	return nil, nil
+	return &s.recommendation, nil
 }
 
 func (s *FailedSucceedService) MarkRecommendationSucceeded(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationSucceeded", []interface{}{name, etag}, []interface{}{errors.New("recommendation couldn't be marked succeeded")}}
+	newCalledFunction := calledFunction{"MarkRecommendationSucceeded", []interface{}{name, etag}, []interface{}{nil, errors.New("recommendation couldn't be marked succeeded")}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return nil, errors.New("recommendation couldn't be marked succeeded")
 }
@@ -841,7 +866,9 @@ func TestFailedSucceedRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := FailedSucceedService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	recommendationCopy := recommendation
+
+	service := FailedSucceedService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := Apply(&service, &recommendation)
 	assert.Error(t, err, "recommendation couldn't be marked succeeded")
 
@@ -854,7 +881,7 @@ func TestFailedSucceedRecommendation(t *testing.T) {
 		"MarkRecommendationSucceeded",
 	}
 	expectedArguments := [][]interface{}{
-		{recommendation.Name, recommendation.Etag},
+		{recommendation.Name, recommendationCopy.Etag},
 		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
 		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver"},
 		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver", "e2-medium"},
@@ -876,19 +903,19 @@ func TestFailedSucceedRecommendation(t *testing.T) {
 
 type FailedFailedService struct {
 	GoogleService
-	calledFunctions   []calledFunction
-	getInstanceResult *compute.Instance
-	recommendation    gcloudRecommendation
+	calledFunctions []calledFunction
+	recommendation  gcloudRecommendation
 }
 
 func (s *FailedFailedService) MarkRecommendationClaimed(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{nil}}
+	s.recommendation = recommendationNewEtag(s.recommendation)
+	newCalledFunction := calledFunction{"MarkRecommendationClaimed", []interface{}{name, etag}, []interface{}{s.recommendation, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return &s.recommendation, nil
 }
 
 func (s *FailedFailedService) MarkRecommendationFailed(name string, etag string) (*gcloudRecommendation, error) {
-	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{errors.New("recommendation couldn't be marked failed")}}
+	newCalledFunction := calledFunction{"MarkRecommendationFailed", []interface{}{name, etag}, []interface{}{nil, errors.New("recommendation couldn't be marked failed")}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
 	return nil, errors.New("recommendation couldn't be marked failed")
 }
@@ -924,6 +951,8 @@ func TestFailedFailedRecommendation(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
+	recommendationCopy := recommendation
+
 	service := FailedFailedService{recommendation: recommendation}
 	err := Apply(&service, &recommendation)
 	assert.Error(t, err, "recommendation couldn't be marked failed")
@@ -933,12 +962,135 @@ func TestFailedFailedRecommendation(t *testing.T) {
 		"MarkRecommendationFailed",
 	}
 	expectedArguments := [][]interface{}{
-		{recommendation.Name, recommendation.Etag},
+		{recommendation.Name, recommendationCopy.Etag},
 		{recommendation.Name, recommendation.Etag},
 	}
 	expectedResults := [][]interface{}{
 		{recommendation, nil},
 		{nil, errors.New("recommendation couldn't be marked failed")},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	assert.Equal(t, expected, service.calledFunctions)
+}
+
+// Test checking if the correct execution of the apply function
+// works as expected
+func TestApplySucceeded(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	recommendationCopy := recommendation
+
+	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	err := Apply(&service, &recommendation)
+	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
+
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"GetInstance",
+		"StopInstance",
+		"ChangeMachineType",
+		"StartInstance",
+		"MarkRecommendationSucceeded",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendationCopy.Name, recommendationCopy.Etag},
+		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
+		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver"},
+		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver", "e2-medium"},
+		{"rightsizer-test", "us-central1-a", "sidharan-e2-with-stackdriver"},
+		{recommendationCopy.Name, newEtag(recommendationCopy.Etag)},
+	}
+	expectedResults := [][]interface{}{
+		{recommendationNewEtag(recommendationCopy), nil},
+		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}, nil},
+		{nil},
+		{nil},
+		{nil},
+		{recommendation, nil},
+	}
+
+	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	assert.Equal(t, expected, service.calledFunctions)
+}
+
+// Test checking  if apply function which encounters error
+// works as expected
+func TestApplyFailed(t *testing.T) {
+	recommendation := gcloudRecommendation{
+		Content: &gcloudContent{
+			OperationGroups: []*gcloudOperationGroup{
+				&gcloudOperationGroup{
+					Operations: []*gcloudOperation{
+						&gcloudOperation{
+							Action:       "test",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidsharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							ValueMatcher: &gcloudValueMatcher{MatchesPattern: ".*zones/us-east1-b/machineTypes/e2-standard-2"},
+						},
+						&gcloudOperation{
+							Action:       "replace",
+							Path:         "/machineType",
+							Resource:     "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/instances/sidharan-e2-with-stackdriver",
+							ResourceType: "compute.googleapis.com/Instance",
+							Value:        "zones/us-central1-a/machineTypes/e2-medium",
+						},
+					},
+				},
+			},
+		},
+		Etag:      "\"40204a1000e5befe\"",
+		Name:      "projects/323016592286/locations/us-central1-a/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/5df355d9-2f50-4567-a909-bcfcebcf7d66",
+		StateInfo: &gcloudStateInfo{State: "Active"},
+	}
+
+	recommendationCopy := recommendation
+
+	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}}
+	err := Apply(&service, &recommendation)
+	assert.Error(t, err, assert.Error(t, err, "machine type is not as expected"))
+
+	expectedFunctions := []string{
+		"MarkRecommendationClaimed",
+		"GetInstance",
+		"MarkRecommendationFailed",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendationCopy.Name, recommendationCopy.Etag},
+		{"rightsizer-test", "us-central1-a", "sidsharan-e2-with-stackdriver"},
+		{recommendationCopy.Name, newEtag(recommendationCopy.Etag)},
+	}
+	expectedResults := [][]interface{}{
+		{recommendationNewEtag(recommendationCopy), nil},
+		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}, nil},
+		{recommendation, nil},
 	}
 
 	expected, _ := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
