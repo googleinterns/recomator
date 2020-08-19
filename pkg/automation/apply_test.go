@@ -424,8 +424,6 @@ func TestReplaceRecommendation(t *testing.T) {
 	assert.Equal(t, expected, service.calledFunctions)
 }
 
-// TODO correctly applied recommendation and failed recommendation
-
 // Checks, that the attempt to apply a not active recommendation
 // results in the expected error.
 func TestNotActiveRecommendation(t *testing.T) {

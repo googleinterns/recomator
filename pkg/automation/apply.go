@@ -44,14 +44,7 @@ func DoOperation(service GoogleService, operation *gcloudOperation) error {
 		if operation.ResourceType != "compute.googleapis.com/Instance" {
 			return errors.New(operationNotSupportedMessage)
 		}
-		switch operation.Path {
-		case "/machineType":
-			return testMachineType(service, operation)
-		case "/status":
-			return testStatus(service, operation)
-		default:
-			return errors.New(operationNotSupportedMessage)
-		}
+		return testInstanceField(service, operation)
 	case "replace":
 		if operation.ResourceType != "compute.googleapis.com/Instance" {
 			return errors.New(operationNotSupportedMessage)

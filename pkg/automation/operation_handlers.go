@@ -18,10 +18,10 @@ type valueAddSnapshot struct {
 
 type gcloudOperation = recommender.GoogleCloudRecommenderV1Operation
 
-// Assumes, that the operation's action is test and path is /machineType.
-// Tests if the machine type is equal to operation's value, or matches the
-// operation's value matcher.
-func testMachineType(service GoogleService, operation *gcloudOperation) error {
+// Assumes that the operation action is test.
+// Tests if the field given by operation.Path is equal to operation's value,
+// or matches the operation's value matcher.
+func testInstanceField(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
 	project, errProject := extractFromURL(path, projectParam)
@@ -32,39 +32,23 @@ func testMachineType(service GoogleService, operation *gcloudOperation) error {
 		return err
 	}
 
-	result, err := TestMachineType(service, project, zone, instance, operation.Value, operation.ValueMatcher)
+	var result bool
+
+	switch operation.Path {
+	case "/machineType":
+		result, err = TestMachineType(service, project, zone, instance, operation.Value, operation.ValueMatcher)
+	case "/status":
+		result, err = TestStatus(service, project, zone, instance, operation.Value, operation.ValueMatcher)
+	default:
+		return errors.New(operationNotSupportedMessage)
+	}
+
 	if err != nil {
 		return err
 	}
 
 	if result == false {
 		return errors.New("machine type is not as expected")
-	}
-
-	return nil
-}
-
-// Assumes, that the operation's action is test and path is /status.
-// Tests if the status is equal to operation's value, or matches the
-// operation's value matcher.
-func testStatus(service GoogleService, operation *gcloudOperation) error {
-	path := operation.Resource
-
-	project, errProject := extractFromURL(path, projectParam)
-	zone, errZone := extractFromURL(path, zoneParam)
-	instance, errInstance := extractFromURL(path, instanceParam)
-	err := chooseNotNil(errProject, errZone, errInstance)
-	if err != nil {
-		return err
-	}
-
-	result, err := TestStatus(service, project, zone, instance, operation.Value, operation.ValueMatcher)
-	if err != nil {
-		return err
-	}
-
-	if result == false {
-		return errors.New("status of instance is not as expected")
 	}
 
 	return nil
