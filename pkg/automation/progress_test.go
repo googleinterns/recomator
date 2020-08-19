@@ -54,8 +54,8 @@ func TestGetProgress(t *testing.T) {
 }
 
 func TestSubSubtasks(t *testing.T) {
-	var task Task
 	for numSubtasks := 2; numSubtasks <= 5; numSubtasks++ {
+		var task Task
 		task.SetNumberOfSubtasks(numSubtasks)
 
 		subtask := task.GetNextSubtask()
