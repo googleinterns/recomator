@@ -81,12 +81,12 @@ func TestThreadsTask(t *testing.T) {
 			var task Task
 			task.SetNumberOfSubtasks(numSubtasks)
 			ch := make(chan bool)
-			var tasks int32
+			var subtasksDone int32
 			for i := 0; i < numGoroutines; i++ {
 				go func() {
 					for task.GetNextSubtask() != nil {
 						task.IncrementDone()
-						atomic.AddInt32(&tasks, 1)
+						atomic.AddInt32(&subtasksDone, 1)
 					}
 					ch <- true
 				}()
@@ -97,7 +97,7 @@ func TestThreadsTask(t *testing.T) {
 			task.SetAllDone()
 			done, all := task.GetProgress()
 			assert.True(t, done == all, "Task should be finished")
-			assert.Equal(t, int32(numSubtasks), tasks, "Wrong number of done subtasks")
+			assert.Equal(t, int32(numSubtasks), subtasksDone, "Wrong number of done subtasks")
 		}
 	}
 }

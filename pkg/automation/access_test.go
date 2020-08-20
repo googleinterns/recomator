@@ -181,8 +181,12 @@ func TestListRequirements(t *testing.T) {
 					}
 				}
 				assert.ElementsMatch(t, projects, actualProjects, "Should contain the same projects")
+
 				done, all := task.GetProgress()
 				assert.True(t, done == all, "ListRequirements should be done now")
+				task.mutex.Lock()
+				assert.Equal(t, task.subtasksDone, len(task.subtasks), "All subtasks should be done")
+				task.mutex.Unlock()
 			}
 		}
 	}

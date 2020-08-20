@@ -82,6 +82,9 @@ func TestListRecommendations(t *testing.T) {
 
 			done, all := task.GetProgress()
 			assert.True(t, done == all, "List recommendations task should be done already")
+			task.mutex.Lock()
+			assert.Equal(t, len(task.subtasks), task.subtasksDone, "All subtasks should be done")
+			task.mutex.Unlock()
 		}
 	}
 }
@@ -322,6 +325,9 @@ func TestListAllProjectsRecommendations(t *testing.T) {
 				if assert.NoError(t, err) {
 					done, all := task.GetProgress()
 					assert.True(t, done == all, "Task List all recommendations should be finished already")
+					task.mutex.Lock()
+					assert.Equal(t, task.subtasksDone, len(task.subtasks), "All subtasks should be done")
+					task.mutex.Unlock()
 
 					queries := makeProjectsQueries(okProjects)
 					assert.Equal(t, len(queries), mock.numberOfListRecommendationsCalls, "List recommendations called wrong number of times")

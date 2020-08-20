@@ -166,8 +166,8 @@ func ListRecommendations(service GoogleService, project string, numConcurrentCal
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
-			for q := range queries {
-				recs, err := service.ListRecommendations(project, q.location, q.recommenderID)
+			for query := range queries {
+				recs, err := service.ListRecommendations(project, query.location, query.recommenderID)
 				results <- recommendationsResult{recs, err}
 				task.IncrementDone()
 			}
