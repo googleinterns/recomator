@@ -2,6 +2,7 @@ package automation
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -19,8 +20,10 @@ type valueAddSnapshot struct {
 type gcloudOperation = recommender.GoogleCloudRecommenderV1Operation
 
 // Assumes that the operation action is test.
-// Tests if the field given by operation.Path is equal to operation's value,
-// or matches the operation's value matcher.
+// According to Recommender API, in a test operation, either value or valueMatcher is specified.
+// The value specified by the path field in the operation struct must match value or valueMatcher,
+// depending on which one is defined. More can be read here:
+// https://cloud.google.com/recommender/docs/reference/rest/v1/projects.locations.recommenders.recommendations#operation
 func testInstanceField(service GoogleService, operation *gcloudOperation) error {
 	path := operation.Resource
 
@@ -32,13 +35,21 @@ func testInstanceField(service GoogleService, operation *gcloudOperation) error 
 		return err
 	}
 
+	machineInstance, err := service.GetInstance(project, zone, instance)
+	if err != nil {
+		return err
+	}
+
 	var result bool
+	var field string
 
 	switch operation.Path {
 	case "/machineType":
-		result, err = TestMachineType(service, project, zone, instance, operation.Value, operation.ValueMatcher)
+		field = "machine type"
+		result, err = testMatching(machineInstance.MachineType, operation.Value, operation.ValueMatcher)
 	case "/status":
-		result, err = TestStatus(service, project, zone, instance, operation.Value, operation.ValueMatcher)
+		field = "status"
+		result, err = testMatching(machineInstance.Status, operation.Value, operation.ValueMatcher)
 	default:
 		return errors.New(operationNotSupportedMessage)
 	}
@@ -48,7 +59,7 @@ func testInstanceField(service GoogleService, operation *gcloudOperation) error 
 	}
 
 	if result == false {
-		return errors.New("machine type is not as expected")
+		return fmt.Errorf("%s is not as expected", field)
 	}
 
 	return nil

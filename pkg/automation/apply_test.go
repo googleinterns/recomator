@@ -123,7 +123,7 @@ func TestTestMachineTypeOperation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/n1-standard-4"}}
 	err := DoOperation(&service, &operation)
-	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
+	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"GetInstance"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-east1-b", "alicja-test"}}
@@ -145,7 +145,7 @@ func TestTestStatusOperation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := DoOperation(&service, &operation)
-	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
+	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"GetInstance"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
@@ -167,7 +167,7 @@ func TestReplaceMachineTypeOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
+	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"StopInstance", "ChangeMachineType", "StartInstance"}
 	expectedArguments := [][]interface{}{
@@ -193,7 +193,7 @@ func TestReplaceStatusOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
+	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"StopInstance"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"}}
@@ -214,7 +214,7 @@ func TestAddSnapshotOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
+	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"CreateSnapshot"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "europe-west1-d", "vertical-scaling-krzysztofk-wordpress", ""}}
@@ -235,7 +235,7 @@ func TestRemoveDiskOperation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.NoErrorf(t, err, "DoOperation shouldn't return an error")
+	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"DeleteDisk"}
 	expectedArguments := [][]interface{}{{"rightsizer-test", "europe-west1-d", "vertical-scaling-krzysztofk-wordpress"}}
@@ -257,7 +257,7 @@ func TestResourceWithoutNecessaryParams(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperation(&service, &operation)
-	assert.Error(t, err, fmt.Sprintf("url %s does not contain the parameter %s", operation.Resource, projectParam))
+	assert.EqualError(t, err, fmt.Sprintf("url %s does not contain the parameter %s", operation.Resource, projectParam))
 	var nilCalledFunction []calledFunction = nil
 
 	assert.Equal(t, nilCalledFunction, service.calledFunctions)
@@ -296,7 +296,7 @@ func TestStopRecommendation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{Status: "RUNNING"}}
 	err := DoOperations(&service, &recommendation)
-	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
+	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"GetInstance",
@@ -347,7 +347,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperations(&service, &recommendation)
-	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
+	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"CreateSnapshot",
@@ -399,7 +399,7 @@ func TestReplaceRecommendation(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
-	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
+	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"GetInstance",
@@ -457,7 +457,7 @@ func TestNotActiveRecommendation(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := Apply(&service, &recommendation)
-	assert.Error(t, err, "to apply a recommendation, its status must be active")
+	assert.EqualError(t, err, "to apply a recommendation, its status must be active")
 	var nilCalledFunction []calledFunction = nil
 
 	assert.Equal(t, nilCalledFunction, service.calledFunctions)
@@ -496,7 +496,7 @@ func TestUnsupportedAction(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperations(&service, &recommendation)
-	assert.Error(t, err, operationNotSupportedMessage)
+	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
 
 	assert.Equal(t, nilCalledFunction, service.calledFunctions)
@@ -535,7 +535,7 @@ func TestUnsupportedPath(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
-	assert.Error(t, err, operationNotSupportedMessage)
+	assert.EqualError(t, err, operationNotSupportedMessage)
 	expectedFunctions := []string{
 		"GetInstance",
 	}
@@ -583,7 +583,7 @@ func TestUnsupportedResourceType(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := DoOperations(&service, &recommendation)
-	assert.Error(t, err, operationNotSupportedMessage)
+	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunctions []calledFunction = nil
 
 	assert.Equal(t, nilCalledFunctions, service.calledFunctions)
@@ -620,9 +620,9 @@ func TestUnsupportedReplaceValue(t *testing.T) {
 		StateInfo: &gcloudStateInfo{State: "Active"},
 	}
 
-	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
+	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2", Status: "RUNNING"}}
 	err := DoOperations(&service, &recommendation)
-	assert.Error(t, err, operationNotSupportedMessage)
+	assert.EqualError(t, err, operationNotSupportedMessage)
 	expectedFunctions := []string{
 		"GetInstance",
 	}
@@ -630,7 +630,7 @@ func TestUnsupportedReplaceValue(t *testing.T) {
 		{"rightsizer-test", "us-central1-a", "vkovalova-instance-memory-1"},
 	}
 	expectedResults := [][]interface{}{
-		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}, nil},
+		{&compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2", Status: "RUNNING"}, nil},
 	}
 
 	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
@@ -675,7 +675,7 @@ func TestUnsupportedAddResourceType(t *testing.T) {
 
 	service := ApplyMockService{}
 	err := DoOperations(&service, &recommendation)
-	assert.Error(t, err, operationNotSupportedMessage)
+	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
 
 	assert.Equal(t, nilCalledFunction, service.calledFunctions)
@@ -714,7 +714,7 @@ func TestFailedTest(t *testing.T) {
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "@#$%!E"}}
 	err := DoOperations(&service, &recommendation)
-	assert.Error(t, err, "machine type is not as expected")
+	assert.EqualError(t, err, "machine type is not as expected")
 	expectedFunctions := []string{
 		"GetInstance",
 	}
@@ -764,7 +764,7 @@ func TestApplyFailed(t *testing.T) {
 
 	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}}
 	err := Apply(&service, &recommendation)
-	assert.Error(t, err, assert.Error(t, err, "machine type is not as expected"))
+	assert.EqualError(t, err, "machine type is not as expected")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -831,7 +831,7 @@ func TestFailedClaimRecommendation(t *testing.T) {
 
 	service := FailedClaimService{}
 	err := Apply(&service, &recommendation)
-	assert.Error(t, err, "recommendation couldn't be marked claimed")
+	assert.EqualError(t, err, "recommendation couldn't be marked claimed")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -926,7 +926,7 @@ func TestFailedSucceedRecommendation(t *testing.T) {
 
 	service := FailedSucceedService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := Apply(&service, &recommendation)
-	assert.Error(t, err, "recommendation couldn't be marked succeeded")
+	assert.EqualError(t, err, "recommendation couldn't be marked succeeded")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -1011,7 +1011,7 @@ func TestFailedFailedRecommendation(t *testing.T) {
 
 	service := FailedFailedService{recommendation: recommendation}
 	err := Apply(&service, &recommendation)
-	assert.Error(t, err, "recommendation couldn't be marked failed")
+	assert.EqualError(t, err, "recommendation couldn't be marked failed")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
@@ -1065,7 +1065,7 @@ func TestApplySucceeded(t *testing.T) {
 
 	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
 	err := Apply(&service, &recommendation)
-	assert.NoErrorf(t, err, "DoOperations shouldn't return an error")
+	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",

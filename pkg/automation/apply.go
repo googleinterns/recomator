@@ -73,16 +73,13 @@ func DoOperation(service GoogleService, operation *gcloudOperation) error {
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Disk":
 			return removeDisk(service, operation)
-		default:
-			return errors.New(operationNotSupportedMessage)
 		}
-
-	default:
-		return errors.New(operationNotSupportedMessage)
 	}
+
+	return errors.New(operationNotSupportedMessage)
 }
 
-// DoOperations calls DoOperatiojn for each operation specified in the recommendation
+// DoOperations calls DoOperation for each operation specified in the recommendation
 func DoOperations(service GoogleService, recommendation *gcloudRecommendation) error {
 	for _, operationGroup := range recommendation.Content.OperationGroups {
 		for _, operation := range operationGroup.Operations {
