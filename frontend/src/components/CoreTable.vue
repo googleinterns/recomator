@@ -24,6 +24,9 @@ limitations under the License. -->
     :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
+    <template v-slot:item.data-table-select="{ item }" >
+      <v-simple-checkbox v-on:input="select(item, isSelected(item))" :value="isSelected(item)&&isActiveRecommendation(item)" :disabled="!isActiveRecommendation(item)"/>
+    </template>
 
     <template v-slot:body.prepend="{ isMobile }">
       <FiltersRow :isMobile="isMobile" />
@@ -64,7 +67,11 @@ import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
 import { IRootStoreState } from "../store/root";
-import { RecommendationExtra } from "../store/model";
+import {
+  RecommendationExtra,
+  throwIfInvalidStatus,
+  getInternalStatusMapping,
+} from "../store/model";
 
 @Component({
   components: {
@@ -74,8 +81,8 @@ import { RecommendationExtra } from "../store/model";
     TypeCell,
     DescriptionCell,
     SavingsCostCell,
-    ApplyAndStatusCell
-  }
+    ApplyAndStatusCell,
+  },
 })
 export default class CoreTable extends Vue {
   // headers ending with "Col" have values that are bound to corresponding properties
@@ -84,33 +91,52 @@ export default class CoreTable extends Vue {
     {
       text: "Resource",
       value: "resourceCol",
-      sortable: true
+      sortable: true,
     },
     { text: "Project", value: "projectCol", sortable: true },
     {
       text: "Type",
       value: "typeCol",
-      sortable: true
+      sortable: true,
     },
     {
       text: "Description",
       value: "description",
-      sortable: false
+      sortable: false,
     },
     {
       text: "Savings/cost per week",
       value: "costCol",
-      sortable: true
+      sortable: true,
     },
-    { text: "", value: "statusCol", sortable: false }
+    { text: "", value: "statusCol", sortable: false },
   ];
 
+  selectedArray = new Array<RecommendationExtra>();
+
+  isActiveRecommendation(item: RecommendationExtra) {
+    return item.statusCol === getInternalStatusMapping("ACTIVE");
+  }
+
   get selectedRows(): RecommendationExtra[] {
-    return (this.$store.state as IRootStoreState).coreTableStore!.selected;
+    return this.selectedArray;
   }
 
   set selectedRows(selected: RecommendationExtra[]) {
-    this.$store.commit("coreTableStore/setSelected", selected);
+    this.selectedArray = selected;
+    this.$store.commit("coreTableStore/setSelected", selected.filter(elt => this.isActiveRecommendation(elt)));
+  }
+
+  isSelected(item: RecommendationExtra): boolean {
+    return this.selectedRows.includes(item);
+  }
+
+  select(item: RecommendationExtra, value: boolean) {
+    if (value) {
+      this.selectedRows = this.selectedRows.filter((elt) => elt != item);
+    } else {
+      this.selectedRows.push(item);
+    }
   }
 }
 </script>
