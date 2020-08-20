@@ -19,7 +19,8 @@ import {
   statusFilterAccepted,
   projectFilterAccepted,
   typeFilterAccepted,
-  resourceFilterAccepted
+  resourceFilterAccepted,
+  costFilterAccepted
 } from "@/store/core_table_filter_utils";
 
 import {
@@ -40,21 +41,23 @@ describe("Filtering aggregate (resource name, type, status...)", () => {
     ) as boolean;
 
   test("project filter", () => {
-    let isOn = [true, true, true, true, true];
+    const numberOfFilters = 6;
+    let isOn = new Array(numberOfFilters).fill(true);
     (descriptionFilterAccepted as any).mockImplementation(() => isOn[0]);
     (projectFilterAccepted as any).mockImplementation(() => isOn[1]);
     (typeFilterAccepted as any).mockImplementation(() => isOn[2]);
     (resourceFilterAccepted as any).mockImplementation(() => isOn[3]);
     (statusFilterAccepted as any).mockImplementation(() => isOn[4]);
+    (costFilterAccepted as any).mockImplementation(() => isOn[5]);
 
-    for (let i = 0; i < isOn.length; i++) {
+    for (let i = 0; i < numberOfFilters; i++) {
       expect(passesAll()).toBeTruthy();
       isOn[i] = false;
       expect(passesAll()).toBeFalsy();
       isOn[i] = true;
     }
 
-    isOn = [false, false, false, false];
+    isOn = new Array(numberOfFilters).fill(false);
     expect(passesAll()).toBeFalsy();
   });
 });
