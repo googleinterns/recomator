@@ -20,12 +20,14 @@ const sampleRawRecommendation: RecommendationRaw = {
       {
         operations: [
           {
+            action: "test",
             path: "/machineType",
             resource:
               "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
             resourceType: "compute.googleapis.com/Instance"
           },
           {
+            action: "replace",
             path: "/machineType",
             resource:
               "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",

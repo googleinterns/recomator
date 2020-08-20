@@ -12,17 +12,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <v-banner single-line>
-    <v-icon color="primary">
-      mdi-lightbulb-on-outline
-    </v-icon>
-    Hint: You can group recommendations by project or type by clicking "group"
-    next to the column.
-  </v-banner>
+  <v-text-field
+    v-model="descriptionSearchText"
+    append-icon="mdi-magnify"
+    label="Filter descriptions"
+    single-line
+    hide-details
+  />
 </template>
+
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { IRootStoreState } from "../../store/root";
 
 @Component
-export default class GroupingHint extends Vue {}
+export default class DescriptionFilter extends Vue {
+  get descriptionSearchText(): string {
+    return (this.$store.state as IRootStoreState).coreTableStore!
+      .descriptionSearchText;
+  }
+
+  set descriptionSearchText(text: string) {
+    this.$store.commit("coreTableStore/setDescriptionSearchText", text);
+  }
+}
 </script>
