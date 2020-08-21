@@ -15,8 +15,6 @@ limitations under the License. */
 import {
   RecommendationRaw,
   RecommendationExtra,
-  getRecommendationProject,
-  getRecommendationType,
   getInternalStatusMapping
 } from "@/store/model";
 import { delay, getServerAddress } from "./utils";
@@ -286,19 +284,15 @@ interface ICheckStatusResponse {
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
   allProjects(state): string[] {
-    const projects = state.recommendations.map(r =>
-      getRecommendationProject(r)
-    );
+    const projects = state.recommendations.map(r => r.projectCol);
     return Array.from(new Set(projects));
   },
   allTypes(state): string[] {
-    const types = state.recommendations.map(r => getRecommendationType(r));
+    const types = state.recommendations.map(r => r.typeCol);
     return Array.from(new Set(types));
   },
   allStatuses(state): string[] {
-    const statuses = state.recommendations.map(r =>
-      getInternalStatusMapping(r.stateInfo.state)
-    );
+    const statuses = state.recommendations.map(r => r.statusCol);
     return Array.from(new Set(statuses));
   }
 };
