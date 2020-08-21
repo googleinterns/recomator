@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/google/uuid"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -92,7 +93,10 @@ func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
 	}
 	disksService := compute.NewDisksService(s.computeService)
 	snapshot := &compute.Snapshot{Name: name}
-	_, err := disksService.CreateSnapshot(project, zone, disk, snapshot).Do()
+	requestID := uuid.New().String()
+	err := AwaitUntilCompletion(func() (*compute.Operation, error) {
+		return disksService.CreateSnapshot(project, zone, disk, snapshot).RequestId(requestID).Do()
+	})
 	return err
 }
 
@@ -100,6 +104,9 @@ func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
 // Requires compute.disks.delete permission.
 func (s *googleService) DeleteDisk(project, zone, disk string) error {
 	disksService := compute.NewDisksService(s.computeService)
-	_, err := disksService.Delete(project, zone, disk).Do()
+	requestID := uuid.New().String()
+	err := AwaitUntilCompletion(func() (*compute.Operation, error) {
+		return disksService.Delete(project, zone, disk).RequestId(requestID).Do()
+	})
 	return err
 }

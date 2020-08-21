@@ -19,6 +19,7 @@ package automation
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -27,7 +28,11 @@ func (s *googleService) ChangeMachineType(project string, zone string, instance 
 	machineType = fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
 	request := &compute.InstancesSetMachineTypeRequest{MachineType: machineType}
 	instancesService := compute.NewInstancesService(s.computeService)
-	_, err := instancesService.SetMachineType(project, zone, instance, request).Do()
+
+	requestID := uuid.New().String()
+	err := AwaitUntilCompletion(func() (*compute.Operation, error) {
+		return instancesService.SetMachineType(project, zone, instance, request).RequestId(requestID).Do()
+	})
 	return err
 }
 
@@ -40,6 +45,9 @@ func (s *googleService) GetInstance(project string, zone string, instance string
 // StopInstance stops instance using instances.stop method
 func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
-	_, err := instancesService.Stop(project, zone, instance).Do()
+	requestID := uuid.New().String()
+	err := AwaitUntilCompletion(func() (*compute.Operation, error) {
+		return instancesService.Stop(project, zone, instance).RequestId(requestID).Do()
+	})
 	return err
 }
