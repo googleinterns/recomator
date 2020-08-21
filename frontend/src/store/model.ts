@@ -67,17 +67,19 @@ export interface Operation {
   resource: string;
   resourceType: string;
   path: string;
-  // This is a part of a union field, which other version
-  // (ValueMatcher) is not currently in use
+  // This is a part of a union field, which other type ValueMatcher is not currently in use
+  // This might well fail to parse for non-standard (not seen in recommendations now) operations
   value?: string | AddOperationValue;
 }
 
+// Operation value used for snapshots
 export interface AddOperationValue {
   name: string;
   source_disk: string;
   storage_locations: string[];
 }
 
+// Checks if the operation looks like the first operation in a snapshot recommendation
 function isAddOperationValue(
   value: string | AddOperationValue | undefined
 ): value is AddOperationValue {
@@ -122,41 +124,43 @@ function isAddOperationValue(
 }
 
 // -> "add"
-export function getExampleRecommendationAction(
+export function getRecommendationFirstAction(
   recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].action;
 }
 
 // -> "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test"
-export function getExampleRecommendationResource(
+export function getRecommendationFirstResource(
   recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
 // -> "compute.googleapis.com/Snapshot"
-export function getExampleRecommendationResourceType(
+export function getRecommendationFirstResourceType(
   recommendation: RecommendationRaw
 ): string {
   return recommendation.content.operationGroups[0].operations[0].resourceType;
 }
 
-export function getExampleRecommendationValue(
+export function getRecommendationFirstValue(
   recommendation: RecommendationRaw
 ): string | AddOperationValue | undefined {
   return recommendation.content.operationGroups[0].operations[0].value;
 }
 
+// Returns a name to identify the related resource by, regardless of recommendation type.
 // -> "timus-test-for-probers-n2-std-4-idling"
+// -> "shcheshnyak-disk"
 export function getRecommendationResourceShortName(
   recommendation: RecommendationRaw
 ): string {
-  const action = getExampleRecommendationAction(recommendation);
+  const action = getRecommendationFirstAction(recommendation);
 
   switch (action) {
     case "add": {
-      const value = getExampleRecommendationValue(recommendation);
+      const value = getRecommendationFirstValue(recommendation);
       if (isAddOperationValue(value)) {
         return extractFromResource("disks", value.source_disk);
       }
@@ -164,15 +168,15 @@ export function getRecommendationResourceShortName(
       throw "the given value parameter doesn't match the action";
     }
     case "remove": {
-      const resource = getExampleRecommendationResource(recommendation);
+      const resource = getRecommendationFirstResource(recommendation);
       return extractFromResource("disks", resource);
     }
     case "replace": {
-      const resource = getExampleRecommendationResource(recommendation);
+      const resource = getRecommendationFirstResource(recommendation);
       return extractFromResource("instances", resource);
     }
     case "test": {
-      const resource = getExampleRecommendationResource(recommendation);
+      const resource = getRecommendationFirstResource(recommendation);
       return extractFromResource("instances", resource);
     }
     default:
@@ -184,13 +188,11 @@ export function getRecommendationResourceShortName(
 export function getRecommendationProject(
   recommendation: RecommendationRaw
 ): string {
-  const resource = getExampleRecommendationResource(recommendation);
+  const resource = getRecommendationFirstResource(recommendation);
   return extractFromResource("projects", resource);
 }
 
-// TODO: remove ignoring Eslint, once these methods are actually used somewhere
-
-// Doesn't do much, but I think it is likely we will decide to show more clever descriptions later
+// -> "Save cost by changing machine type from n1-standard-4 to custom-2-5120."
 export function getRecomendationDescription(
   recommendation: RecommendationRaw
 ): string {
@@ -198,7 +200,6 @@ export function getRecomendationDescription(
 }
 
 // "3.5" ($ per week)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRecommendationCostPerWeek(
   recommendation: RecommendationRaw
 ): number {
@@ -267,9 +268,9 @@ export class RecommendationExtra implements RecommendationRaw {
   readonly typeCol: string;
 
   // These can be modified:
-  statusCol: string; // follows the current recommendation status
-  errorHeader?: string;
-  errorDescription?: string;
+  statusCol: string; // follows the current recommendation status, unlike stateInfo
+  errorHeader?: string; // if apply fails,
+  errorDescription?: string; // error details are stored here
 
   constructor(rec: RecommendationRaw) {
     this.name = rec.name;
