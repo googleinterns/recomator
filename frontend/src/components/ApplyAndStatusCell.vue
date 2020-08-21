@@ -26,6 +26,7 @@ limitations under the License. -->
       >Apply</v-btn
     >
 
+    <!-- Success chip -->
     <v-btn
       rounded
       small
@@ -38,6 +39,7 @@ limitations under the License. -->
       {{ rowRecommendation.statusCol }}
     </v-btn>
 
+    <!-- Error dialog -->
     <v-dialog
       v-if="checkStatus('FAILED')"
       v-model="errorDialogOpened"
@@ -91,7 +93,8 @@ const ApplyAndStatusCellProps = Vue.extend({
 export default class ApplyAndStatusCell extends ApplyAndStatusCellProps {
   errorDialogOpened = false;
 
-  // we don't want a typo in status name to go unnoticed
+  // confirms status name,
+  //  we don't want a typo in status name to go unnoticed
   checkStatus(statusName: string) {
     throwIfInvalidStatus(statusName);
     return (
