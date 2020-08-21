@@ -25,10 +25,12 @@ limitations under the License. -->
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
 
+    <!-- The row with filters just above the data -->
     <template v-slot:body.prepend="{ isMobile }">
       <FiltersRow :isMobile="isMobile" />
     </template>
 
+    <!-- Mappings of cell implementations to column slots: -->
     <template v-slot:item.resourceCol="{ item }">
       <ResourceCell :rowRecommendation="item" />
     </template>
@@ -78,7 +80,7 @@ import { RecommendationExtra } from "../store/model";
   }
 })
 export default class CoreTable extends Vue {
-  // headers ending with "Col" have values that are bound to corresponding properties
+  // headers ending with "Col" have values that are bound to corresponding columns
   //  for example, Resource will take RecommendationExtra.resourceCol for sorting
   headers = [
     {
@@ -105,6 +107,7 @@ export default class CoreTable extends Vue {
     { text: "", value: "statusCol", sortable: false }
   ];
 
+  // Sync selected with the store
   get selectedRows(): RecommendationExtra[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;
   }
