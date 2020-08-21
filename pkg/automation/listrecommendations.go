@@ -87,11 +87,9 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 	return regions, nil
 }
 
-// ListRecommendations returns the list of recommendations for a Cloud project.
-// Requires the recommender.*.list IAM permission for the specified recommender.
-// numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
-// non-positive values are ignored, instead the default value is used.
-func ListRecommendations(service GoogleService, project, recommenderID string, numConcurrentCalls int) ([]*gcloudRecommendation, error) {
+// ListLocations return the list of all locations per project(zones and regions).
+// Exactly one of returned values will be non-nil.
+func ListLocations(service GoogleService, project string) ([]string, error) {
 	zones, err := service.ListZonesNames(project)
 	if err != nil {
 		return nil, err
@@ -99,11 +97,55 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 
 	regions, err := service.ListRegionsNames(project)
 	if err != nil {
-		return []*gcloudRecommendation{}, err
+		return nil, err
 	}
 
 	locations := append(zones, regions...)
-	numberOfLocations := len(locations)
+	return locations, nil
+}
+
+var googleRecommenders = []string{
+	"google.compute.disk.IdleResourceRecommender",
+	"google.compute.instance.IdleResourceRecommender",
+	"google.compute.instance.MachineTypeRecommender",
+}
+
+type recommendationsResult struct {
+	recommendations []*gcloudRecommendation
+	err             error
+}
+
+// concatResults receives numberOfResults values from results channel.
+// Returns concatenated slice of all recommendations. If one of results contains error, returns error.
+// At most one of returned values will be non-nil.
+func concatResults(results <-chan recommendationsResult, numberOfResults int) ([]*gcloudRecommendation, error) {
+	var err error
+	var recommendations []*gcloudRecommendation
+	for i := 0; i < numberOfResults; i++ {
+		result := <-results
+		if result.err != nil {
+			err = result.err
+		} else {
+			recommendations = append(recommendations, result.recommendations...)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return recommendations, nil
+}
+
+// ListRecommendations returns the list of recommendations for a Cloud project from googleRecommenders.
+// Requires the recommender.*.list IAM permissions for the recommenders.
+// numConcurrentCalls specifies the maximum number of concurrent calls to ListRecommendations method,
+// non-positive values are ignored, instead the default value is used.
+// task structure tracks the progress of the function.
+func ListRecommendations(service GoogleService, project string, numConcurrentCalls int, task *Task) ([]*gcloudRecommendation, error) {
+	locations, err := ListLocations(service, project)
+	if err != nil {
+		return nil, err
+	}
 
 	numWorkers := numConcurrentCalls
 	const defaultNumWorkers = 16
@@ -111,41 +153,105 @@ func ListRecommendations(service GoogleService, project, recommenderID string, n
 		numWorkers = defaultNumWorkers
 	}
 
-	type result struct {
-		recommendations []*gcloudRecommendation
-		err             error
+	type query struct {
+		location      string
+		recommenderID string
 	}
 
-	results := make(chan result, numberOfLocations)
-  	locationsJobs := make(chan string, numberOfLocations)
+	numberOfQueries := len(locations) * len(googleRecommenders)
+	task.SetNumberOfSubtasks(numberOfQueries)
+
+	results := make(chan recommendationsResult, numberOfQueries)
+	queries := make(chan query, numberOfQueries)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
-			for location := range locationsJobs {
-				recs, err := service.ListRecommendations(project, location, recommenderID)
-				results <- result{recs, err}
+			for query := range queries {
+				recs, err := service.ListRecommendations(project, query.location, query.recommenderID)
+				results <- recommendationsResult{recs, err}
+				task.IncrementDone()
 			}
 		}()
 	}
 
-	for _, location := range locations {
-		locationsJobs <- location
-	}
-
-	close(locationsJobs)
-
-	var recommendations []*gcloudRecommendation
-	err = nil
-	for range locations {
-		locationResult := <-results
-		if locationResult.err != nil {
-			err = locationResult.err
-		} else {
-			recommendations = append(recommendations, locationResult.recommendations...)
+	for _, recommenderID := range googleRecommenders {
+		for _, location := range locations {
+			queries <- query{location: location, recommenderID: recommenderID}
 		}
 	}
+
+	close(queries)
+
+	recommendations, err := concatResults(results, numberOfQueries)
+	if err == nil {
+		task.SetAllDone()
+	}
+	return recommendations, err
+}
+
+// ListResult contains information about listing recommendations for all projects.
+// If user doesn't have enough permissions for the project, the requirements, including failed ones, are listed in failedProjects.
+// Otherwise, recommendations for the project are appended to recommendations.
+type ListResult struct {
+	recommendations []*gcloudRecommendation
+	failedProjects  []*ProjectRequirements
+}
+
+func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsRequirements []*ProjectRequirements, numConcurrentCalls int, task *Task) (*ListResult, error) {
+	task.SetNumberOfSubtasks(len(projectsRequirements))
+
+	var listResult ListResult
+	for _, projectRequirements := range projectsRequirements {
+		ok := true
+		for _, req := range projectRequirements.Requirements {
+			if req.Status == RequirementFailed {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			newRecs, err := ListRecommendations(service, projectRequirements.Project, numConcurrentCalls, task.GetNextSubtask())
+			if err != nil {
+				return nil, err
+			}
+			listResult.recommendations = append(listResult.recommendations, newRecs...)
+		} else {
+			listResult.failedProjects = append(listResult.failedProjects, projectRequirements)
+		}
+
+		task.IncrementDone()
+	}
+
+	task.SetAllDone()
+	return &listResult, nil
+}
+
+// ListAllProjectsRecommendations gets all projects for which user has projects.get permission.
+// If the user has enough permissions to apply and list recommendations, recommendations for projects are listed.
+// Otherwise, projects requirements, including failed ones, are added to `failedProjects` to help show warnings to the user.
+// task structure tracks how many subtasks have been done already.
+func ListAllProjectsRecommendations(service GoogleService, numConcurrentCalls int, task *Task) (*ListResult, error) {
+	projects, err := service.ListProjects()
 	if err != nil {
 		return nil, err
 	}
-	return recommendations, nil
+
+	task.SetNumberOfSubtasks(2) // 2 subtasks are calls to ListRequirements and listRecommendationsIfRequirementsCompleted
+
+	projectsRequirements, err := ListRequirements(service, projects, task.GetNextSubtask())
+	if err != nil {
+		return nil, err
+	}
+
+	task.IncrementDone()
+
+	listResult, err := listRecommendationsIfRequirementsCompleted(service, projectsRequirements, numConcurrentCalls, task.GetNextSubtask())
+
+	if err != nil {
+		return nil, err
+	}
+	task.IncrementDone()
+
+	task.SetAllDone()
+	return listResult, nil
 }
