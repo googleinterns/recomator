@@ -246,6 +246,8 @@ export function throwIfInvalidStatus(statusName: string): void {
     throw `invalid status name passed: ${statusName}`;
 }
 
+// We don't want to display API status names directly
+//  For details on how this is stored, see RecommendationExtra definition above
 export function getInternalStatusMapping(statusName: string): string {
   throwIfInvalidStatus(statusName);
   return internalStatusMap[statusName];
