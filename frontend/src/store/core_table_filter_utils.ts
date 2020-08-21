@@ -16,7 +16,7 @@ limitations under the License. */
 //  they can be mocked by Jest:
 //  https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 
-import { RecommendationExtra } from "./model";
+import { RecommendationExtra } from "./recommendation_extra";
 import { ICoreTableStoreState, costCategoriesNames } from "./core_table";
 
 // case-insensitive search (searching for 'myvm' should match 'MyVm')

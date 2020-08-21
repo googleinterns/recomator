@@ -75,10 +75,13 @@ limitations under the License. -->
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
 import {
-  RecommendationExtra,
   throwIfInvalidStatus,
   getInternalStatusMapping
-} from "../store/model";
+} from "../store/utils";
+
+import {
+  RecommendationExtra
+} from "../store/recommendation_extra"
 
 const ApplyAndStatusCellProps = Vue.extend({
   props: {

@@ -29,11 +29,11 @@ import {
   costFilterAccepted
 } from "@/store/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
-import {
-  RecommendationExtra,
-  RecommendationRaw,
-  getInternalStatusMapping
-} from "@/store/model";
+import { RecommendationRaw } from "@/store/recommendation_raw";
+
+import { RecommendationExtra } from "@/store/recommendation_extra";
+
+import { getInternalStatusMapping } from "@/store/utils";
 
 describe("Core Table store", () => {
   test("Filtering results by resource with store mutations", () => {

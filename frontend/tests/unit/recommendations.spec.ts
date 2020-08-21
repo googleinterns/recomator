@@ -17,10 +17,10 @@ enableFetchMocks(); // making it possible to mock fetch in this test suite
 fetchMock.dontMock(); // not mocking fetch in every test by default
 
 import {
-  RecommendationExtra,
   getRecommendationProject,
   getRecommendationResourceShortName
-} from "@/store/model";
+} from "@/store/recommendation_raw";
+import { RecommendationExtra } from "@/store/recommendation_extra";
 import { rootStoreFactory } from "@/store/root";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 
