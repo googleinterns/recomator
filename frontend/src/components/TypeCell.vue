@@ -38,7 +38,7 @@ export default class TypeCell extends TypeCellProps {
   get recommenderSubtype(): string {
     return this.rowRecommendation.typeCol;
   }
-  
+
   // Find out which icon to show based on type
   iconName(): string {
     switch (this.recommenderSubtype) {
