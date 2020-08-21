@@ -79,7 +79,7 @@ limitations under the License. -->
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root";
-import { RecommendationExtra } from "../store/model";
+import { RecommendationExtra } from "../store/recommendation_extra";
 
 @Component
 export default class Footer extends Vue {
