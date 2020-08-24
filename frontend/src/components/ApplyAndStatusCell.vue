@@ -77,7 +77,7 @@ import { Component } from "vue-property-decorator";
 import {
   throwIfInvalidStatus,
   getInternalStatusMapping
-} from "../store/utils/misc";
+} from "../store/data_model/status_map";
 
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 

@@ -14,11 +14,8 @@ limitations under the License. */
 
 import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
-import {
-  delay,
-  getServerAddress,
-  getInternalStatusMapping
-} from "./utils/misc";
+import { delay, getServerAddress } from "./utils/misc";
+import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
 
