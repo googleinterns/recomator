@@ -58,15 +58,11 @@ func DoOperation(service GoogleService, operation *gcloudOperation) error {
 			}
 
 			return stopInstance(service, operation)
-		default:
-			return errors.New(operationNotSupportedMessage)
 		}
 	case "add":
 		switch operation.ResourceType {
 		case "compute.googleapis.com/Snapshot":
 			return addSnapshot(service, operation)
-		default:
-			return errors.New(operationNotSupportedMessage)
 		}
 
 	case "remove":
