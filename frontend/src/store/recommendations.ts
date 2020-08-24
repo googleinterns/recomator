@@ -88,21 +88,22 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained recommendations to the store
+  // - it can only be run once in the app lifetime,
+  //    as there is no way to stop status watchers atm
   async fetchRecommendations(context): Promise<void> {
+    // one fetch at a time only
     if (context.state.progress !== null) {
       return;
     }
-
+    context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
-    let response;
-    let responseJson;
-    let responseCode;
-
+    // send /recommendations requests until data received
+    let responseJson: any;
     for (;;) {
-      response = await fetch(`${SERVER_ADDRESS}/recommendations`);
+      const response = await fetch(`${SERVER_ADDRESS}/recommendations`);
       responseJson = await response.json();
-      responseCode = response.status;
+      const responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
         context.commit("setError", {
