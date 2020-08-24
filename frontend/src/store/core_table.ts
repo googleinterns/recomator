@@ -14,7 +14,7 @@ limitations under the License. */
 
 import { Module, MutationTree } from "vuex";
 import { IRootStoreState } from "./root";
-import { RecommendationExtra } from "./recommendation_extra";
+import { RecommendationExtra } from "./data_model/recommendation_extra";
 import {
   descriptionFilterAccepted,
   projectFilterAccepted,

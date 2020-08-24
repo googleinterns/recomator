@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { ProjectConfig } from "@/config";
-import { internalStatusMap } from "@/store/recommendation_extra";
+import { internalStatusMap } from "@/store/data_model/recommendation_extra";
 
 export function extractFromResource(
   property: string,

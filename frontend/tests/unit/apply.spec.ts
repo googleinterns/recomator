@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { enableFetchMocks } from "jest-fetch-mock";
-import { RecommendationExtra } from "@/store/recommendation_extra";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { getInternalStatusMapping } from "@/store/utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { rootStoreFactory } from "@/store/root";

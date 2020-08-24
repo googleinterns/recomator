@@ -12,8 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { RecommendationRaw } from "@/store/recommendation_raw";
-import { RecommendationExtra } from "@/store/recommendation_extra";
+import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { delay, getServerAddress, getInternalStatusMapping } from "./utils";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";

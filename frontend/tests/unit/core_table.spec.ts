@@ -29,9 +29,9 @@ import {
   costFilterAccepted
 } from "@/store/utils/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
-import { RecommendationRaw } from "@/store/recommendation_raw";
+import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
 
-import { RecommendationExtra } from "@/store/recommendation_extra";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 
 import { getInternalStatusMapping } from "@/store/utils";
 
