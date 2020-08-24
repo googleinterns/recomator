@@ -27,7 +27,7 @@ import {
   resourceFilterAccepted,
   descriptionFilterAccepted,
   costFilterAccepted
-} from "@/store/core_table_filter_utils";
+} from "@/store/utils/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { RecommendationRaw } from "@/store/recommendation_raw";
 

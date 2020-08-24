@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-jest.mock("@/store/core_table_filter_utils");
+jest.mock("@/store/utils/core_table_filter_utils");
 
 import {
   descriptionFilterAccepted,
@@ -21,7 +21,7 @@ import {
   typeFilterAccepted,
   resourceFilterAccepted,
   costFilterAccepted
-} from "@/store/core_table_filter_utils";
+} from "@/store/utils/core_table_filter_utils";
 
 import {
   coreTableStoreStateFactory,

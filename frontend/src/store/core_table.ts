@@ -22,7 +22,7 @@ import {
   typeFilterAccepted,
   statusFilterAccepted,
   costFilterAccepted
-} from "./core_table_filter_utils";
+} from "./utils/core_table_filter_utils";
 
 export interface ICoreTableStoreState {
   resourceNameSearchText: string;
