@@ -131,7 +131,9 @@ describe("applySingleRecommendation action", () => {
 describe("watchStatusOnce action", () => {
   let watchStatusOnce: any;
   beforeAll(() => {
-    watchStatusOnce = recommendationStoreFactory().actions!["watchStatusOnce"] as any;
+    watchStatusOnce = recommendationStoreFactory().actions![
+      "watchStatusOnce"
+    ] as any;
   });
   beforeEach(() => {
     jest.useFakeTimers(); // mocked setTimeout
@@ -140,7 +142,7 @@ describe("watchStatusOnce action", () => {
   test("-> in progress", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "IN PROGRESS" }));
     const shouldContinue = await watchStatusOnce(context, firstRec);
-    
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
     expect(shouldContinue).toBeTruthy();
   });
@@ -148,7 +150,7 @@ describe("watchStatusOnce action", () => {
   test("-> succeeded", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "SUCCEEDED" }));
     const shouldContinue = await watchStatusOnce(context, firstRec);
-    
+
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("SUCCEEDED"));
     expect(shouldContinue).toBeFalsy();
@@ -157,7 +159,7 @@ describe("watchStatusOnce action", () => {
   test("-> not applied", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "NOT APPLIED" }));
     const shouldContinue = await watchStatusOnce(context, firstRec);
-   
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Server has")).toBeTruthy();
     expect(shouldContinue).toBeFalsy();
@@ -171,7 +173,7 @@ describe("watchStatusOnce action", () => {
       })
     );
     const shouldContinue = await watchStatusOnce(context, firstRec);
-   
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Applying ")).toBeTruthy();
     expect(firstRec.errorDescription).toBe("something bad happened");
@@ -181,7 +183,7 @@ describe("watchStatusOnce action", () => {
   test("-> gibberish", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "%%%" }));
     const shouldContinue = await watchStatusOnce(context, firstRec);
-    
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Bad status(")).toBeTruthy();
     expect(shouldContinue).toBeFalsy();
