@@ -19,19 +19,15 @@ limitations under the License. -->
     :items="this.$store.getters['filteredRecommendationsWithExtras']"
     :single-select="false"
     show-select
-    v-model=selectedRows
+    v-model="selectedRows"
     v-on:pagination="pagination"
     item-key="name"
     :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
-    <template v-slot:header.data-table-select="{ }">
-      <v-simple-checkbox
-      :value="areAllSelected()"
-        v-on:input="selectAll"
-      />
+    <template v-slot:header.data-table-select="{}">
+      <v-simple-checkbox :value="areAllSelected()" v-on:input="selectAll" />
     </template>
-
 
     <template v-slot:item.data-table-select="{ item }">
       <v-simple-checkbox
@@ -41,7 +37,7 @@ limitations under the License. -->
       />
     </template>
 
-     <template v-slot:body.prepend="{ isMobile }">
+    <template v-slot:body.prepend="{ isMobile }">
       <FiltersRow :isMobile="isMobile" />
     </template>
 
@@ -126,11 +122,10 @@ export default class CoreTable extends Vue {
   // are selected and are applicable
   firstRow = 0;
   lastRow = Infinity;
-  selectableCount = 0;
   selectableRows = new Array<RecommendationExtra>();
 
   get allRows(): RecommendationExtra[] {
-    return this.$store.getters['filteredRecommendationsWithExtras'];
+    return this.$store.getters["filteredRecommendationsWithExtras"];
   }
 
   get selectedRows(): RecommendationExtra[] {
@@ -138,28 +133,44 @@ export default class CoreTable extends Vue {
   }
 
   set selectedRows(selected: RecommendationExtra[]) {
-    this.$store.commit(
-      "coreTableStore/setSelected",
-      selected);
+    this.$store.commit("coreTableStore/setSelected", selected);
   }
 
-  pagination(event: any) {
-    this.firstRow = event.pageStart;
-    this.lastRow = event.pageStop;
-    this.selectableRows = this.allRows.slice(this.firstRow, this.lastRow).filter(item => this.isActiveRecommendation(item));
-    this.selectableCount = this.selectableRows.reduce(acc => acc + 1, 0);
+  pagination(page: any) {
+    this.firstRow = page.pageStart;
+    this.lastRow = page.pageStop;
+    this.selectableRows = this.allRows
+      .slice(this.firstRow, this.lastRow)
+      .filter(item => this.isActiveRecommendation(item));
   }
 
   selectAll(value: boolean) {
     if (value) {
-      this.selectedRows = this.selectableRows;
+      const copySelected = this.selectedRows.slice();
+      for (const row of this.selectableRows) {
+        if (!this.isSelected(row)) {
+          copySelected.push(row);
+        }
+      }
+
+      this.selectedRows = copySelected;
     } else {
-      this.selectedRows = [];
+      for (const row of this.selectableRows) {
+        if (this.isSelected(row)) {
+          this.selectedRows = this.selectedRows.filter(item => item !== row);
+        }
+      }
     }
   }
 
   areAllSelected(): boolean {
-    return this.selectedRows.length === this.selectableCount;
+    for (const row of this.selectableRows) {
+      if (!this.isSelected(row)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   isActiveRecommendation(item: RecommendationExtra) {
