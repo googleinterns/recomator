@@ -17,7 +17,7 @@ limitations under the License. -->
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { RecommendationExtra } from "../store/recommendation_extra";
+import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 
 const DescriptionCellProps = Vue.extend({
   props: {
