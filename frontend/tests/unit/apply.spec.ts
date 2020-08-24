@@ -128,10 +128,10 @@ describe("applySingleRecommendation action", () => {
   });
 });
 
-describe("watchStatus action", () => {
-  let watchStatus: any;
+describe("watchStatusOnce action", () => {
+  let watchStatusOnce: any;
   beforeAll(() => {
-    watchStatus = recommendationStoreFactory().actions!["watchStatus"] as any;
+    watchStatusOnce = recommendationStoreFactory().actions!["watchStatusOnce"] as any;
   });
   beforeEach(() => {
     jest.useFakeTimers(); // mocked setTimeout
@@ -139,30 +139,28 @@ describe("watchStatus action", () => {
 
   test("-> in progress", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "IN PROGRESS" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await watchStatusOnce(context, firstRec);
+    
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
-
-    // dispatch watchStatus in the future
-    expect(setTimeout as any).toBeCalledTimes(1);
+    expect(shouldContinue).toBeTruthy();
   });
 
   test("-> succeeded", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "SUCCEEDED" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await watchStatusOnce(context, firstRec);
+    
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("SUCCEEDED"));
-
-    // end the status updates cycle
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("-> not applied", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "NOT APPLIED" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await watchStatusOnce(context, firstRec);
+   
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Server has")).toBeTruthy();
-
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("-> failed", async () => {
@@ -172,32 +170,30 @@ describe("watchStatus action", () => {
         errorMessage: "something bad happened"
       })
     );
-    await watchStatus(context, firstRec);
+    const shouldContinue = await watchStatusOnce(context, firstRec);
+   
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Applying ")).toBeTruthy();
     expect(firstRec.errorDescription).toBe("something bad happened");
-
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("-> gibberish", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "%%%" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await watchStatusOnce(context, firstRec);
+    
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Bad status(")).toBeTruthy();
-
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("server connection error", async () => {
     fetchMock.mockResponseOnce(async () => {
       return { status: 404, body: "Endpoint not found" };
     });
-    await watchStatus(context, firstRec);
+    const shouldContinue = await watchStatusOnce(context, firstRec);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader?.indexOf("404")).not.toBe(-1);
-
-    // we want to try again in this case
-    expect(setTimeout as any).toBeCalledTimes(1);
+    expect(shouldContinue).toBeTruthy(); // try again in this case
   });
 });

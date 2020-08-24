@@ -190,13 +190,23 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       });
     }
   },
-  // If there is a "CLAIMED" recommendation, its status will change once
-  //  it has finished being applied. Therefore, we want to follow it and update the UI.
-  // - should return nearly immediately
-  async watchStatus(
-    { commit, dispatch },
+  // If there is a "CLAIMED" recommendation, its status will change once it
+  //  has finished being applied. Therefore, we want to follow it and update the store
+  //  (which will, in turn, automatically update the UI).
+  async watchStatus({ dispatch }, rec: RecommendationExtra): Promise<void> {
+    for (;;) {
+      const shouldContinue = await dispatch("watchStatusOnce", rec);
+      if (!shouldContinue) break;
+      // ask the browser to do something else for a bit and then resume
+      await delay(APPLY_PROGRESS_WAIT_TIME);
+    }
+  },
+  // Should return nearly immediately,
+  //  the promise encapsulates the answer to: do we want to continue watching this recommendation?
+  async watchStatusOnce(
+    { commit },
     rec: RecommendationExtra
-  ): Promise<void> {
+  ): Promise<boolean> {
     const response = await fetch(
       `${SERVER_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
@@ -210,16 +220,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             newStatus: "CLAIMED"
           });
           // continue following the progress
-          break;
+          return true;
 
         case "SUCCEEDED":
           commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "SUCCEEDED"
           });
-          return;
+          return false;
 
-        // Now we know it failed, tell the user why
+        // Now we know it failed, tell the user why and return: false
 
         case "NOT APPLIED":
           commit("setRecommendationStatus", {
@@ -232,7 +242,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             desc:
               "Recomator API has not received the request to apply this recommendation. You can try applying it again."
           });
-          return;
+          return false;
 
         case "FAILED":
           commit("setRecommendationStatus", {
@@ -245,7 +255,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
               "Applying recommendation failed server-side. You can try applying it again.",
             desc: `${responseJson.errorMessage}`
           });
-          return;
+          return false;
 
         default:
           commit("setRecommendationStatus", {
@@ -257,7 +267,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             header: `Bad status(${responseJson.status})`,
             desc: "Recomator API status not recognized."
           });
-          return;
+          return false;
       }
     } else {
       // Non-200 HTTP code
@@ -269,9 +279,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       rec.errorDescription =
         "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment.";
     }
-
-    // ask the event loop to check the status once again in a bit
-    setTimeout(() => dispatch("watchStatus", rec), APPLY_PROGRESS_WAIT_TIME);
+    return true; // Continue watching the status, maybe this is a temporary connection error
   }
 };
 
