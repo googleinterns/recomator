@@ -74,7 +74,10 @@ limitations under the License. -->
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { throwIfInvalidStatus, getInternalStatusMapping } from "../store/utils";
+import {
+  throwIfInvalidStatus,
+  getInternalStatusMapping
+} from "../store/utils/misc";
 
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 

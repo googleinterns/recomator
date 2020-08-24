@@ -14,7 +14,7 @@ limitations under the License. */
 
 import { enableFetchMocks } from "jest-fetch-mock";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
-import { getInternalStatusMapping } from "@/store/utils";
+import { getInternalStatusMapping } from "@/store/utils/misc";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { rootStoreFactory } from "@/store/root";
 import { recommendationStoreFactory } from "@/store/recommendations";

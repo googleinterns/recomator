@@ -23,7 +23,7 @@ import {
   getRecommendationType
 } from "./recommendation_raw";
 
-import { getInternalStatusMapping } from "../utils";
+import { getInternalStatusMapping } from "../utils/misc";
 
 // All data maintained for each recommendation, extends the raw object fetched from the API
 export class RecommendationExtra implements RecommendationRaw {

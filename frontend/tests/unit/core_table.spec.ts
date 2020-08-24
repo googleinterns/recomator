@@ -33,7 +33,7 @@ import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
 
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 
-import { getInternalStatusMapping } from "@/store/utils";
+import { getInternalStatusMapping } from "@/store/utils/misc";
 
 describe("Core Table store", () => {
   test("Filtering results by resource with store mutations", () => {
