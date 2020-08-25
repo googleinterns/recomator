@@ -22,7 +22,7 @@ limitations under the License. -->
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import { RecommendationExtra } from "../store/model";
+import { RecommendationExtra } from "../store/recommendation_extra";
 
 const TypeCellProps = Vue.extend({
   props: {
@@ -38,6 +38,8 @@ export default class TypeCell extends TypeCellProps {
   get recommenderSubtype(): string {
     return this.rowRecommendation.typeCol;
   }
+
+  // Find out which icon to show based on type
   iconName(): string {
     switch (this.recommenderSubtype) {
       case "CHANGE_MACHINE_TYPE":
