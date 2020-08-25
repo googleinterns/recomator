@@ -14,7 +14,7 @@ limitations under the License. */
 
 import { Module, MutationTree } from "vuex";
 import { IRootStoreState } from "./root";
-import { RecommendationExtra } from "./recommendation_extra";
+import { RecommendationExtra } from "./data_model/recommendation_extra";
 import {
   descriptionFilterAccepted,
   projectFilterAccepted,
@@ -22,7 +22,7 @@ import {
   typeFilterAccepted,
   statusFilterAccepted,
   costFilterAccepted
-} from "./core_table_filter_utils";
+} from "./utils/core_table_filter_utils";
 
 export interface ICoreTableStoreState {
   resourceNameSearchText: string;
