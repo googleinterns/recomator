@@ -30,7 +30,7 @@ func (s *googleService) ChangeMachineType(project string, zone string, instance 
 	instancesService := compute.NewInstancesService(s.computeService)
 
 	requestID := uuid.New().String()
-	err := AwaitUntilCompletion(func() (*compute.Operation, error) {
+	err := AwaitCompletion(func() (*compute.Operation, error) {
 		return instancesService.SetMachineType(project, zone, instance, request).RequestId(requestID).Do()
 	})
 	return err
@@ -46,7 +46,7 @@ func (s *googleService) GetInstance(project string, zone string, instance string
 func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
 	requestID := uuid.New().String()
-	err := AwaitUntilCompletion(func() (*compute.Operation, error) {
+	err := AwaitCompletion(func() (*compute.Operation, error) {
 		return instancesService.Stop(project, zone, instance).RequestId(requestID).Do()
 	})
 	return err

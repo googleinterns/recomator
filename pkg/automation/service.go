@@ -106,13 +106,13 @@ func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Toke
 	}, nil
 }
 
-// for anonymous functions passed to AwaitUntilCompletion
+// for anonymous functions passed to AwaitCompletion
 type operationGenerator func() (*compute.Operation, error)
 
-// AwaitUntilCompletion takes a function that needs to be called repeatedly
+// AwaitCompletion takes a function that needs to be called repeatedly
 //  to check if a process (some Google Service request) has finished.
 // Such a function is usually constructed by wrapping a .Do() call
-func AwaitUntilCompletion(gen operationGenerator) error {
+func AwaitCompletion(gen operationGenerator) error {
 	for {
 		oper, err := gen()
 		if err != nil {
