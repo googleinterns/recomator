@@ -23,13 +23,13 @@ limitations under the License. -->
           v-on="on"
           display="fill"
         >
-          {{ (cost >= 0 ? "" : "+") + Math.abs(costRounded) }}$
+          {{ (cost >= 0 ? "" : "+") + Math.abs(costRounded).toFixed(2) }}$
         </v-chip>
       </template>
       {{
         cost >= 0
-          ? `Save ${costRounded}$ per week by applying this recommendation`
-          : `Applying this recommendation will cost an additional ${-costRounded}$ per week`
+          ? `Applying this recommendation will cost an additional ${costRounded}$ per week`
+          : `Save ${-costRounded}$ per week by applying this recommendation`
       }}
     </v-tooltip>
   </div>
