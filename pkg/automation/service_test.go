@@ -24,44 +24,42 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func TestAwaitCompletion(t *testing.T) {
-	// fast failure
+func TestAwaitCompletionFastFailure(t *testing.T) {
 	err := AwaitCompletion(fastFailingOperationGen)
 	assert.EqualError(t, err, "Oh no")
+}
 
-	//ending in success
-	longOperationGenCounter = 0
-	longOperationGenShouldSucceed = true
-	err = AwaitCompletion(longOperationGen)
+func TestAwaitingCompletionEndsWithSuccess(t *testing.T) {
+	calledTimes := 0
+	err := AwaitCompletion(longOperationGen(true, &calledTimes))
 	assert.Nil(t, err)
-	assert.Equal(t, longOperationGenCounter, 3)
-
-	//ending in failure
-	longOperationGenCounter = 0
-	longOperationGenShouldSucceed = false
-	err = AwaitCompletion(longOperationGen)
+	assert.Equal(t, calledTimes, 3)
+}
+func TestAwaitingCompletionEndsWithFailure(t *testing.T) {
+	calledTimes := 0
+	err := AwaitCompletion(longOperationGen(false, &calledTimes))
 	assert.EqualError(t, err, "Oh no")
-	assert.Equal(t, longOperationGenCounter, 3)
+	assert.Equal(t, calledTimes, 3)
 }
 
 func fastFailingOperationGen() (*compute.Operation, error) {
 	return nil, errors.New("Oh no")
 }
 
-var longOperationGenCounter int
-var longOperationGenShouldSucceed bool
-
-func longOperationGen() (*compute.Operation, error) {
-	longOperationGenCounter++
-	switch longOperationGenCounter {
-	case 1, 2:
-		return &compute.Operation{Status: "PROCESSING"}, nil
-	case 3:
-		if longOperationGenShouldSucceed {
-			return &compute.Operation{Status: "DONE"}, nil
+func longOperationGen(succeeds bool, genCounter *int) operationGenerator {
+	*genCounter = 0
+	return func() (*compute.Operation, error) {
+		(*genCounter)++
+		switch *genCounter {
+		case 1, 2:
+			return &compute.Operation{Status: "PROCESSING"}, nil
+		case 3:
+			if succeeds {
+				return &compute.Operation{Status: "DONE"}, nil
+			}
+			return &compute.Operation{Status: "Done"}, errors.New("Oh no")
+		default:
+			panic("too many calls")
 		}
-		return &compute.Operation{Status: "Done"}, errors.New("Oh no")
-	default:
-		panic("too many calls")
 	}
 }
