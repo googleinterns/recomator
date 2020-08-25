@@ -29,7 +29,7 @@ import {
 } from "@/store/core_table";
 
 import { freshSampleRawRecommendation } from "./sample_recommendation";
-import { RecommendationExtra } from "@/store/model";
+import { RecommendationExtra } from "@/store/recommendation_extra";
 
 describe("Filtering aggregate (resource name, type, status...)", () => {
   const tableState = coreTableStoreStateFactory();

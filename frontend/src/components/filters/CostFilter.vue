@@ -28,6 +28,7 @@ import { costCategoriesNames } from "../../store/core_table";
 
 @Component
 export default class CostFilter extends Vue {
+  // ["Gains", "Costs"] or some synonyms of these
   get allCostCategories(): string[] {
     return Object.values(costCategoriesNames);
   }

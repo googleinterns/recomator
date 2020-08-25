@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { ProjectConfig } from "@/config";
+import { internalStatusMap } from "@/store/recommendation_extra";
 
 export function extractFromResource(
   property: string,
@@ -43,4 +44,16 @@ export function getServerAddress(): string {
   }
 
   return ProjectConfig.PRODUCTION_SERVER_ADDRESS;
+}
+
+export function throwIfInvalidStatus(statusName: string): void {
+  if (!(statusName in internalStatusMap))
+    throw `invalid status name passed: ${statusName}`;
+}
+
+// We don't want to display API status names directly
+//  For details on how this is stored, see RecommendationExtra definition above
+export function getInternalStatusMapping(statusName: string): string {
+  throwIfInvalidStatus(statusName);
+  return internalStatusMap[statusName];
 }
