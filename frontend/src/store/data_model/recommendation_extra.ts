@@ -23,7 +23,7 @@ import {
   getRecommendationType
 } from "./recommendation_raw";
 
-import { getInternalStatusMapping } from "./utils";
+import { getInternalStatusMapping } from "./status_map";
 
 // All data maintained for each recommendation, extends the raw object fetched from the API
 export class RecommendationExtra implements RecommendationRaw {
@@ -61,11 +61,3 @@ export class RecommendationExtra implements RecommendationRaw {
     this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
   }
 }
-
-export const internalStatusMap: Record<string, string> = {
-  ACTIVE: "Applicable",
-  CLAIMED: "In progress",
-  SUCCEEDED: "Success",
-  FAILED: "Failed",
-  DISMISSED: "Dismissed"
-};

@@ -19,8 +19,8 @@ fetchMock.dontMock(); // not mocking fetch in every test by default
 import {
   getRecommendationProject,
   getRecommendationResourceShortName
-} from "@/store/recommendation_raw";
-import { RecommendationExtra } from "@/store/recommendation_extra";
+} from "@/store/data_model/recommendation_raw";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { rootStoreFactory } from "@/store/root";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 

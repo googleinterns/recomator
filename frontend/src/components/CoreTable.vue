@@ -66,7 +66,7 @@ import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
 import { IRootStoreState } from "../store/root";
-import { RecommendationExtra } from "../store/recommendation_extra";
+import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 
 @Component({
   components: {
