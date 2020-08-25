@@ -20,20 +20,24 @@ limitations under the License. -->
     :single-select="false"
     show-select
     v-model="selectedRows"
-    v-on:pagination="pagination"
+    v-on:current-items="setSelectableRows"
     item-key="name"
     :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
     <template v-slot:header.data-table-select="{}">
-      <v-simple-checkbox :value="areAllSelected()" v-on:input="selectAll" />
+      <v-simple-checkbox
+        :value="areAllSelected()"
+        :indeterminate="!areAllSelected() && isSomeSelected()"
+        v-on:input="selectAll"
+      />
     </template>
 
     <template v-slot:item.data-table-select="{ item }">
       <v-simple-checkbox
         v-on:input="select(item, isSelected(item))"
-        :value="isSelected(item) && isActiveRecommendation(item)"
-        :disabled="!isActiveRecommendation(item)"
+        :value="isSelected(item) && isActive(item)"
+        :disabled="!isActive(item)"
       />
     </template>
 
@@ -117,13 +121,6 @@ export default class CoreTable extends Vue {
     { text: "", value: "statusCol", sortable: false }
   ];
 
-  // Array that keeps all recommendations that are selected
-  // The array in the store keeps only the recommendations that
-  // are selected and are applicable
-  firstRow = 0;
-  lastRow = Infinity;
-  selectableRows = new Array<RecommendationExtra>();
-
   get allRows(): RecommendationExtra[] {
     return this.$store.getters["filteredRecommendationsWithExtras"];
   }
@@ -132,63 +129,54 @@ export default class CoreTable extends Vue {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;
   }
 
-  set selectedRows(selected: RecommendationExtra[]) {
-    this.$store.commit("coreTableStore/setSelected", selected);
+  set selectedRows(rows: RecommendationExtra[]) {
+    this.$store.commit("coreTableStore/setSelected", rows);
   }
 
-  pagination(page: any) {
-    this.firstRow = page.pageStart;
-    this.lastRow = page.pageStop;
-    this.selectableRows = this.allRows
-      .slice(this.firstRow, this.lastRow)
-      .filter(item => this.isActiveRecommendation(item));
+  get selectableRows(): RecommendationExtra[] {
+    return (this.$store.state as IRootStoreState).coreTableStore!
+      .currentlySelectable;
   }
 
-  selectAll(value: boolean) {
-    if (value) {
-      const copySelected = this.selectedRows.slice();
-      for (const row of this.selectableRows) {
-        if (!this.isSelected(row)) {
-          copySelected.push(row);
-        }
-      }
-
-      this.selectedRows = copySelected;
-    } else {
-      for (const row of this.selectableRows) {
-        if (this.isSelected(row)) {
-          this.selectedRows = this.selectedRows.filter(item => item !== row);
-        }
-      }
-    }
+  setSelectableRows(rows: RecommendationExtra[]) {
+    this.$store.commit(
+      "coreTableStore/setCurrentlySelectable",
+      rows.filter(item => this.isActive(item))
+    );
   }
 
+  // If select parameter is true, selects all the rows on the current page
+  // Otherwise unselects all rows on the current page
+  selectAll(select: boolean) {
+    select
+      ? this.$store.commit("coreTableStore/selectAllSelectable")
+      : this.$store.commit("coreTableStore/unselectAllSelectable");
+  }
+
+  // Checks if everything is selected on the current page
   areAllSelected(): boolean {
-    for (const row of this.selectableRows) {
-      if (!this.isSelected(row)) {
-        return false;
-      }
-    }
-
-    return true;
+    return this.selectableRows.every(this.isSelected);
   }
 
-  isActiveRecommendation(item: RecommendationExtra) {
-    return item.statusCol === getInternalStatusMapping("ACTIVE");
+  // Checks if anything is selected on the current page
+  isSomeSelected(): boolean {
+    return this.selectableRows.some(item => this.selectedRows.includes(item));
   }
 
-  isSelected(item: RecommendationExtra): boolean {
-    return this.selectedRows.includes(item);
+  isActive(recommendation: RecommendationExtra) {
+    return recommendation.statusCol === getInternalStatusMapping("ACTIVE");
   }
 
-  select(item: RecommendationExtra, value: boolean) {
-    if (value) {
-      this.selectedRows = this.selectedRows.filter(elt => elt != item);
-    } else {
-      const copySelected = this.selectedRows.slice();
-      copySelected.push(item);
-      this.selectedRows = copySelected;
-    }
+  isSelected(row: RecommendationExtra): boolean {
+    return this.selectedRows.includes(row);
+  }
+
+  // If unselect is set to true, results in row being not selected.
+  // If it is set to false, then results in row being selected.
+  select(row: RecommendationExtra, unselect: boolean) {
+    unselect
+      ? this.$store.commit("coreTableStore/unselect", row)
+      : this.$store.commit("coreTableStore/select", row);
   }
 }
 </script>
