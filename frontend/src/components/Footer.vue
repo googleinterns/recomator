@@ -13,31 +13,33 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div>
+    <!-- Footer with 'Apply Selected' button -->
     <v-footer
       v-if="selectedRowsCount > 0"
       v-bind:fixed="true"
       color="rgba(255, 210, 20, 1)"
-      class="pa-xl-6 pa-lg-5 pa-md-4 pa-sm-3 pa-xs-0"
+      class="pa-xl-6 pa-lg-5 pa-md-4 pa-sm-3 pa-xs-0 justify-center"
       v-bind:app="true"
     >
-      <v-row class="px-5">
-        <v-col>
-          <div class="font-weight-black">
-            {{ footerMessage }}
-          </div>
-        </v-col>
-      </v-row>
-      <v-row class="px-5">
-        <v-col>
-          <v-btn rounded color="primary" dark v-on:click="dialog = true"
-            >Apply Selected Recommendation{{
-              selectedRowsCount == 1 ? "" : "s"
-            }}</v-btn
-          >
-        </v-col>
-      </v-row>
+      <v-container>
+        <v-row>
+          <v-col :cols="12" :lg="8">
+            <div class="font-weight-black">
+              {{ footerMessage }}
+            </div>
+          </v-col>
+          <v-col :cols="12" :lg="4">
+            <v-btn rounded color="primary" dark v-on:click="dialog = true"
+              >Apply Selected Recommendation{{
+                selectedRowsCount == 1 ? "" : "s"
+              }}</v-btn
+            >
+          </v-col>
+        </v-row>
+      </v-container>
     </v-footer>
 
+    <!-- Confirmation dialog -->
     <v-dialog v-model="dialog" max-width="640px">
       <v-card>
         <v-card-title class="headline">
@@ -53,7 +55,6 @@ limitations under the License. -->
 
         <v-card-actions>
           <v-spacer />
-
           <v-btn
             color="green white--text"
             v-on:click="
@@ -61,11 +62,13 @@ limitations under the License. -->
               dialog = false;
             "
           >
-            Proceed
+            <v-icon>mdi-check</v-icon>
+            Yes
           </v-btn>
 
-          <v-btn color="red white--text" v-on:click="dialog = false">
-            Resign
+          <v-btn color="primary white--text" v-on:click="dialog = false">
+            <v-icon>mdi-window-close</v-icon>
+            Cancel
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -76,11 +79,13 @@ limitations under the License. -->
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root";
-import { RecommendationExtra } from "../store/model";
+import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 
 @Component
 export default class Footer extends Vue {
   dialog = false;
+
+  // Helpers:
 
   get selectedRows(): RecommendationExtra[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;
@@ -107,6 +112,8 @@ export default class Footer extends Vue {
       .filter(recommendation => recommendation.costCol > 0)
       .reduce(acc => acc + 1, 0);
   }
+
+  // Footer summary generators:
 
   get applyPart(): string {
     return `Apply ${this.selectedRowsCount} recommendation${
@@ -139,6 +146,7 @@ export default class Footer extends Vue {
     return this.applyPart + this.savingsPart + this.spendingsPart;
   }
 
+  // Handler of the 'Apply all selected' button
   applySelectedRecommendations(): void {
     this.$store.dispatch(
       "recommendationsStore/applyGivenRecommendations",

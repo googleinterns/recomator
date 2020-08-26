@@ -18,6 +18,7 @@ package automation
 
 import (
 	"context"
+	"time"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -115,4 +116,23 @@ func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Toke
 		resourceManagerService: resourceManagerService,
 		serviceUsageService:    serviceUsageService,
 	}, nil
+}
+
+// for anonymous functions passed to AwaitCompletion
+type operationGenerator func() (*compute.Operation, error)
+
+// AwaitCompletion takes a function that needs to be called repeatedly
+// to check if a process (some Google Service request) has finished.
+// Such a function is usually constructed by wrapping a requestId(x).Do() call.
+func AwaitCompletion(gen operationGenerator) error {
+	for {
+		oper, err := gen()
+		if err != nil {
+			return err
+		}
+		if oper.Status == "DONE" {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
 }
