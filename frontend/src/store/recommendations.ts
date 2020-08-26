@@ -277,9 +277,12 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         recName: rec.name,
         newStatus: "FAILED"
       });
-      rec.errorHeader = `Status query failed (HTTP:${response.status})`;
-      rec.errorDescription =
-        "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment.";
+      commit("setRecommendationError", {
+        recName: rec.name,
+        header: `Status query failed (HTTP:${response.status})`,
+        desc:
+          "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment."
+      });
     }
     return true; // Continue watching the status, maybe this is a temporary connection error
   }
