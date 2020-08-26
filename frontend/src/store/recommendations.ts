@@ -294,18 +294,20 @@ interface ICheckStatusResponse {
 }
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
-  // Used for calculating filter choices
+  // Used for calculating filter choices, sorted to avoid changes in order 
+  // caused by a different set of recommendations in a filtered view
+  // (for example. the first type found might change very frequently) 
 
   allProjects(state): string[] {
-    const projects = state.recommendations.map(r => r.projectCol);
+    const projects = state.recommendations.map(r => r.projectCol).sort();
     return Array.from(new Set(projects));
   },
   allTypes(state): string[] {
-    const types = state.recommendations.map(r => r.typeCol);
+    const types = state.recommendations.map(r => r.typeCol).sort();
     return Array.from(new Set(types));
   },
   allStatuses(state): string[] {
-    const statuses = state.recommendations.map(r => r.statusCol);
+    const statuses = state.recommendations.map(r => r.statusCol).sort();
     return Array.from(new Set(statuses));
   }
 };
