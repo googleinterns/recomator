@@ -12,9 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <div>
+  <div ref="test">
     <!-- Footer with 'Apply Selected' button -->
     <v-footer
+      ref="footer"
       v-if="selectedRowsCount > 0"
       v-bind:fixed="true"
       color="rgba(255, 210, 20, 1)"
