@@ -12,20 +12,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { RecommendationExtra } from "./model";
-import { ICoreTableStoreState, costCategoriesNames } from "./core_table";
-
 // The primary motivation for having these in a separate file is so that
 //  they can be mocked by Jest:
 //  https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 
-// We want 'save' in a search field to match 'Save' in a cell
+import { RecommendationExtra } from "../data_model/recommendation_extra";
+import { ICoreTableStoreState, costCategoriesNames } from "../core_table";
+
+// case-insensitive search (searching for 'myvm' should match 'MyVm')
 export function isSearchTextInCell(
   searchText: string,
   cellText: string
 ): boolean {
   return cellText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
 }
+
+// Individual filters: (each one returns true for empty input)
 
 export function projectFilterAccepted(
   tableState: ICoreTableStoreState,

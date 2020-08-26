@@ -24,7 +24,7 @@ import {
   isRecommendationInResults,
   coreTableStoreFactory
 } from "./core_table";
-import { RecommendationExtra } from "./model";
+import { RecommendationExtra } from "./data_model/recommendation_extra";
 
 Vue.use(Vuex);
 

@@ -109,6 +109,7 @@ var requiredPermissions = [][]string{
 	[]string{"recommender.computeInstanceMachineTypeRecommendations.update"},  // ListRecommendations for google.compute.instance.MachineTypeRecommender
 	[]string{"compute.regions.list"},                                          // ListRegionsNames
 	[]string{"compute.zones.list"},                                            // ListZonesNames
+	[]string{"compute.instances.start"},                                       // StartInstance
 	[]string{"compute.instances.stop"},                                        // StopInstance
 }
 

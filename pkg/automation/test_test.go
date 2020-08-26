@@ -117,5 +117,5 @@ func TestNonstringValue(t *testing.T) {
 	value := 123
 	var valueMatcher *gcloudValueMatcher = nil
 	_, err := testMatching(toTest, value, valueMatcher)
-	assert.Errorf(t, err, "If the given value is not a string, an error should be returned")
+	assert.EqualError(t, err, "if value is specified it must be of type string", "If the given value is not a string, an error should be returned")
 }

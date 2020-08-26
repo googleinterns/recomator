@@ -12,14 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import {
-  RecommendationRaw,
-  RecommendationExtra,
-  getRecommendationProject,
-  getRecommendationType,
-  getInternalStatusMapping
-} from "@/store/model";
-import { delay, getServerAddress } from "./utils";
+import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
+import { delay, getServerAddress } from "./utils/misc";
+import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
 
@@ -34,8 +30,7 @@ export interface IRecommendationsStoreState {
   recommendationsByName: Map<string, RecommendationExtra>;
   errorCode: number | undefined;
   errorMessage: string | undefined;
-  // % recommendations loaded, null if no fetching is happening
-  progress: number | null;
+  progress: number | null; // % recommendations loaded, null if no fetching is happening
 }
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
@@ -50,7 +45,6 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
   addRecommendation(state, recommendation: RecommendationRaw): void {
-    //TODO: add watching recommendations that are in progress at the app launch
     const extended = new RecommendationExtra(recommendation);
     if (state.recommendationsByName.get(extended.name) !== undefined)
       throw "Duplicate recommendation name";
@@ -93,6 +87,7 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
 };
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
+  // Makes requests to the middleware and adds obtained recommendations to the store
   async fetchRecommendations(context): Promise<void> {
     if (context.state.progress !== null) {
       return;
@@ -146,7 +141,6 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("endFetching");
   },
 
-  // we need names, not references so that we can find them in the state fast
   applyGivenRecommendations(
     { dispatch, state },
     selectedNames: string[]
@@ -164,7 +158,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       throw "Name given doesn't match an existing recommendation";
 
     // If we find out that preparing the requests takes too long and
-    // blocks the UI, we can wrap dispatches in setTimeout(...,0)
+    //  blocks the UI, we can wrap dispatches in setTimeout(...,0)
     selectedRecs.forEach(rec => dispatch("applySingleRecommendation", rec));
   },
 
@@ -183,6 +177,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       { method: "POST" }
     );
 
+    // If server accepted the request, watch the status. Otherwise, save the error.
     if (response.status === HTTP_OK_CODE) dispatch("watchStatus", rec);
     else {
       commit("setRecommendationStatus", {
@@ -196,11 +191,23 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       });
     }
   },
-  //  should return nearly immediately, assumes "CLAIMED" status
-  async watchStatus(
-    { commit, dispatch },
+  // If there is a "CLAIMED" recommendation, its status will change once it
+  //  has finished being applied. Therefore, we want to follow it and update the store
+  //  (which will, in turn, automatically update the UI).
+  async watchStatus({ dispatch }, rec: RecommendationExtra): Promise<void> {
+    for (;;) {
+      const shouldContinue = await dispatch("watchStatusOnce", rec);
+      if (!shouldContinue) break;
+      // ask the browser to do something else for a bit and then resume
+      await delay(APPLY_PROGRESS_WAIT_TIME);
+    }
+  },
+  // Should return nearly immediately,
+  //  the promise encapsulates the answer to: do we want to continue watching this recommendation?
+  async watchStatusOnce(
+    { commit },
     rec: RecommendationExtra
-  ): Promise<void> {
+  ): Promise<boolean> {
     const response = await fetch(
       `${SERVER_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
@@ -214,16 +221,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             newStatus: "CLAIMED"
           });
           // continue following the progress
-          break;
+          return true;
 
         case "SUCCEEDED":
           commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "SUCCEEDED"
           });
-          return;
+          return false;
 
-        // Now we know it failed, tell the user why
+        // Now we know it failed, tell the user why and return: false
 
         case "NOT APPLIED":
           commit("setRecommendationStatus", {
@@ -236,7 +243,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             desc:
               "Recomator API has not received the request to apply this recommendation. You can try applying it again."
           });
-          return;
+          return false;
 
         case "FAILED":
           commit("setRecommendationStatus", {
@@ -249,7 +256,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
               "Applying recommendation failed server-side. You can try applying it again.",
             desc: `${responseJson.errorMessage}`
           });
-          return;
+          return false;
 
         default:
           commit("setRecommendationStatus", {
@@ -261,7 +268,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             header: `Bad status(${responseJson.status})`,
             desc: "Recomator API status not recognized."
           });
-          return;
+          return false;
       }
     } else {
       // Non-200 HTTP code
@@ -273,9 +280,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       rec.errorDescription =
         "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment.";
     }
-
-    // ask the event loop to check the status once again in a bit
-    setTimeout(() => dispatch("watchStatus", rec), APPLY_PROGRESS_WAIT_TIME);
+    return true; // Continue watching the status, maybe this is a temporary connection error
   }
 };
 
@@ -285,20 +290,18 @@ interface ICheckStatusResponse {
 }
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
+  // Used for calculating filter choices
+
   allProjects(state): string[] {
-    const projects = state.recommendations.map(r =>
-      getRecommendationProject(r)
-    );
+    const projects = state.recommendations.map(r => r.projectCol);
     return Array.from(new Set(projects));
   },
   allTypes(state): string[] {
-    const types = state.recommendations.map(r => getRecommendationType(r));
+    const types = state.recommendations.map(r => r.typeCol);
     return Array.from(new Set(types));
   },
   allStatuses(state): string[] {
-    const statuses = state.recommendations.map(r =>
-      getInternalStatusMapping(r.stateInfo.state)
-    );
+    const statuses = state.recommendations.map(r => r.statusCol);
     return Array.from(new Set(statuses));
   }
 };
