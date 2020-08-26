@@ -19,7 +19,6 @@ import {
   ICoreTableStoreState,
   costCategoriesNames
 } from "@/store/core_table";
-
 import {
   projectFilterAccepted,
   typeFilterAccepted,
@@ -27,13 +26,11 @@ import {
   resourceFilterAccepted,
   descriptionFilterAccepted,
   costFilterAccepted
-} from "@/store/core_table_filter_utils";
+} from "@/store/utils/core_table_filter_utils";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
-import { RecommendationRaw } from "@/store/recommendation_raw";
-
-import { RecommendationExtra } from "@/store/recommendation_extra";
-
-import { getInternalStatusMapping } from "@/store/utils";
+import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
+import { getInternalStatusMapping } from "@/store/data_model/status_map";
 
 describe("Core Table store", () => {
   test("Filtering results by resource with store mutations", () => {
