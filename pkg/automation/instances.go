@@ -51,3 +51,10 @@ func (s *googleService) StopInstance(project string, zone string, instance strin
 	})
 	return err
 }
+
+// StartInstance starts instance using instances.start method
+func (s *googleService) StartInstance(project string, zone string, instance string) error {
+	instancesService := compute.NewInstancesService(s.computeService)
+	_, err := instancesService.Start(project, zone, instance).Do()
+	return err
+}

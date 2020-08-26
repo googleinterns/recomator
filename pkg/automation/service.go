@@ -60,8 +60,20 @@ type GoogleService interface {
 	// listing every region available for the project methods
 	ListRegionsNames(project string) ([]string, error)
 
+	// marks recommendation for the project with given etag and name claimed
+	MarkRecommendationClaimed(name, etag string) (*gcloudRecommendation, error)
+
+	// marks recommendation for the project with given etag and name succeeded
+	MarkRecommendationSucceeded(name, etag string) (*gcloudRecommendation, error)
+
+	// marks recommendation for the project with given etag and name failed
+	MarkRecommendationFailed(name, etag string) (*gcloudRecommendation, error)
+
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
+
+	// starts the specified instance
+	StartInstance(project, zone, instance string) error
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs.
