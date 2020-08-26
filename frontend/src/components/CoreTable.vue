@@ -18,12 +18,28 @@ limitations under the License. -->
     :headers="headers"
     :items="this.$store.getters['filteredRecommendationsWithExtras']"
     :single-select="false"
-    v-model="selectedRows"
     show-select
+    v-model="selectedRows"
+    v-on:current-items="setSelectableRows"
     item-key="name"
     :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
+    <template v-slot:header.data-table-select="{}">
+      <v-simple-checkbox
+        :value="areAllSelected()"
+        :indeterminate="!areAllSelected() && isSomeSelected()"
+        v-on:input="selectAll"
+      />
+    </template>
+
+    <template v-slot:item.data-table-select="{ item }">
+      <v-simple-checkbox
+        v-on:input="select(item, isSelected(item))"
+        :value="isSelected(item) && isActive(item)"
+        :disabled="!isActive(item)"
+      />
+    </template>
 
     <!-- The row with filters just above the data -->
     <template v-slot:body.prepend="{ isMobile }">
@@ -65,8 +81,9 @@ import DescriptionCell from "@/components/DescriptionCell.vue";
 import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
+import { getInternalStatusMapping } from "../store/data_model/status_map";
 import { IRootStoreState } from "../store/root";
-import { RecommendationExtra } from "../store/recommendation_extra";
+import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 
 @Component({
   components: {
@@ -107,13 +124,63 @@ export default class CoreTable extends Vue {
     { text: "", value: "statusCol", sortable: false }
   ];
 
+  get allRows(): RecommendationExtra[] {
+    return this.$store.getters["filteredRecommendationsWithExtras"];
+  }
+
   // Sync selected with the store
   get selectedRows(): RecommendationExtra[] {
     return (this.$store.state as IRootStoreState).coreTableStore!.selected;
   }
 
-  set selectedRows(selected: RecommendationExtra[]) {
-    this.$store.commit("coreTableStore/setSelected", selected);
+  set selectedRows(rows: RecommendationExtra[]) {
+    this.$store.commit("coreTableStore/setSelected", rows);
+  }
+
+  get selectableRows(): RecommendationExtra[] {
+    return (this.$store.state as IRootStoreState).coreTableStore!
+      .currentlySelectable;
+  }
+
+  setSelectableRows(rows: RecommendationExtra[]) {
+    this.$store.commit(
+      "coreTableStore/setCurrentlySelectable",
+      rows.filter(item => this.isActive(item))
+    );
+  }
+
+  // If select parameter is true, selects all the rows on the current page
+  // Otherwise unselects all rows on the current page
+  selectAll(select: boolean) {
+    select
+      ? this.$store.commit("coreTableStore/selectAllSelectable")
+      : this.$store.commit("coreTableStore/unselectAllSelectable");
+  }
+
+  // Checks if everything is selected on the current page
+  areAllSelected(): boolean {
+    return this.selectableRows.every(item => this.isSelected(item));
+  }
+
+  // Checks if anything is selected on the current page
+  isSomeSelected(): boolean {
+    return this.selectableRows.some(item => this.isSelected(item));
+  }
+
+  isActive(recommendation: RecommendationExtra) {
+    return recommendation.statusCol === getInternalStatusMapping("ACTIVE");
+  }
+
+  isSelected(row: RecommendationExtra): boolean {
+    return this.selectedRows.includes(row);
+  }
+
+  // If unselect is set to true, results in row being not selected.
+  // If it is set to false, then results in row being selected.
+  select(row: RecommendationExtra, unselect: boolean) {
+    unselect
+      ? this.$store.commit("coreTableStore/unselect", row)
+      : this.$store.commit("coreTableStore/select", row);
   }
 }
 </script>
