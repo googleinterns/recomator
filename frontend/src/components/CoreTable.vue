@@ -155,12 +155,12 @@ export default class CoreTable extends Vue {
 
   // Checks if everything is selected on the current page
   areAllSelected(): boolean {
-    return this.selectableRows.every(() => this.isSelected);
+    return this.selectableRows.every(item => this.isSelected(item));
   }
 
   // Checks if anything is selected on the current page
   isSomeSelected(): boolean {
-    return this.selectableRows.some(item => this.selectedRows.includes(item));
+    return this.selectableRows.some(item => this.isSelected(item));
   }
 
   isActive(recommendation: RecommendationExtra) {
