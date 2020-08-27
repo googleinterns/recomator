@@ -221,7 +221,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       await delay(APPLY_PROGRESS_WAIT_TIME);
     }
   },
-  // Should return nearly immediately,
+  // Should return nearly immediately. Assumes the recommendation was applied by us (not Pantheon, for example)
   // the promise encapsulates the answer to: do we want to continue watching this recommendation?
   async watchStatusOnce(
     { commit },
@@ -251,7 +251,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
           });
           return false;
 
-        // Now we know it failed, tell the user why and return: false
+        // Now we know it failed, save the error message and tell the user why
 
         case "NOT APPLIED":
           commit("setRecommendationStatus", {
