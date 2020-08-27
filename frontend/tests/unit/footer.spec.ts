@@ -1,9 +1,7 @@
 import { mount } from "@vue/test-utils";
 import "@testing-library/jest-dom";
-import Home from "@/views/Home.vue";
 import Footer from "@/components/Footer.vue";
 import { rootStoreFactory, IRootStoreState } from "@/store/root";
-import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import {
   freshSampleRawRecommendation,
@@ -11,16 +9,7 @@ import {
   freshPerformanceRawRecommendation,
 } from "./sample_recommendations";
 import vuetify from "@/plugins/vuetify";
-import {
-  coreTableStoreStateFactory,
-  ICoreTableStoreState,
-} from "@/store/core_table";
-import {
-  IRecommendationsStoreState,
-  recommendationsStoreStateFactory,
-} from "../../src/store/recommendations";
 import { Store } from "vuex";
-import CoreTable from "../../src/components/CoreTable.vue";
 
 describe("Footer", () => {
   let recommendation: RecommendationExtra;
@@ -37,7 +26,10 @@ describe("Footer", () => {
       freshPerformanceRawRecommendation()
     );
     fakeStore = rootStoreFactory();
-    fakeStore.commit("recommendationsStore/addRecommendation", recommendation);
+    fakeStore.commit(
+      "recommendationsStore/addRecommendation",
+      recommendation
+    );
     fakeStore.commit(
       "recommendationsStore/addRecommendation",
       savingRecommendation
@@ -47,6 +39,7 @@ describe("Footer", () => {
       performanceRecommendation
     );
 
+    // So the warning about not finding data-app doesn't happen
     var app = document.createElement("div");
     app.setAttribute("data-app", "true");
     document.body.appendChild(app);

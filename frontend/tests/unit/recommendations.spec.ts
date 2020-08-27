@@ -22,7 +22,7 @@ import {
 } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { rootStoreFactory } from "@/store/root";
-import { freshSampleRawRecommendation } from "./sample_recommendation";
+import { freshSampleRawRecommendation } from "./sample_recommendations";
 
 describe("Store", () => {
   test("addRecommendation", () => {
