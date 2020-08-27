@@ -40,12 +40,16 @@ limitations under the License. -->
     </v-btn>
 
     <!-- Error dialog (with the 'Failed' button defined inside) -->
-    <v-dialog
-      v-model="errorDialogOpened"
-      max-width="600px"
-    >
+    <v-dialog v-model="errorDialogOpened" max-width="600px">
       <template v-slot:activator="{ on }">
-        <v-btn v-show="checkStatus('FAILED')" color="red darken-2" v-on="on" small rounded block>
+        <v-btn
+          v-show="checkStatus('FAILED')"
+          color="red darken-2"
+          v-on="on"
+          small
+          rounded
+          block
+        >
           <v-icon left color="white">mdi-alert-box</v-icon>
           Show Error
         </v-btn>

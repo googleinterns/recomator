@@ -21,6 +21,7 @@ import { IRootStoreState } from "./root";
 
 // TODO: move all of this to config in some next PR
 const SERVER_ADDRESS: string = getServerAddress();
+const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
 const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
 
@@ -43,6 +44,7 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
 }
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
+  // only entry point for recommendations
   addRecommendation(state, recommendation: RecommendationRaw): void {
     const extended = new RecommendationExtra(recommendation);
     if (state.recommendationsByName.get(extended.name) !== undefined)
@@ -161,8 +163,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       throw "Name given doesn't match an existing recommendation";
 
     // Apply all, without waiting for them to send
-    for (const rec of selectedRecs)
-      dispatch("applySingleRecommendation", rec);
+    for (const rec of selectedRecs) dispatch("applySingleRecommendation", rec);
   },
 
   // should return nearly immediately
@@ -199,6 +200,8 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
   },
   // If there is a "CLAIMED" recommendation, its status will change once it
+  // has finished being applied. Therefore, we want to follow it and update the store
+  // (which will, in turn, automatically update the UI).
   //
   // It is safe to add to/clear the recommendations list during execution,
   //  forEach makes sure of that
@@ -219,15 +222,17 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
   },
   // Should return nearly immediately,
-  //  the promise encapsulates the answer to: do we want to continue watching this recommendation?
+  // the promise encapsulates the answer to: do we want to continue watching this recommendation?
   async watchStatusOnce(
     { commit },
     rec: RecommendationExtra
   ): Promise<boolean> {
+    // send the request
     const response = await fetch(
       `${SERVER_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
 
+    // handle all possible types of responses
     if (response.status === HTTP_OK_CODE) {
       const responseJson = (await response.json()) as ICheckStatusResponse;
       switch (responseJson.status) {
@@ -309,9 +314,9 @@ interface ICheckStatusResponse {
 }
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
-  // Used for calculating filter choices, sorted to avoid changes in order 
+  // Used for calculating filter choices, sorted to avoid changes in order
   // caused by a different set of recommendations in a filtered view
-  // (for example. the first type found might change very frequently) 
+  // (for example. the first type found might change very frequently)
 
   allProjects(state): string[] {
     const projects = state.recommendations.map(r => r.projectCol).sort();
