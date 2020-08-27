@@ -146,10 +146,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("endFetching");
   },
 
-  applyGivenRecommendations(
+  async applyGivenRecommendations(
     { dispatch, state },
     selectedNames: string[]
-  ): void {
+  ): Promise<void> {
     // if selected has duplicates
     if (new Set(selectedNames).size !== selectedNames.length)
       throw "Duplicates found among given recommendation names";
@@ -162,8 +162,9 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (selectedRecs.includes(undefined))
       throw "Name given doesn't match an existing recommendation";
 
-    // Apply all, without waiting for them to send
-    for (const rec of selectedRecs) dispatch("applySingleRecommendation", rec);
+    // Apply all, waiting for them to send
+    for (const rec of selectedRecs)
+      await dispatch("applySingleRecommendation", rec);
   },
 
   // should return nearly immediately
@@ -208,19 +209,23 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   // (which will, in turn, automatically update the UI).
   //
   // It is safe to add to/clear the recommendations list during execution,
-  //  forEach makes sure of that
+  // as we are operating on a copy
   async watchStatusForAll({ state, commit, dispatch }): Promise<void> {
     for (;;) {
-      // check status of all recommendations (waits for responses)
-      state.recommendations.forEach(async rec => {
-        if (!rec.needsStatusWatcher) return;
+      // make a copy first so that this is more predictable
+      const recsCopy = state.recommendations.map(rec => rec);
+
+      // check status of all recommendations that need to be watched
+      // (waits for a response before starting a new request)
+      for (const rec of recsCopy) {
+        if (!rec.needsStatusWatcher) continue;
 
         const shouldContinue = await dispatch("watchStatusOnce", rec);
         commit("setRecommendationNeedsStatusWatcher", {
           recName: rec.name,
           needs: shouldContinue
         });
-      });
+      }
       // ask the browser to do something else for a bit and then resume
       await delay(APPLY_PROGRESS_WAIT_TIME);
     }
