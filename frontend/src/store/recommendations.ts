@@ -21,8 +21,7 @@ import { IRootStoreState } from "./root";
 
 // TODO: move all of this to config in some next PR
 const SERVER_ADDRESS: string = getServerAddress();
-const FETCH_PROGRESS_WAIT_TIME = 100;
-const APPLY_PROGRESS_WAIT_TIME = 200;
+const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
@@ -83,6 +82,15 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
       throw `Attempting to access an inexistent recommendation`;
     rec.errorHeader = payload.header;
     rec.errorDescription = payload.desc;
+  },
+  setRecommendationNeedsStatusWatcher(
+    state,
+    payload: { recName: string; needs: boolean }
+  ) {
+    const rec = state.recommendationsByName.get(payload.recName);
+    if (rec == undefined)
+      throw `Attempting to access an inexistent recommendation`;
+    rec.needsStatusWatcher = payload.needs;
   }
 };
 
@@ -133,12 +141,6 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       context.commit("addRecommendation", recommendation);
     }
 
-    // start watchers for all added recommendations already in progress
-    for (const recommendation of context.state.recommendations) {
-      if (recommendation.statusCol == getInternalStatusMapping("CLAIMED"))
-        context.dispatch("watchStatus", recommendation);
-    }
-
     context.commit("endFetching");
   },
 
@@ -158,14 +160,14 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (selectedRecs.includes(undefined))
       throw "Name given doesn't match an existing recommendation";
 
-    // If we find out that preparing the requests takes too long and
-    //  blocks the UI, we can wrap dispatches in setTimeout(...,0)
-    selectedRecs.forEach(rec => dispatch("applySingleRecommendation", rec));
+    // Apply all, without waiting for them to send
+    for (const rec of selectedRecs)
+      dispatch("applySingleRecommendation", rec);
   },
 
   // should return nearly immediately
   async applySingleRecommendation(
-    { commit, dispatch },
+    { commit },
     rec: RecommendationExtra
   ): Promise<void> {
     commit("setRecommendationStatus", {
@@ -179,7 +181,11 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     );
 
     // If server accepted the request, watch the status. Otherwise, save the error.
-    if (response.status === HTTP_OK_CODE) dispatch("watchStatus", rec);
+    if (response.status === HTTP_OK_CODE)
+      commit("setRecommendationNeedsStatusWatcher", {
+        recName: rec.name,
+        needs: true
+      });
     else {
       commit("setRecommendationStatus", {
         recName: rec.name,
@@ -193,12 +199,21 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
   },
   // If there is a "CLAIMED" recommendation, its status will change once it
-  //  has finished being applied. Therefore, we want to follow it and update the store
-  //  (which will, in turn, automatically update the UI).
-  async watchStatus({ dispatch }, rec: RecommendationExtra): Promise<void> {
+  //
+  // It is safe to add to/clear the recommendations list during execution,
+  //  forEach makes sure of that
+  async watchStatusForAll({ state, commit, dispatch }): Promise<void> {
     for (;;) {
-      const shouldContinue = await dispatch("watchStatusOnce", rec);
-      if (!shouldContinue) break;
+      // check status of all recommendations (waits for responses)
+      state.recommendations.forEach(async rec => {
+        if (!rec.needsStatusWatcher) return;
+
+        const shouldContinue = await dispatch("watchStatusOnce", rec);
+        commit("setRecommendationNeedsStatusWatcher", {
+          recName: rec.name,
+          needs: shouldContinue
+        });
+      });
       // ask the browser to do something else for a bit and then resume
       await delay(APPLY_PROGRESS_WAIT_TIME);
     }

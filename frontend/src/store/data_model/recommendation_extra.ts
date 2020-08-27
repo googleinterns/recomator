@@ -46,6 +46,9 @@ export class RecommendationExtra implements RecommendationRaw {
   errorHeader?: string; // if apply fails,
   errorDescription?: string; // error details are stored here
 
+  // decides if checkStatus requests are sent once in a while
+  needsStatusWatcher = false;
+
   constructor(rec: RecommendationRaw) {
     this.name = rec.name;
     this.description = rec.description;
