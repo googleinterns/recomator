@@ -188,6 +188,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         needs: true
       });
     else {
+      commit("setRecommendationNeedsStatusWatcher", {
+        recName: rec.name,
+        needs: false
+      });
       commit("setRecommendationStatus", {
         recName: rec.name,
         newStatus: "FAILED"
