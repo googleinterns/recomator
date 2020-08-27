@@ -66,29 +66,25 @@ afterEach(() => {
   dispatch.mockClear();
 });
 
-test("applyGivenRecommendations action", () => {
+test("applyGivenRecommendations action", async () => {
   const applier = recommendationStoreFactory().actions![
     "applyGivenRecommendations"
   ] as any;
-  expect(applier).not.toBeNull();
+
+  // Note: rejects/resolves fails (good) if the Promise actually doesn't
 
   // duplicates
-  expect(() => {
-    applier(context, ["a/b", "a/b"]);
-  }).toThrowError();
+  await expect(applier(context, ["a/b", "a/b"])).rejects.not.toBeNull();
   expect(dispatch).toBeCalledTimes(0);
 
   // non-existent
   dispatch.mockReset();
-  expect(() => {
-    applier(context, ["a/b", "a/b/c/d"]);
-  }).toThrowError();
+  await expect(applier(context, ["a/b", "a/b/c/d"])).rejects.not.toBeNull();
   expect(dispatch).toBeCalledTimes(0);
 
+  // succeeding
   dispatch.mockReset();
-  expect(() => {
-    applier(context, ["a/b/c", "a/b"]);
-  }).not.toThrowError();
+  await expect(applier(context, ["a/b/c", "a/b"])).resolves.not.toBeNull();
   expect(dispatch).toBeCalledTimes(2);
   expect(dispatch.mock.calls[0][0]).toBe("applySingleRecommendation");
   expect(dispatch.mock.calls[1][0]).toBe("applySingleRecommendation");
