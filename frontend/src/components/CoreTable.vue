@@ -14,6 +14,7 @@ limitations under the License. -->
 
 <template>
   <v-data-table
+  ref="check"
     dense
     :headers="headers"
     :items="this.$store.getters['filteredRecommendationsWithExtras']"
@@ -34,7 +35,7 @@ limitations under the License. -->
     </template>
 
     <template v-slot:item.data-table-select="{ item }">
-      <v-simple-checkbox
+      <v-simple-checkbox ref="test1"
         v-on:input="select(item, isSelected(item))"
         :value="isSelected(item) && isActive(item)"
         :disabled="!isActive(item)"

@@ -28,7 +28,7 @@ import {
   isRecommendationInResults
 } from "@/store/core_table";
 
-import { freshSampleRawRecommendation } from "./sample_recommendation";
+import { freshSampleRawRecommendation } from "./sample_recommendations";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 
 describe("Filtering aggregate (resource name, type, status...)", () => {

@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <div ref="test">
+  <div>
     <!-- Footer with 'Apply Selected' button -->
     <v-footer
       ref="footer"
@@ -25,12 +25,12 @@ limitations under the License. -->
       <v-container>
         <v-row>
           <v-col :cols="12" :lg="8">
-            <div class="font-weight-black">
+            <div data-name="footer-summary" class="font-weight-black">
               {{ footerMessage }}
             </div>
           </v-col>
           <v-col :cols="12" :lg="4">
-            <v-btn rounded color="primary" dark v-on:click="dialog = true"
+            <v-btn rounded data-name="footer-button" color="primary" dark v-on:click="dialog = true"
               >Apply Selected Recommendation{{
                 selectedRowsCount == 1 ? "" : "s"
               }}</v-btn
@@ -41,8 +41,8 @@ limitations under the License. -->
     </v-footer>
 
     <!-- Confirmation dialog -->
-    <v-dialog v-model="dialog" max-width="640px">
-      <v-card>
+    <v-dialog ref="dialog" v-model="dialog" max-width="640px">
+      <v-card data-name="dialog">
         <v-card-title class="headline">
           <v-row>
             <v-col
@@ -57,6 +57,7 @@ limitations under the License. -->
         <v-card-actions>
           <v-spacer />
           <v-btn
+            data-name="yes-button"
             color="green white--text"
             v-on:click="
               applySelectedRecommendations();
@@ -67,7 +68,8 @@ limitations under the License. -->
             Yes
           </v-btn>
 
-          <v-btn color="primary white--text" v-on:click="dialog = false">
+          <v-btn data-name="cancel-button"
+color="primary white--text" v-on:click="dialog = false">
             <v-icon>mdi-window-close</v-icon>
             Cancel
           </v-btn>
