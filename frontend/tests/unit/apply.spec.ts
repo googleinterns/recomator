@@ -111,7 +111,7 @@ describe("applySingleRecommendation action", () => {
 
     expect((fetch as any).mock.calls.length).toEqual(1);
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
-    expect(dispatch.mock.calls).toEqual([["watchStatus", firstRec]]);
+    expect(firstRec.needsStatusWatcher).toBeTruthy();
     expect(firstRec.statusCol).toEqual(getInternalStatusMapping("CLAIMED"));
   });
 
@@ -122,7 +122,7 @@ describe("applySingleRecommendation action", () => {
     await applier(context, firstRec);
 
     expect((fetch as any).mock.calls.length).toEqual(1);
-    expect(dispatch).toHaveBeenCalledTimes(0);
+    expect(firstRec.needsStatusWatcher).toBeFalsy();
     expect(firstRec.statusCol).toEqual(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader).not.toBeNull();
   });
