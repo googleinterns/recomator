@@ -98,8 +98,6 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained recommendations to the store
-  // - it can only be run once in the app lifetime,
-  //    as there is no way to stop status watchers atm
   async fetchRecommendations(context): Promise<void> {
     // one fetch at a time only
     if (context.state.progress !== null) {
@@ -162,7 +160,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (selectedRecs.includes(undefined))
       throw "Name given doesn't match an existing recommendation";
 
-    // Apply all, waiting for them to send
+    // Apply all, waiting for them to send one by one
     for (const rec of selectedRecs)
       await dispatch("applySingleRecommendation", rec);
   },
