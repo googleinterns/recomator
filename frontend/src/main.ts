@@ -28,7 +28,7 @@ errors disappear, make sure that Go is in the latest version too. */
 // Asynchronously request and receive recommendations from the middleware
 store.dispatch("recommendationsStore/fetchRecommendations");
 // Start status watchers
-store.dispatch("recommendationsStore/watchStatusForAll");
+store.dispatch("recommendationsStore/startCentralStatusWatcher");
 
 new Vue({
   router,

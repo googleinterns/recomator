@@ -31,6 +31,7 @@ export interface IRecommendationsStoreState {
   errorCode: number | undefined;
   errorMessage: string | undefined;
   progress: number | null; // % recommendations loaded, null if no fetching is happening
+  centralStatusWatcherRunning: boolean;
 }
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
@@ -39,7 +40,8 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
     recommendationsByName: new Map<string, RecommendationExtra>(),
     progress: null,
     errorCode: undefined,
-    errorMessage: undefined
+    errorMessage: undefined,
+    centralStatusWatcherRunning: false
   };
 }
 
@@ -93,6 +95,11 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     if (rec == undefined)
       throw `Attempting to access an inexistent recommendation`;
     rec.needsStatusWatcher = payload.needs;
+  },
+  registerCentralStatusWatcher(state) {
+    if (state.centralStatusWatcherRunning)
+      throw `More than once central status watcher`;
+    state.centralStatusWatcherRunning = true;
   }
 };
 
@@ -208,7 +215,8 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   //
   // It is safe to add to/clear the recommendations list during execution,
   // as we are operating on a copy
-  async watchStatusForAll({ state, commit, dispatch }): Promise<void> {
+  async startCentralStatusWatcher({ state, commit, dispatch }): Promise<void> {
+    commit("registerCentralStatusWatcher");
     for (;;) {
       // make a copy first so that this is more predictable
       const recsCopy = state.recommendations.map(rec => rec);
