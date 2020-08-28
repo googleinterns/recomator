@@ -22,7 +22,7 @@ import { recommendationStoreFactory } from "@/store/recommendations";
 let store: any, context: any, commit: any;
 let dispatch: jest.Mock;
 
-let firstRec: RecommendationExtra;
+let firstRec: RecommendationExtra, secondRec: RecommendationExtra;
 
 beforeAll(() => {
   enableFetchMocks(); // fetchMock instance visible
@@ -57,6 +57,7 @@ beforeEach(() => {
   store.commit("recommendationsStore/addRecommendation", recsRaw[0]);
   store.commit("recommendationsStore/addRecommendation", recsRaw[1]);
   firstRec = modState.recommendations[0];
+  secondRec = modState.recommendations[1];
 });
 
 afterEach(() => {
@@ -121,6 +122,68 @@ describe("applySingleRecommendation action", () => {
     expect(firstRec.needsStatusWatcher).toBeFalsy();
     expect(firstRec.statusCol).toEqual(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader).not.toBeNull();
+  });
+});
+
+describe("startCentralStatusWatcher action", () => {
+  const action = recommendationStoreFactory().actions![
+    "startCentralStatusWatcher"
+  ] as any;
+
+  test("only one instance at a time allowed", async () => {
+    // make this fail on checkStatusOnceForAll
+    dispatch = jest.fn(() => {
+      throw "abcdef";
+    });
+    context.dispatch = dispatch;
+
+    // make sure that both expects are called
+    expect.assertions(2);
+
+    // it should fail at the first dispatch the first time
+    action(context).catch((error: any) => {
+      expect(error.toString()).toBe("abcdef");
+    });
+
+    // it should fail earlier the second time
+    action(context).catch((error: any) => {
+      expect(error.toString()).not.toBe("abcdef");
+    });
+  });
+});
+
+describe("checkStatusOnceForAll action", () => {
+  let action: any;
+  beforeAll(() => {
+    action = recommendationStoreFactory().actions![
+      "checkStatusOnceForAll"
+    ] as any;
+  });
+
+  test("checkStatusOnce: true => false", async () => {
+    dispatch = jest
+      .fn()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    context.dispatch = dispatch;
+
+    firstRec.needsStatusWatcher = true;
+
+    await action(context);
+    expect(firstRec.needsStatusWatcher).toBeTruthy();
+    await action(context);
+    expect(firstRec.needsStatusWatcher).toBeFalsy();
+  });
+
+  test("ignores iff needsStatusWatcher: false", async () => {
+    firstRec.needsStatusWatcher = false;
+    secondRec.needsStatusWatcher = true;
+
+    dispatch = jest.fn().mockResolvedValue(false);
+    context.dispatch = dispatch;
+
+    await action(context);
+    expect(dispatch.mock.calls).toEqual([["checkStatusOnce", secondRec]]);
   });
 });
 
