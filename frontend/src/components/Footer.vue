@@ -22,18 +22,25 @@ limitations under the License. -->
     >
       <v-container fluid>
         <v-row align="center" justify="space-around" justify-md="space-between">
-              <v-btn fab small dark color="secondary" v-on:click="unselectAll">
-                  <v-icon dark>mdi-close</v-icon>
-              </v-btn>
+          <v-btn fab small dark color="secondary" v-on:click="unselectAll">
+            <v-icon dark>mdi-close</v-icon>
+          </v-btn>
           <div>
-              <div style="font-weight: bold; color: white">
-            {{applyPart}}<br/>
-            <span v-if="spendingsPart.length>0">{{spendingsPart}}<br/></span>
-            <span v-if="savingsPart.length>0">{{savingsPart}}</span>
-              </div>
+            <div style="font-weight: bold; color: white">
+              {{ applyPart }}<br />
+              <span v-if="spendingsPart.length > 0"
+                >{{ spendingsPart }}<br
+              /></span>
+              <span v-if="savingsPart.length > 0">{{ savingsPart }}</span>
+            </div>
           </div>
           <div>
-            <v-btn rounded color="secondary" style="font-weight: bold" dark v-on:click="dialog = true"
+            <v-btn
+              rounded
+              color="secondary"
+              style="font-weight: bold"
+              dark
+              v-on:click="dialog = true"
               >Apply Selected</v-btn
             >
           </div>
@@ -127,9 +134,7 @@ export default class Footer extends Vue {
       return "";
     }
 
-    return `Use less resources and save ${savings.toFixed(
-      2
-    )}$ each week.`;
+    return `Use less resources and save ${savings.toFixed(2)}$ each week.`;
   }
 
   get spendingsPart(): string {
@@ -151,7 +156,7 @@ export default class Footer extends Vue {
     this.unselectAll();
   }
 
-  unselectAll() : void {
+  unselectAll(): void {
     this.$store.commit("coreTableStore/setSelected", []);
   }
 }
