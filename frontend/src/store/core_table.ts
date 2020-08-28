@@ -32,6 +32,7 @@ export interface ICoreTableStoreState {
   statusesSelected: string[];
   costCategoriesSelected: string[];
   selected: RecommendationExtra[];
+  currentlySelectable: RecommendationExtra[];
 }
 
 export function coreTableStoreStateFactory(): ICoreTableStoreState {
@@ -42,7 +43,8 @@ export function coreTableStoreStateFactory(): ICoreTableStoreState {
     typesSelected: [],
     statusesSelected: [],
     costCategoriesSelected: [],
-    selected: []
+    selected: [],
+    currentlySelectable: []
   };
 }
 
@@ -67,6 +69,29 @@ const mutations: MutationTree<ICoreTableStoreState> = {
   },
   setSelected(state, selected: RecommendationExtra[]) {
     state.selected = selected;
+  },
+  setCurrentlySelectable(state, currentlySelectable: RecommendationExtra[]) {
+    state.currentlySelectable = currentlySelectable;
+  },
+  selectAllSelectable(state) {
+    for (const row of state.currentlySelectable) {
+      if (!state.selected.includes(row)) {
+        state.selected.push(row);
+      }
+    }
+  },
+  unselectAllSelectable(state) {
+    for (const row of state.currentlySelectable) {
+      state.selected = state.selected.filter(item => item !== row);
+    }
+  },
+  select(state, toSelect: RecommendationExtra) {
+    if (!state.selected.includes(toSelect)) {
+      state.selected.push(toSelect);
+    }
+  },
+  unselect(state, toSelect: RecommendationExtra) {
+    state.selected = state.selected.filter(item => item !== toSelect);
   }
 };
 
