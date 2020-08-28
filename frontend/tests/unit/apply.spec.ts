@@ -124,11 +124,11 @@ describe("applySingleRecommendation action", () => {
   });
 });
 
-describe("watchStatusOnce action", () => {
-  let watchStatusOnce: any;
+describe("checkStatusOnce action", () => {
+  let checkStatusOnce: any;
   beforeAll(() => {
-    watchStatusOnce = recommendationStoreFactory().actions![
-      "watchStatusOnce"
+    checkStatusOnce = recommendationStoreFactory().actions![
+      "checkStatusOnce"
     ] as any;
   });
   beforeEach(() => {
@@ -137,7 +137,7 @@ describe("watchStatusOnce action", () => {
 
   test("-> in progress", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "IN PROGRESS" }));
-    const shouldContinue = await watchStatusOnce(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
 
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
     expect(shouldContinue).toBeTruthy();
@@ -145,7 +145,7 @@ describe("watchStatusOnce action", () => {
 
   test("-> succeeded", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "SUCCEEDED" }));
-    const shouldContinue = await watchStatusOnce(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
 
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("SUCCEEDED"));
@@ -154,7 +154,7 @@ describe("watchStatusOnce action", () => {
 
   test("-> not applied", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "NOT APPLIED" }));
-    const shouldContinue = await watchStatusOnce(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
 
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Server has")).toBeTruthy();
@@ -168,7 +168,7 @@ describe("watchStatusOnce action", () => {
         errorMessage: "something bad happened"
       })
     );
-    const shouldContinue = await watchStatusOnce(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
 
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Applying ")).toBeTruthy();
@@ -178,7 +178,7 @@ describe("watchStatusOnce action", () => {
 
   test("-> gibberish", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "%%%" }));
-    const shouldContinue = await watchStatusOnce(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
 
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Bad status(")).toBeTruthy();
@@ -189,7 +189,7 @@ describe("watchStatusOnce action", () => {
     fetchMock.mockResponseOnce(async () => {
       return { status: 404, body: "Endpoint not found" };
     });
-    const shouldContinue = await watchStatusOnce(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader?.indexOf("404")).not.toBe(-1);
     expect(shouldContinue).toBeTruthy(); // try again in this case

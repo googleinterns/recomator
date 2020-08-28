@@ -215,30 +215,33 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   //
   // It is safe to add to/clear the recommendations list during execution,
   // as we are operating on a copy
-  async startCentralStatusWatcher({ state, commit, dispatch }): Promise<void> {
+  async startCentralStatusWatcher({ commit, dispatch }): Promise<void> {
     commit("registerCentralStatusWatcher");
     for (;;) {
-      // make a copy first so that this is more predictable
-      const recsCopy = state.recommendations.map(rec => rec);
-
-      // check status of all recommendations that need to be watched
-      // (waits for a response before starting a new request)
-      for (const rec of recsCopy) {
-        if (!rec.needsStatusWatcher) continue;
-
-        const shouldContinue = await dispatch("watchStatusOnce", rec);
-        commit("setRecommendationNeedsStatusWatcher", {
-          recName: rec.name,
-          needs: shouldContinue
-        });
-      }
+      await dispatch("checkStatusOnceForAll");
       // ask the browser to do something else for a bit and then resume
       await delay(APPLY_PROGRESS_WAIT_TIME);
     }
   },
+  async checkStatusOnceForAll({ state, commit, dispatch }): Promise<void> {
+    // make a copy first to make the array constant inside the for loop
+    const recsCopy = state.recommendations.map(rec => rec);
+
+    // check status of all recommendations that need to be watched
+    // (waits for a response before starting a new request)
+    for (const rec of recsCopy) {
+      if (!rec.needsStatusWatcher) continue;
+
+      const shouldContinue = await dispatch("checkStatusOnce", rec);
+      commit("setRecommendationNeedsStatusWatcher", {
+        recName: rec.name,
+        needs: shouldContinue
+      });
+    }
+  },
   // Should return nearly immediately. Assumes the recommendation was applied by us (not Pantheon, for example)
   // the promise encapsulates the answer to: do we want to continue watching this recommendation?
-  async watchStatusOnce(
+  async checkStatusOnce(
     { commit },
     rec: RecommendationExtra
   ): Promise<boolean> {
