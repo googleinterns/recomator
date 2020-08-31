@@ -239,8 +239,9 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       });
     }
   },
-  // Should return nearly immediately. Assumes the recommendation was applied by us (not Pantheon, for example)
-  // the promise encapsulates the answer to: do we want to continue watching this recommendation?
+  // Iff awaited, waits for the status check to finish.
+  // Assumes the recommendation has been applied already (by us/Pantheon/something else).
+  // Returns: do we want to continue watching this recommendation?
   async checkStatusOnce(
     { commit },
     rec: RecommendationExtra
@@ -253,8 +254,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // handle all possible types of responses
     if (response.status === HTTP_OK_CODE) {
       const responseJson = (await response.json()) as ICheckStatusResponse;
+
       switch (responseJson.status) {
-        case "IN PROGRESS":
+        case "CLAIMED": // applied somewhere else (e.g. Pantheon, us earlier
+        case "IN PROGRESS": // applied by us
           commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "CLAIMED"
@@ -269,9 +272,9 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
           });
           return false;
 
-        // Now we know it failed, save the error message and tell the user why
+        // Now we know it failed, save the error message telling the user why
 
-        case "NOT APPLIED":
+        case "ACTIVE": // shouldn't be ACTIVE if it has been applied
           commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "FAILED"
@@ -280,7 +283,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             recName: rec.name,
             header: "Server hasn't acknowledged the request",
             desc:
-              "Recomator API has not received the request to apply this recommendation. You can try applying it again."
+              "The recommendation is still active, so the Recomator API has not received the request to apply this recommendation. You can try applying it again."
           });
           return false;
 
