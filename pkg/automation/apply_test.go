@@ -311,8 +311,12 @@ func TestStopRecommendation(t *testing.T) {
 	}
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{Status: "RUNNING"}}
-	err := DoOperations(&service, &recommendation)
+	task := &Task{}
+	err := DoOperations(&service, &recommendation, task)
 	assert.NoError(t, err, "DoOperations shouldn't return an error")
+
+	done, all := task.GetProgress()
+	assert.True(t, done == all, "All should be done for DoOperations")
 
 	expectedFunctions := []string{
 		"GetInstance",
@@ -362,7 +366,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 	}
 
 	service := ApplyMockService{}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
@@ -414,7 +418,7 @@ func TestReplaceRecommendation(t *testing.T) {
 	}
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
@@ -472,7 +476,7 @@ func TestNotActiveRecommendation(t *testing.T) {
 	}
 
 	service := ApplyMockService{}
-	err := Apply(&service, &recommendation)
+	err := Apply(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, "to apply a recommendation, its status must be active")
 	var nilCalledFunction []calledFunction = nil
 
@@ -511,7 +515,8 @@ func TestUnsupportedAction(t *testing.T) {
 	}
 
 	service := ApplyMockService{}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
+
 	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
 
@@ -550,7 +555,7 @@ func TestUnsupportedPath(t *testing.T) {
 	}
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, operationNotSupportedMessage)
 	expectedFunctions := []string{
 		"GetInstance",
@@ -598,7 +603,7 @@ func TestUnsupportedResourceType(t *testing.T) {
 	}
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunctions []calledFunction = nil
 
@@ -637,7 +642,7 @@ func TestUnsupportedReplaceValue(t *testing.T) {
 	}
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2", Status: "RUNNING"}}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, operationNotSupportedMessage)
 	expectedFunctions := []string{
 		"GetInstance",
@@ -690,7 +695,7 @@ func TestUnsupportedAddResourceType(t *testing.T) {
 	}
 
 	service := ApplyMockService{}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
 
@@ -729,7 +734,7 @@ func TestFailedTest(t *testing.T) {
 	}
 
 	service := ApplyMockService{getInstanceResult: &compute.Instance{MachineType: "@#$%!E"}}
-	err := DoOperations(&service, &recommendation)
+	err := DoOperations(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, "machine type is not as expected")
 	expectedFunctions := []string{
 		"GetInstance",
@@ -779,7 +784,7 @@ func TestApplyFailed(t *testing.T) {
 	recommendationCopy := recommendation
 
 	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-123"}}
-	err := Apply(&service, &recommendation)
+	err := Apply(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, "machine type is not as expected")
 
 	expectedFunctions := []string{
@@ -846,7 +851,7 @@ func TestFailedClaimRecommendation(t *testing.T) {
 	}
 
 	service := FailedClaimService{}
-	err := Apply(&service, &recommendation)
+	err := Apply(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, "recommendation couldn't be marked claimed")
 
 	expectedFunctions := []string{
@@ -941,7 +946,7 @@ func TestFailedSucceedRecommendation(t *testing.T) {
 	recommendationCopy := recommendation
 
 	service := FailedSucceedService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
-	err := Apply(&service, &recommendation)
+	err := Apply(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, "recommendation couldn't be marked succeeded")
 
 	expectedFunctions := []string{
@@ -1026,7 +1031,7 @@ func TestFailedFailedRecommendation(t *testing.T) {
 	recommendationCopy := recommendation
 
 	service := FailedFailedService{recommendation: recommendation}
-	err := Apply(&service, &recommendation)
+	err := Apply(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, "recommendation couldn't be marked failed")
 
 	expectedFunctions := []string{
@@ -1080,8 +1085,13 @@ func TestApplySucceeded(t *testing.T) {
 	recommendationCopy := recommendation
 
 	service := ApplyMockService{recommendation: recommendation, getInstanceResult: &compute.Instance{MachineType: "zones/us-east1-b/machineTypes/e2-standard-2"}}
-	err := Apply(&service, &recommendation)
-	assert.NoError(t, err, "DoOperations shouldn't return an error")
+
+	task := &Task{}
+	err := Apply(&service, &recommendation, task)
+	done, all := task.GetProgress()
+	assert.True(t, done == all, "Apply should be finished now")
+
+	assert.NoError(t, err, "Apply shouldn't return an error")
 
 	expectedFunctions := []string{
 		"MarkRecommendationClaimed",
