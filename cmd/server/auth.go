@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,11 +23,10 @@ type AuthorizationService interface {
 
 // authorizeRequest extracts the authorization code from Authorization header in request
 // and uses it to return authorize user using authService.
-func authorizeRequest(authService AuthorizationService, request *gin.Request) (User, err) {
-	authCode := c.Request.Header["Authorization"]
-	name := c.Query("name")
+func authorizeRequest(authService AuthorizationService, request *http.Request) (User, error) {
+	authCode := request.Header["Authorization"]
 	if len(authCode) == 0 {
-		return fmt.Errorf("Authorization code not specified")
+		return User{}, fmt.Errorf("Authorization code not specified")
 	}
 	return authService.Authorize(authCode[0])
 }

@@ -72,7 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	listRequestsInProcess := listRequestsMap{data: make(map[string]*listRequestHandler)} // the key is email address of the user
+	listRequestsInProcess = listRequestsMap{data: make(map[string]*listRequestHandler)} // the key is email address of the user
 
 	applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
 

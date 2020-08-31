@@ -95,6 +95,7 @@ func (m *applyRequestsMap) LoadOrStore(info applyInfo, handler *applyRequestHand
 
 func getApplyHandler(authService AuthorizationService) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		name := c.Query("name")
 		user, err := authorizeRequest(authService, c.Request)
 
 		if err != nil {
@@ -113,7 +114,7 @@ func getApplyHandler(authService AuthorizationService) func(c *gin.Context) {
 
 func getCheckStatusHandler(authService AuthorizationService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-
+		name := c.Query("name")
 		user, err := authorizeRequest(authService, c.Request)
 
 		if err != nil {
@@ -138,7 +139,7 @@ func getCheckStatusHandler(authService AuthorizationService) func(c *gin.Context
 			if err != nil {
 				sendError(c, err)
 			} else {
-				c.JSON(http.StatusOK, CheckStatusResponse{Status: rec.Status})
+				c.JSON(http.StatusOK, CheckStatusResponse{Status: rec.StateInfo.State})
 			}
 		}
 
