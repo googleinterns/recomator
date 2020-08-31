@@ -336,12 +336,12 @@ func TestListAllProjectsRecommendations(t *testing.T) {
 					assert.ElementsMatch(t, projects, mock.apiCalls, "List api requirements was called for different projects")
 					assert.ElementsMatch(t, okProjects, mock.permissionCalls, "List permission requirements was called for different projects")
 
-					assert.Equal(t, len(queries), len(res.recommendations), "Wrong number of overall recommendations")
+					assert.Equal(t, len(queries), len(res.Recommendations), "Wrong number of overall recommendations")
 					var failedProjectsRequirements []*ProjectRequirements
 					for i := 0; i < numFailed; i++ {
 						failedProjectsRequirements = append(failedProjectsRequirements, &ProjectRequirements{Project: failedProject, Requirements: failedRequirements})
 					}
-					assert.ElementsMatch(t, failedProjectsRequirements, res.failedProjects, "Wrong failed projects requirements list")
+					assert.ElementsMatch(t, failedProjectsRequirements, res.FailedProjects, "Wrong failed projects requirements list")
 				}
 			}
 		}
