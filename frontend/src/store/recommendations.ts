@@ -12,21 +12,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import {
-  RecommendationRaw,
-  RecommendationExtra,
-  getRecommendationProject,
-  getRecommendationType,
-  getInternalStatusMapping
-} from "@/store/model";
-import { delay, getServerAddress } from "./utils";
+import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
+import { delay, getServerAddress } from "./utils/misc";
+import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
 
 // TODO: move all of this to config in some next PR
 const SERVER_ADDRESS: string = getServerAddress();
-const FETCH_PROGRESS_WAIT_TIME = 100;
-const APPLY_PROGRESS_WAIT_TIME = 200;
+const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
+const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
 
 export interface IRecommendationsStoreState {
@@ -34,8 +30,8 @@ export interface IRecommendationsStoreState {
   recommendationsByName: Map<string, RecommendationExtra>;
   errorCode: number | undefined;
   errorMessage: string | undefined;
-  // % recommendations loaded, null if no fetching is happening
-  progress: number | null;
+  progress: number | null; // % recommendations loaded, null if no fetching is happening
+  centralStatusWatcherRunning: boolean;
 }
 
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
@@ -44,13 +40,14 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
     recommendationsByName: new Map<string, RecommendationExtra>(),
     progress: null,
     errorCode: undefined,
-    errorMessage: undefined
+    errorMessage: undefined,
+    centralStatusWatcherRunning: false
   };
 }
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
+  // only entry point for recommendations
   addRecommendation(state, recommendation: RecommendationRaw): void {
-    //TODO: add watching recommendations that are in progress at the app launch
     const extended = new RecommendationExtra(recommendation);
     if (state.recommendationsByName.get(extended.name) !== undefined)
       throw "Duplicate recommendation name";
@@ -89,25 +86,39 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
       throw `Attempting to access an inexistent recommendation`;
     rec.errorHeader = payload.header;
     rec.errorDescription = payload.desc;
+  },
+  setRecommendationNeedsStatusWatcher(
+    state,
+    payload: { recName: string; needs: boolean }
+  ) {
+    const rec = state.recommendationsByName.get(payload.recName);
+    if (rec == undefined)
+      throw `Attempting to access an inexistent recommendation`;
+    rec.needsStatusWatcher = payload.needs;
+  },
+  registerCentralStatusWatcher(state) {
+    if (state.centralStatusWatcherRunning)
+      throw `More than once central status watcher`;
+    state.centralStatusWatcherRunning = true;
   }
 };
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
+  // Makes requests to the middleware and adds obtained recommendations to the store
   async fetchRecommendations(context): Promise<void> {
+    // one fetch at a time only
     if (context.state.progress !== null) {
       return;
     }
-
+    context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
-    let response;
-    let responseJson;
-    let responseCode;
-
+    // send /recommendations requests until data received
+    let responseJson: any;
     for (;;) {
-      response = await fetch(`${SERVER_ADDRESS}/recommendations`);
+      const response = await fetch(`${SERVER_ADDRESS}/recommendations`);
       responseJson = await response.json();
-      responseCode = response.status;
+      const responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
         context.commit("setError", {
@@ -137,20 +148,13 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       context.commit("addRecommendation", recommendation);
     }
 
-    // start watchers for all added recommendations already in progress
-    for (const recommendation of context.state.recommendations) {
-      if (recommendation.statusCol == getInternalStatusMapping("CLAIMED"))
-        context.dispatch("watchStatus", recommendation);
-    }
-
     context.commit("endFetching");
   },
 
-  // we need names, not references so that we can find them in the state fast
-  applyGivenRecommendations(
+  async applyGivenRecommendations(
     { dispatch, state },
     selectedNames: string[]
-  ): void {
+  ): Promise<void> {
     // if selected has duplicates
     if (new Set(selectedNames).size !== selectedNames.length)
       throw "Duplicates found among given recommendation names";
@@ -163,14 +167,14 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (selectedRecs.includes(undefined))
       throw "Name given doesn't match an existing recommendation";
 
-    // If we find out that preparing the requests takes too long and
-    // blocks the UI, we can wrap dispatches in setTimeout(...,0)
-    selectedRecs.forEach(rec => dispatch("applySingleRecommendation", rec));
+    // Apply all, waiting for them to send one by one
+    for (const rec of selectedRecs)
+      await dispatch("applySingleRecommendation", rec);
   },
 
   // should return nearly immediately
   async applySingleRecommendation(
-    { commit, dispatch },
+    { commit },
     rec: RecommendationExtra
   ): Promise<void> {
     commit("setRecommendationStatus", {
@@ -183,8 +187,17 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       { method: "POST" }
     );
 
-    if (response.status === HTTP_OK_CODE) dispatch("watchStatus", rec);
+    // If server accepted the request, watch the status. Otherwise, save the error.
+    if (response.status === HTTP_OK_CODE)
+      commit("setRecommendationNeedsStatusWatcher", {
+        recName: rec.name,
+        needs: true
+      });
     else {
+      commit("setRecommendationNeedsStatusWatcher", {
+        recName: rec.name,
+        needs: false
+      });
       commit("setRecommendationStatus", {
         recName: rec.name,
         newStatus: "FAILED"
@@ -196,15 +209,48 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       });
     }
   },
-  //  should return nearly immediately, assumes "CLAIMED" status
-  async watchStatus(
-    { commit, dispatch },
+  // If there is a "CLAIMED" recommendation, its status will change once it
+  // has finished being applied. Therefore, we want to follow it and update the store
+  // (which will, in turn, automatically update the UI).
+  //
+  // It is safe to add to/clear the recommendations list during execution,
+  // as we are operating on a copy
+  async startCentralStatusWatcher({ commit, dispatch }): Promise<void> {
+    commit("registerCentralStatusWatcher");
+    for (;;) {
+      await dispatch("checkStatusOnceForAll");
+      // ask the browser to do something else for a bit and then resume
+      await delay(APPLY_PROGRESS_WAIT_TIME);
+    }
+  },
+  async checkStatusOnceForAll({ state, commit, dispatch }): Promise<void> {
+    // make a copy first to make the array constant inside the for loop
+    const recsCopy = state.recommendations.map(rec => rec);
+
+    // check status of all recommendations that need to be watched
+    // (waits for a response before starting a new request)
+    for (const rec of recsCopy) {
+      if (!rec.needsStatusWatcher) continue;
+
+      const shouldContinue = await dispatch("checkStatusOnce", rec);
+      commit("setRecommendationNeedsStatusWatcher", {
+        recName: rec.name,
+        needs: shouldContinue
+      });
+    }
+  },
+  // Should return nearly immediately. Assumes the recommendation was applied by us (not Pantheon, for example)
+  // the promise encapsulates the answer to: do we want to continue watching this recommendation?
+  async checkStatusOnce(
+    { commit },
     rec: RecommendationExtra
-  ): Promise<void> {
+  ): Promise<boolean> {
+    // send the request
     const response = await fetch(
       `${SERVER_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
 
+    // handle all possible types of responses
     if (response.status === HTTP_OK_CODE) {
       const responseJson = (await response.json()) as ICheckStatusResponse;
       switch (responseJson.status) {
@@ -214,16 +260,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             newStatus: "CLAIMED"
           });
           // continue following the progress
-          break;
+          return true;
 
         case "SUCCEEDED":
           commit("setRecommendationStatus", {
             recName: rec.name,
             newStatus: "SUCCEEDED"
           });
-          return;
+          return false;
 
-        // Now we know it failed, tell the user why
+        // Now we know it failed, save the error message and tell the user why
 
         case "NOT APPLIED":
           commit("setRecommendationStatus", {
@@ -236,7 +282,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             desc:
               "Recomator API has not received the request to apply this recommendation. You can try applying it again."
           });
-          return;
+          return false;
 
         case "FAILED":
           commit("setRecommendationStatus", {
@@ -249,7 +295,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
               "Applying recommendation failed server-side. You can try applying it again.",
             desc: `${responseJson.errorMessage}`
           });
-          return;
+          return false;
 
         default:
           commit("setRecommendationStatus", {
@@ -261,7 +307,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
             header: `Bad status(${responseJson.status})`,
             desc: "Recomator API status not recognized."
           });
-          return;
+          return false;
       }
     } else {
       // Non-200 HTTP code
@@ -269,13 +315,14 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         recName: rec.name,
         newStatus: "FAILED"
       });
-      rec.errorHeader = `Status query failed (HTTP:${response.status})`;
-      rec.errorDescription =
-        "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment.";
+      commit("setRecommendationError", {
+        recName: rec.name,
+        header: `Status query failed (HTTP:${response.status})`,
+        desc:
+          "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment."
+      });
     }
-
-    // ask the event loop to check the status once again in a bit
-    setTimeout(() => dispatch("watchStatus", rec), APPLY_PROGRESS_WAIT_TIME);
+    return true; // Continue watching the status, maybe this is a temporary connection error
   }
 };
 
@@ -285,20 +332,20 @@ interface ICheckStatusResponse {
 }
 
 const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
+  // Used for calculating filter choices, sorted to avoid changes in order
+  // caused by a different set of recommendations in a filtered view
+  // (for example. the first type found might change very frequently)
+
   allProjects(state): string[] {
-    const projects = state.recommendations.map(r =>
-      getRecommendationProject(r)
-    );
+    const projects = state.recommendations.map(r => r.projectCol).sort();
     return Array.from(new Set(projects));
   },
   allTypes(state): string[] {
-    const types = state.recommendations.map(r => getRecommendationType(r));
+    const types = state.recommendations.map(r => r.typeCol).sort();
     return Array.from(new Set(types));
   },
   allStatuses(state): string[] {
-    const statuses = state.recommendations.map(r =>
-      getInternalStatusMapping(r.stateInfo.state)
-    );
+    const statuses = state.recommendations.map(r => r.statusCol).sort();
     return Array.from(new Set(statuses));
   }
 };

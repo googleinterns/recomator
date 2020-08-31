@@ -17,18 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
-	"golang.org/x/oauth2"
+	"github.com/gin-gonic/gin"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
-
-	"github.com/gin-gonic/gin"
-	"github.com/googleinterns/recomator/pkg/automation"
 )
 
 type gcloudRecommendation recommender.GoogleCloudRecommenderV1Recommendation
@@ -38,108 +32,52 @@ type ErrorResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
-func setAuthorizationHeader(c *gin.Context, token *oauth2.Token) bool {
-	tokenByte, err := json.Marshal(token)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{ErrorMessage: err.Error()})
-		return false
-	}
-	c.Header("Authorization", string(tokenByte))
-	return true
-}
+const defaultErrorCode = http.StatusInternalServerError
 
-func sendError(c *gin.Context, err error) {
+// sendError sends error message in ErrorResponse.
+// If the code is not specified in err, errorCode will be used.
+// If errorCode is not specified, defaultErrorCode will be used.
+func sendError(c *gin.Context, err error, errorCode ...int) {
 	googleErr, ok := err.(*googleapi.Error)
 	if ok {
 		c.JSON(googleErr.Code, ErrorResponse{googleErr.Message})
 		return
 	}
-	c.JSON(http.StatusInternalServerError, ErrorResponse{err.Error()})
+	code := defaultErrorCode
+	if len(errorCode) != 0 {
+		code = errorCode[0]
+	}
+	c.JSON(code, ErrorResponse{err.Error()})
 }
 
-func main() {
-	if err := setConfig(&conf, "config.json"); err != nil {
-		log.Fatal(err)
-	}
-	listRequestsInProcess := listRequestsMap{data: make(map[oauth2.Token]*listRequestHandler)} // the key is the token
-
-	// applyRequestsInProcess := applyRequestsMap{data: make(map[string]*applyRequestHandler)} // the key is recommendation name
-
+func setUpRouter(auth AuthorizationService) *gin.Engine {
 	router := gin.Default()
 	router.Use(corsMiddleware())
 
-	router.GET("/auth", func(c *gin.Context) {
-		code := c.Query("code")
-		path := c.Query("state")
-		token, err := conf.Exchange(context.Background(), code, authOptions...)
-		if err != nil {
-			sendError(c, err)
-			return
-		}
-		if !setAuthorizationHeader(c, token) {
-			return
-		}
-		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: fmt.Sprintf("Resend %s request with this authorization header", path)})
-	})
+	router.GET("/auth", authHandler)
 
-	router.GET("/recommendations", func(c *gin.Context) {
-		tokenStrings := c.Request.Header["Authorization"]
-		log.Printf("Authorization header: %v\n", tokenStrings)
-		if len(tokenStrings) != 0 {
-			var token oauth2.Token
-			log.Println(tokenStrings[0])
-			tokenByte := []byte(tokenStrings[0])
+	router.GET("/recommendations", getListHandler(auth))
 
-			err := json.Unmarshal(tokenByte, &token)
-			if err == nil {
-				newService, err := automation.NewGoogleService(context.Background(), &conf, &token)
-				if err != nil {
-					sendError(c, err)
-					return
-				}
+	router.POST("/recommendations/apply", getApplyHandler(auth))
 
-				handler, loaded := listRequestsInProcess.LoadOrStore(token, &listRequestHandler{service: newService, token: &token})
-				if !loaded {
-					go handler.ListRecommendations()
-				}
-				done, all := handler.GetProgress()
-				if done < all {
-					if setAuthorizationHeader(c, &token) {
-						c.JSON(http.StatusOK, ListRecommendationsProgressResponse{int(done), int(all)})
-					}
-				} else {
-					listRequestsInProcess.Delete(token)
-					listResult, err := handler.GetResult()
-					if err != nil {
-						sendError(c, err)
-					} else {
-						if setAuthorizationHeader(c, &token) {
-							c.JSON(http.StatusOK, ListRecommendationsResponse{
-								Recommendations: listResult.Recommendations,
-								FailedProjects:  listResult.FailedProjects})
-						}
-					}
-				}
-				return
-			}
-			log.Println(err)
-		}
-		// TODO send state field
-		url := conf.AuthCodeURL(c.Request.URL.Path, authOptions...)
-		c.Redirect(http.StatusSeeOther, url)
-		return
-	})
+	router.GET("/recommendations/checkStatus", getCheckStatusHandler(auth))
+	return router
+}
 
-	/*
-		router.POST("/recommendations/apply", func(c *gin.Context) {
+var listRequestsInProcess listRequestsMap
+var applyRequestsInProcess applyRequestsMap
 
-		})
+func main() {
+	if err := setConfig(&config, "config.json"); err != nil {
+		log.Fatal(err)
+	}
 
-		router.GET("/recommendations/checkStatus", func(c *gin.Context) {
+	listRequestsInProcess := listRequestsMap{data: make(map[string]*listRequestHandler)} // the key is email address of the user
 
-		})
-	*/
+	applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
 
-	router.Run(":8000")
+	// router := setUpServer(//TODO)
+
+	// router.Run(":8000")
 
 }

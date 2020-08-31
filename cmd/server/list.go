@@ -17,14 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/recommender/v1"
 )
 
-const numConcurrentCalls = 100
+const defaultNumConcurrentCalls = 100
 
 // ListRecommendationsResponse is response to list/recommendations method
 type ListRecommendationsResponse struct {
@@ -40,16 +42,16 @@ type ListRecommendationsProgressResponse struct {
 }
 
 type listRequestHandler struct {
-	result  *automation.ListResult
-	service automation.GoogleService
-	token   *oauth2.Token
-	task    automation.Task
-	err     error
+	result             *automation.ListResult
+	service            automation.GoogleService
+	task               automation.Task
+	numConcurrentCalls int
+	err                error
 }
 
 func (h *listRequestHandler) ListRecommendations() {
 	h.task.SetNumberOfSubtasks(1) // 1 call to ListAllProjectsRecommendations
-	h.result, h.err = automation.ListAllProjectsRecommendations(h.service, numConcurrentCalls, h.task.GetNextSubtask())
+	h.result, h.err = automation.ListAllProjectsRecommendations(h.service, h.numConcurrentCalls, h.task.GetNextSubtask())
 	h.task.SetAllDone()
 }
 
@@ -62,23 +64,59 @@ func (h *listRequestHandler) GetResult() (*automation.ListResult, error) {
 }
 
 type listRequestsMap struct {
-	data  map[oauth2.Token]*listRequestHandler
+	data  map[string]*listRequestHandler
 	mutex sync.Mutex
 }
 
-func (m *listRequestsMap) LoadOrStore(token oauth2.Token, handler *listRequestHandler) (*listRequestHandler, bool) {
+func (m *listRequestsMap) LoadOrStore(email string, handler *listRequestHandler) (*listRequestHandler, bool) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	h, ok := m.data[token]
+	h, ok := m.data[email]
 	if !ok {
-		m.data[token] = handler
+		m.data[email] = handler
 		h = handler
 	}
 	return h, ok
 }
 
-func (m *listRequestsMap) Delete(token oauth2.Token) {
+func (m *listRequestsMap) Delete(email string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	delete(m.data, token)
+	delete(m.data, email)
+}
+
+func getListHandler(authService AuthorizationService) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		authCode := c.Request.Header["Authorization"]
+		if len(authCode) != 0 {
+			user, err := authService.Authorize(authCode[0])
+
+			if err == nil {
+
+				handler, loaded := listRequestsInProcess.LoadOrStore(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
+				if !loaded {
+					go handler.ListRecommendations()
+				}
+				done, all := handler.GetProgress()
+				if done < all {
+					c.JSON(http.StatusOK, ListRecommendationsProgressResponse{int(done), int(all)})
+				} else {
+					listRequestsInProcess.Delete(user.email)
+					listResult, err := handler.GetResult()
+					if err != nil {
+						sendError(c, err)
+					} else {
+						c.JSON(http.StatusOK, ListRecommendationsResponse{
+							Recommendations: listResult.Recommendations,
+							FailedProjects:  listResult.FailedProjects})
+					}
+
+				}
+				return
+			}
+			sendError(c, err, http.StatusUnauthorized)
+			return
+		}
+		sendError(c, fmt.Errorf("Authorization code not specified"), http.StatusUnauthorized)
+	}
 }

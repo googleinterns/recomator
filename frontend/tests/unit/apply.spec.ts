@@ -13,7 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { enableFetchMocks } from "jest-fetch-mock";
-import { RecommendationExtra, getInternalStatusMapping } from "@/store/model";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
+import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { rootStoreFactory } from "@/store/root";
 import { recommendationStoreFactory } from "@/store/recommendations";
@@ -21,7 +22,7 @@ import { recommendationStoreFactory } from "@/store/recommendations";
 let store: any, context: any, commit: any;
 let dispatch: jest.Mock;
 
-let firstRec: RecommendationExtra;
+let firstRec: RecommendationExtra, secondRec: RecommendationExtra;
 
 beforeAll(() => {
   enableFetchMocks(); // fetchMock instance visible
@@ -56,6 +57,7 @@ beforeEach(() => {
   store.commit("recommendationsStore/addRecommendation", recsRaw[0]);
   store.commit("recommendationsStore/addRecommendation", recsRaw[1]);
   firstRec = modState.recommendations[0];
+  secondRec = modState.recommendations[1];
 });
 
 afterEach(() => {
@@ -65,29 +67,25 @@ afterEach(() => {
   dispatch.mockClear();
 });
 
-test("applyGivenRecommendations action", () => {
+test("applyGivenRecommendations action", async () => {
   const applier = recommendationStoreFactory().actions![
     "applyGivenRecommendations"
   ] as any;
-  expect(applier).not.toBeNull();
+
+  // Note: rejects/resolves fails (good) if the Promise actually doesn't
 
   // duplicates
-  expect(() => {
-    applier(context, ["a/b", "a/b"]);
-  }).toThrowError();
+  await expect(applier(context, ["a/b", "a/b"])).rejects.not.toBeNull();
   expect(dispatch).toBeCalledTimes(0);
 
   // non-existent
   dispatch.mockReset();
-  expect(() => {
-    applier(context, ["a/b", "a/b/c/d"]);
-  }).toThrowError();
+  await expect(applier(context, ["a/b", "a/b/c/d"])).rejects.not.toBeNull();
   expect(dispatch).toBeCalledTimes(0);
 
+  // succeeding
   dispatch.mockReset();
-  expect(() => {
-    applier(context, ["a/b/c", "a/b"]);
-  }).not.toThrowError();
+  await expect(applier(context, ["a/b/c", "a/b"])).resolves.not.toBeNull();
   expect(dispatch).toBeCalledTimes(2);
   expect(dispatch.mock.calls[0][0]).toBe("applySingleRecommendation");
   expect(dispatch.mock.calls[1][0]).toBe("applySingleRecommendation");
@@ -110,7 +108,7 @@ describe("applySingleRecommendation action", () => {
 
     expect((fetch as any).mock.calls.length).toEqual(1);
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
-    expect(dispatch.mock.calls).toEqual([["watchStatus", firstRec]]);
+    expect(firstRec.needsStatusWatcher).toBeTruthy();
     expect(firstRec.statusCol).toEqual(getInternalStatusMapping("CLAIMED"));
   });
 
@@ -121,16 +119,80 @@ describe("applySingleRecommendation action", () => {
     await applier(context, firstRec);
 
     expect((fetch as any).mock.calls.length).toEqual(1);
-    expect(dispatch).toHaveBeenCalledTimes(0);
+    expect(firstRec.needsStatusWatcher).toBeFalsy();
     expect(firstRec.statusCol).toEqual(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader).not.toBeNull();
   });
 });
 
-describe("watchStatus action", () => {
-  let watchStatus: any;
+describe("startCentralStatusWatcher action", () => {
+  const action = recommendationStoreFactory().actions![
+    "startCentralStatusWatcher"
+  ] as any;
+
+  test("only one instance at a time allowed", async () => {
+    // make this fail on checkStatusOnceForAll
+    dispatch = jest.fn(() => {
+      throw "abcdef";
+    });
+    context.dispatch = dispatch;
+
+    // make sure that both expects are called
+    expect.assertions(2);
+
+    // it should fail at the first dispatch the first time
+    action(context).catch((error: any) => {
+      expect(error.toString()).toBe("abcdef");
+    });
+
+    // it should fail earlier the second time
+    action(context).catch((error: any) => {
+      expect(error.toString()).not.toBe("abcdef");
+    });
+  });
+});
+
+describe("checkStatusOnceForAll action", () => {
+  let action: any;
   beforeAll(() => {
-    watchStatus = recommendationStoreFactory().actions!["watchStatus"] as any;
+    action = recommendationStoreFactory().actions![
+      "checkStatusOnceForAll"
+    ] as any;
+  });
+
+  test("checkStatusOnce: true => false", async () => {
+    dispatch = jest
+      .fn()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    context.dispatch = dispatch;
+
+    firstRec.needsStatusWatcher = true;
+
+    await action(context);
+    expect(firstRec.needsStatusWatcher).toBeTruthy();
+    await action(context);
+    expect(firstRec.needsStatusWatcher).toBeFalsy();
+  });
+
+  test("ignores iff needsStatusWatcher: false", async () => {
+    firstRec.needsStatusWatcher = false;
+    secondRec.needsStatusWatcher = true;
+
+    dispatch = jest.fn().mockResolvedValue(false);
+    context.dispatch = dispatch;
+
+    await action(context);
+    expect(dispatch.mock.calls).toEqual([["checkStatusOnce", secondRec]]);
+  });
+});
+
+describe("checkStatusOnce action", () => {
+  let checkStatusOnce: any;
+  beforeAll(() => {
+    checkStatusOnce = recommendationStoreFactory().actions![
+      "checkStatusOnce"
+    ] as any;
   });
   beforeEach(() => {
     jest.useFakeTimers(); // mocked setTimeout
@@ -138,30 +200,28 @@ describe("watchStatus action", () => {
 
   test("-> in progress", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "IN PROGRESS" }));
-    await watchStatus(context, firstRec);
-    expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
+    const shouldContinue = await checkStatusOnce(context, firstRec);
 
-    // dispatch watchStatus in the future
-    expect(setTimeout as any).toBeCalledTimes(1);
+    expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
+    expect(shouldContinue).toBeTruthy();
   });
 
   test("-> succeeded", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "SUCCEEDED" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
+
     expect((fetch as any).mock.calls[0][0].indexOf(firstRec.name)).not.toBe(-1);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("SUCCEEDED"));
-
-    // end the status updates cycle
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("-> not applied", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "NOT APPLIED" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Server has")).toBeTruthy();
-
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("-> failed", async () => {
@@ -171,32 +231,30 @@ describe("watchStatus action", () => {
         errorMessage: "something bad happened"
       })
     );
-    await watchStatus(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Applying ")).toBeTruthy();
     expect(firstRec.errorDescription).toBe("something bad happened");
-
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("-> gibberish", async () => {
     fetchMock.mockResponseOnce(JSON.stringify({ status: "%%%" }));
-    await watchStatus(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
+
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader!.startsWith("Bad status(")).toBeTruthy();
-
-    expect(setTimeout as any).toBeCalledTimes(0);
+    expect(shouldContinue).toBeFalsy();
   });
 
   test("server connection error", async () => {
     fetchMock.mockResponseOnce(async () => {
       return { status: 404, body: "Endpoint not found" };
     });
-    await watchStatus(context, firstRec);
+    const shouldContinue = await checkStatusOnce(context, firstRec);
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
     expect(firstRec.errorHeader?.indexOf("404")).not.toBe(-1);
-
-    // we want to try again in this case
-    expect(setTimeout as any).toBeCalledTimes(1);
+    expect(shouldContinue).toBeTruthy(); // try again in this case
   });
 });

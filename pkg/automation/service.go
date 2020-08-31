@@ -18,6 +18,7 @@ package automation
 
 import (
 	"context"
+	"time"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -41,6 +42,9 @@ type GoogleService interface {
 	// gets the specified instance resource
 	GetInstance(project string, zone string, instance string) (*compute.Instance, error)
 
+	// gets recommendation by name
+	GetRecommendation(name string) (*gcloudRecommendation, error)
+
 	// lists whether the requirements have been met for all APIs (APIs enabled).
 	ListAPIRequirements(project string, apis []string) ([]*Requirement, error)
 
@@ -59,8 +63,20 @@ type GoogleService interface {
 	// listing every region available for the project methods
 	ListRegionsNames(project string) ([]string, error)
 
+	// marks recommendation for the project with given etag and name claimed
+	MarkRecommendationClaimed(name, etag string) (*gcloudRecommendation, error)
+
+	// marks recommendation for the project with given etag and name succeeded
+	MarkRecommendationSucceeded(name, etag string) (*gcloudRecommendation, error)
+
+	// marks recommendation for the project with given etag and name failed
+	MarkRecommendationFailed(name, etag string) (*gcloudRecommendation, error)
+
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
+
+	// starts the specified instance
+	StartInstance(project, zone, instance string) error
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs.
@@ -104,4 +120,23 @@ func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Toke
 		resourceManagerService: resourceManagerService,
 		serviceUsageService:    serviceUsageService,
 	}, nil
+}
+
+// for anonymous functions passed to AwaitCompletion
+type operationGenerator func() (*compute.Operation, error)
+
+// AwaitCompletion takes a function that needs to be called repeatedly
+// to check if a process (some Google Service request) has finished.
+// Such a function is usually constructed by wrapping a requestId(x).Do() call.
+func AwaitCompletion(gen operationGenerator) error {
+	for {
+		oper, err := gen()
+		if err != nil {
+			return err
+		}
+		if oper.Status == "DONE" {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
 }

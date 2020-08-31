@@ -26,6 +26,12 @@ import (
 // gcloudRecommendation is a type alias for Google Cloud Recommendation recommender.GoogleCloudRecommenderV1Recommendation
 type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 
+// GetRecommendation implements projects.locations.recommenders.recommendations/get method
+func (s *googleService) GetRecommendation(name string) (*gcloudRecommendation, error) {
+	service := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
+	return service.Get(name).Do()
+}
+
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
 // projects.locations.recommenders.recommendations/list method from Recommender API is used.
 // If the error occurred the returned error is not nil.

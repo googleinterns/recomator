@@ -27,7 +27,6 @@ import { IRootStoreState } from "../../store/root";
 @Component
 export default class ProjectFilter extends Vue {
   get allProjects(): string[] {
-    // We could cache these, but filtering is the bottleneck so there is no point to bother
     return this.$store.getters["recommendationsStore/allProjects"];
   }
 

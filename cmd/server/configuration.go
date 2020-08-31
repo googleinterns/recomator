@@ -20,11 +20,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/coreos/go-oidc"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 )
-
-var authOptions = []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}
 
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -42,12 +42,9 @@ func corsMiddleware() gin.HandlerFunc {
 	}
 }
 
-var conf = oauth2.Config{
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
-		TokenURL: "https://oauth2.googleapis.com/token",
-	},
-	Scopes: []string{"https://www.googleapis.com/auth/cloud-platform"},
+var config = oauth2.Config{
+	Scopes: []string{oidc.ScopeOpenID, "https://www.googleapis.com/auth/cloud-platform",
+		"https://www.googleapis.com/auth/userinfo.email"},
 }
 
 func setConfig(config *oauth2.Config, file string) error {
@@ -59,6 +56,11 @@ func setConfig(config *oauth2.Config, file string) error {
 	if err := json.Unmarshal(byt, &data); err != nil {
 		return err
 	}
+	provider, err := oidc.NewProvider(oauth2.NoContext, "https://accounts.google.com")
+	if err != nil {
+		return err
+	}
+	config.Endpoint = provider.Endpoint()
 	config.ClientID = data["clientID"]
 	config.ClientSecret = data["clientSecret"]
 	config.RedirectURL = data["redirectURL"]
