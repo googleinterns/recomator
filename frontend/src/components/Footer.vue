@@ -67,8 +67,8 @@ limitations under the License. -->
           <v-btn
             color="green white--text"
             v-on:click="
-              applySelectedRecommendations();
               dialog = false;
+              applySelectedRecommendations();
             "
           >
             <v-icon>mdi-check</v-icon>
