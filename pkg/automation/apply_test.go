@@ -69,6 +69,21 @@ func recommendationNewEtag(recommendation gcloudRecommendation) gcloudRecommenda
 	return result
 }
 
+var errorGetRecommendation = fmt.Errorf("GetRecommendation error")
+
+func (s *ApplyMockService) GetRecommendation(name string) (*gcloudRecommendation, error) {
+	var rec *gcloudRecommendation
+	var err error
+	if name != "error" {
+		rec = &s.recommendation
+	} else {
+		err = errorGetRecommendation
+	}
+	newCalledFunction := calledFunction{"GetRecommendation", []interface{}{name}, []interface{}{rec, err}}
+	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
+	return rec, err
+}
+
 func (s *ApplyMockService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
 	newCalledFunction := calledFunction{"GetInstance", []interface{}{project, zone, instance}, []interface{}{s.getInstanceResult, nil}}
 	s.calledFunctions = append(s.calledFunctions, newCalledFunction)
@@ -1120,4 +1135,69 @@ func TestApplySucceeded(t *testing.T) {
 
 	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
 	assert.Equal(t, expected, service.calledFunctions)
+}
+
+var emptyRecommendation = gcloudRecommendation{
+	Content: &gcloudContent{
+		OperationGroups: []*gcloudOperationGroup{},
+	},
+	Etag:      "\"40204a1000e5befe\"",
+	Name:      "name",
+	StateInfo: &gcloudStateInfo{State: "Active"},
+}
+
+func TestApplyByName(t *testing.T) {
+	recommendation := emptyRecommendation
+
+	mock := &ApplyMockService{recommendation: recommendation}
+	task := &Task{}
+	err := ApplyByName(mock, recommendation.Name, task)
+	done, all := task.GetProgress()
+	assert.True(t, done == all, "ApplyByName should be finished now")
+
+	assert.NoError(t, err, "ApplyByName shouldn't return an error")
+
+	resultingRecommendation := recommendationNewEtag(recommendationNewEtag(recommendation))
+	expectedFunctions := []string{
+		"GetRecommendation",
+		"MarkRecommendationClaimed",
+		"MarkRecommendationSucceeded",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name},
+		{recommendation.Name, recommendation.Etag},
+		{recommendation.Name, newEtag(recommendation.Etag)},
+	}
+	expectedResults := [][]interface{}{
+		{&resultingRecommendation, nil},
+		{recommendationNewEtag(recommendation), nil},
+		{resultingRecommendation, nil},
+	}
+
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	assert.Equal(t, expected, mock.calledFunctions)
+}
+
+func TestApplyByNameError(t *testing.T) {
+	recommendation := emptyRecommendation
+	recommendation.Name = "error"
+
+	mock := &ApplyMockService{recommendation: recommendation}
+	err := ApplyByName(mock, recommendation.Name, &Task{})
+
+	assert.EqualError(t, err, errorGetRecommendation.Error(), "Should fail after calling GetRecommendation")
+
+	expectedFunctions := []string{
+		"GetRecommendation",
+	}
+	expectedArguments := [][]interface{}{
+		{recommendation.Name},
+	}
+	var nilRecommendation *gcloudRecommendation
+	expectedResults := [][]interface{}{
+		{nilRecommendation, errorGetRecommendation},
+	}
+
+	expected := newCalledFunctions(expectedFunctions, expectedArguments, expectedResults)
+	assert.Equal(t, expected, mock.calledFunctions)
 }
