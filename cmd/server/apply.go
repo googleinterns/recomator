@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	notAppliedStatus = "NOT APPLIED"
 	inProgressStatus = "IN PROGRESS"
 	failedStatus     = "FAILED"
 	succeededStatus  = "SUCCEEDED"
@@ -96,62 +95,52 @@ func (m *applyRequestsMap) LoadOrStore(info applyInfo, handler *applyRequestHand
 
 func getApplyHandler(authService AuthorizationService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		authCode := c.Request.Header["Authorization"]
-		name := c.Query("name")
-		if len(authCode) != 0 {
-			user, err := authService.Authorize(authCode[0])
+		user, err := authorizeRequest(authService, c.Request)
 
-			if err == nil {
-
-				handler, loaded := applyRequestsInProcess.LoadOrStore(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
-				if !loaded {
-					go handler.Apply()
-				} else {
-					sendError(c, fmt.Errorf("Recommendation is already being applied"), http.StatusMethodNotAllowed)
-					return
-				}
-			}
+		if err != nil {
 			sendError(c, err, http.StatusUnauthorized)
 			return
 		}
-		sendError(c, fmt.Errorf("Authorization code not specified"), http.StatusUnauthorized)
+
+		handler, loaded := applyRequestsInProcess.LoadOrStore(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
+		if !loaded {
+			go handler.Apply()
+		} else {
+			sendError(c, fmt.Errorf("Recommendation is already being applied"), http.StatusMethodNotAllowed)
+		}
 	}
 }
 
 func getCheckStatusHandler(authService AuthorizationService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		authCode := c.Request.Header["Authorization"]
-		name := c.Query("name")
-		if len(authCode) != 0 {
-			user, err := authService.Authorize(authCode[0])
 
-			if err == nil {
+		user, err := authorizeRequest(authService, c.Request)
 
-				handler, loaded := applyRequestsInProcess.Load(applyInfo{name, user.email})
-				if loaded {
-					done, all := handler.GetProgress()
-					status := inProgressStatus
-					errMessage := ""
-					if done == all {
-						status = handler.GetStatus()
-						if status == failedStatus {
-							errMessage = handler.GetError().Error()
-						}
-					}
-					c.JSON(http.StatusOK, CheckStatusResponse{status, errMessage})
-				} else {
-					rec, err := user.service.GetRecommendation(name)
-					if err != nil {
-						sendError(c, err)
-					} else {
-						c.JSON(http.StatusOK, CheckStatusResponse{Status: rec.Status})
-					}
-				}
-				return
-			}
+		if err != nil {
 			sendError(c, err, http.StatusUnauthorized)
 			return
 		}
-		sendError(c, fmt.Errorf("Authorization code not specified"), http.StatusUnauthorized)
+
+		handler, loaded := applyRequestsInProcess.Load(applyInfo{name, user.email})
+		if loaded {
+			done, all := handler.GetProgress()
+			status := inProgressStatus
+			errMessage := ""
+			if done == all {
+				status = handler.GetStatus()
+				if status == failedStatus {
+					errMessage = handler.GetError().Error()
+				}
+			}
+			c.JSON(http.StatusOK, CheckStatusResponse{status, errMessage})
+		} else {
+			rec, err := user.service.GetRecommendation(name)
+			if err != nil {
+				sendError(c, err)
+			} else {
+				c.JSON(http.StatusOK, CheckStatusResponse{Status: rec.Status})
+			}
+		}
+
 	}
 }

@@ -20,6 +20,17 @@ type AuthorizationService interface {
 	Authorize(authCode string) (User, error)
 }
 
+// authorizeRequest extracts the authorization code from Authorization header in request
+// and uses it to return authorize user using authService.
+func authorizeRequest(authService AuthorizationService, request *gin.Request) (User, err) {
+	authCode := c.Request.Header["Authorization"]
+	name := c.Query("name")
+	if len(authCode) == 0 {
+		return fmt.Errorf("Authorization code not specified")
+	}
+	return authService.Authorize(authCode[0])
+}
+
 func authHandler(c *gin.Context) {
 	email := c.Query("login_hint")
 	var authOptions []oauth2.AuthCodeOption

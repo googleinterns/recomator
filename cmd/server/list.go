@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -87,36 +86,31 @@ func (m *listRequestsMap) Delete(email string) {
 
 func getListHandler(authService AuthorizationService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		authCode := c.Request.Header["Authorization"]
-		if len(authCode) != 0 {
-			user, err := authService.Authorize(authCode[0])
+		user, err := authorizeRequest(authService, c.Request)
 
-			if err == nil {
-
-				handler, loaded := listRequestsInProcess.LoadOrStore(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
-				if !loaded {
-					go handler.ListRecommendations()
-				}
-				done, all := handler.GetProgress()
-				if done < all {
-					c.JSON(http.StatusOK, ListRecommendationsProgressResponse{int(done), int(all)})
-				} else {
-					listRequestsInProcess.Delete(user.email)
-					listResult, err := handler.GetResult()
-					if err != nil {
-						sendError(c, err)
-					} else {
-						c.JSON(http.StatusOK, ListRecommendationsResponse{
-							Recommendations: listResult.Recommendations,
-							FailedProjects:  listResult.FailedProjects})
-					}
-
-				}
-				return
-			}
+		if err != nil {
 			sendError(c, err, http.StatusUnauthorized)
 			return
 		}
-		sendError(c, fmt.Errorf("Authorization code not specified"), http.StatusUnauthorized)
+
+		handler, loaded := listRequestsInProcess.LoadOrStore(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
+		if !loaded {
+			go handler.ListRecommendations()
+		}
+		done, all := handler.GetProgress()
+		if done < all {
+			c.JSON(http.StatusOK, ListRecommendationsProgressResponse{int(done), int(all)})
+		} else {
+			listRequestsInProcess.Delete(user.email)
+			listResult, err := handler.GetResult()
+			if err != nil {
+				sendError(c, err)
+			} else {
+				c.JSON(http.StatusOK, ListRecommendationsResponse{
+					Recommendations: listResult.Recommendations,
+					FailedProjects:  listResult.FailedProjects})
+			}
+
+		}
 	}
 }
