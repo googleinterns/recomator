@@ -18,9 +18,12 @@ package automation
 
 import (
 	"context"
+	"time"
 
+	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
 	"google.golang.org/api/recommender/v1"
 	"google.golang.org/api/serviceusage/v1"
 )
@@ -39,11 +42,14 @@ type GoogleService interface {
 	// gets the specified instance resource
 	GetInstance(project string, zone string, instance string) (*compute.Instance, error)
 
+	// gets recommendation by name
+	GetRecommendation(name string) (*gcloudRecommendation, error)
+
 	// lists whether the requirements have been met for all APIs (APIs enabled).
-	ListAPIRequirements(project string, apis []string) ([]Requirement, error)
+	ListAPIRequirements(project string, apis []string) ([]*Requirement, error)
 
 	// lists whether the requirements have been met for all required permissions.
-	ListPermissionRequirements(project string, permissions [][]string) ([]Requirement, error)
+	ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error)
 
 	// lists projects
 	ListProjects() ([]string, error)
@@ -57,8 +63,20 @@ type GoogleService interface {
 	// listing every region available for the project methods
 	ListRegionsNames(project string) ([]string, error)
 
+	// marks recommendation for the project with given etag and name claimed
+	MarkRecommendationClaimed(name, etag string) (*gcloudRecommendation, error)
+
+	// marks recommendation for the project with given etag and name succeeded
+	MarkRecommendationSucceeded(name, etag string) (*gcloudRecommendation, error)
+
+	// marks recommendation for the project with given etag and name failed
+	MarkRecommendationFailed(name, etag string) (*gcloudRecommendation, error)
+
 	// stops the specified instance
 	StopInstance(project, zone, instance string) error
+
+	// starts the specified instance
+	StartInstance(project, zone, instance string) error
 }
 
 // googleService implements GoogleService interface for Recommender and Compute APIs.
@@ -72,23 +90,25 @@ type googleService struct {
 
 // NewGoogleService creates new googleServices.
 // If creation failed the error will be non-nil.
-func NewGoogleService(ctx context.Context) (GoogleService, error) {
-	computeService, err := compute.NewService(ctx)
+func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Token) (GoogleService, error) {
+	client := conf.Client(ctx, tok)
+	clientOption := option.WithHTTPClient(client)
+	computeService, err := compute.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
 
-	recommenderService, err := recommender.NewService(ctx)
+	recommenderService, err := recommender.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
 
-	resourceManagerService, err := cloudresourcemanager.NewService(ctx)
+	resourceManagerService, err := cloudresourcemanager.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceUsageService, err := serviceusage.NewService(ctx)
+	serviceUsageService, err := serviceusage.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
@@ -100,4 +120,23 @@ func NewGoogleService(ctx context.Context) (GoogleService, error) {
 		resourceManagerService: resourceManagerService,
 		serviceUsageService:    serviceUsageService,
 	}, nil
+}
+
+// for anonymous functions passed to AwaitCompletion
+type operationGenerator func() (*compute.Operation, error)
+
+// AwaitCompletion takes a function that needs to be called repeatedly
+// to check if a process (some Google Service request) has finished.
+// Such a function is usually constructed by wrapping a requestId(x).Do() call.
+func AwaitCompletion(gen operationGenerator) error {
+	for {
+		oper, err := gen()
+		if err != nil {
+			return err
+		}
+		if oper.Status == "DONE" {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
 }

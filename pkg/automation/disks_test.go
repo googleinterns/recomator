@@ -88,7 +88,7 @@ func TestLongZoneName(t *testing.T) {
 	testDisk := ""
 
 	_, err := randomSnapshotName(testZone, testDisk, generator)
-	assert.EqualErrorf(t, err, fmt.Sprintf("length of the zone name must not exceed %d", maxZonenameLen), "When zone name is to long an error should be returned")
+	assert.EqualError(t, err, fmt.Sprintf("length of the zone name must not exceed %d", maxZonenameLen), "When zone name is to long an error should be returned")
 }
 
 // Tests that the returned name is not to long if the disk name is long
