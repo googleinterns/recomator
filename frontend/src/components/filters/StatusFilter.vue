@@ -37,6 +37,7 @@ export default class StatusFilter extends Vue {
     this.$store.commit("coreTableStore/setStatusesSelected", statuses);
   }
 
+  // fixed list of internal names of statuses
   get allInternalStatuses(): string[] {
     return allInternalStatuses();
   }
