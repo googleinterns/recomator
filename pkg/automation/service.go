@@ -42,6 +42,9 @@ type GoogleService interface {
 	// gets the specified instance resource
 	GetInstance(project string, zone string, instance string) (*compute.Instance, error)
 
+	// gets recommendation by name
+	GetRecommendation(name string) (*gcloudRecommendation, error)
+
 	// lists whether the requirements have been met for all APIs (APIs enabled).
 	ListAPIRequirements(project string, apis []string) ([]*Requirement, error)
 
@@ -89,22 +92,23 @@ type googleService struct {
 // If creation failed the error will be non-nil.
 func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Token) (GoogleService, error) {
 	client := conf.Client(ctx, tok)
-	computeService, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	clientOption := option.WithHTTPClient(client)
+	computeService, err := compute.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
 
-	recommenderService, err := recommender.NewService(ctx)
+	recommenderService, err := recommender.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
 
-	resourceManagerService, err := cloudresourcemanager.NewService(ctx)
+	resourceManagerService, err := cloudresourcemanager.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceUsageService, err := serviceusage.NewService(ctx)
+	serviceUsageService, err := serviceusage.NewService(ctx, clientOption)
 	if err != nil {
 		return nil, err
 	}
