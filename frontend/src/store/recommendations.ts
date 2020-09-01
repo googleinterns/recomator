@@ -143,10 +143,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
-
-    for (const recommendation of responseJson.recommendations) {
-      context.commit("addRecommendation", recommendation);
-    }
+    if(responseJson.recommendations != null)
+      for (const recommendation of responseJson.recommendations) {
+        context.commit("addRecommendation", recommendation);
+      }
 
     context.commit("endFetching");
   },

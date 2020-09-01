@@ -31,9 +31,11 @@ limitations under the License. -->
         <v-row>
           <v-col>
             <CoreTable />
+            <NoResultsDialog v-if="noRecommendations"/>
           </v-col>
         </v-row>
       </v-container>
+
     </v-main>
     <Footer />
   </v-app>
@@ -43,9 +45,15 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
+import NoResultsDialog from "@/components/NoResultsDialog.vue"
+import { IRootStoreState } from "../store/root";
 
 @Component({
-  components: { CoreTable, Footer }
+  components: { CoreTable, Footer, NoResultsDialog}
 })
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  get noRecommendations(): boolean {
+    return (this.$store.state as IRootStoreState).recommendationsStore!.recommendations.length === 0;
+  }
+}
 </script>
