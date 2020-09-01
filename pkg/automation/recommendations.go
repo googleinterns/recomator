@@ -26,6 +26,12 @@ import (
 // gcloudRecommendation is a type alias for Google Cloud Recommendation recommender.GoogleCloudRecommenderV1Recommendation
 type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 
+// GetRecommendation implements projects.locations.recommenders.recommendations/get method
+func (s *googleService) GetRecommendation(name string) (*gcloudRecommendation, error) {
+	service := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
+	return service.Get(name).Do()
+}
+
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
 // projects.locations.recommenders.recommendations/list method from Recommender API is used.
 // If the error occurred the returned error is not nil.
@@ -193,8 +199,8 @@ func ListRecommendations(service GoogleService, project string, numConcurrentCal
 // If user doesn't have enough permissions for the project, the requirements, including failed ones, are listed in failedProjects.
 // Otherwise, recommendations for the project are appended to recommendations.
 type ListResult struct {
-	recommendations []*gcloudRecommendation
-	failedProjects  []*ProjectRequirements
+	Recommendations []*gcloudRecommendation
+	FailedProjects  []*ProjectRequirements
 }
 
 func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsRequirements []*ProjectRequirements, numConcurrentCalls int, task *Task) (*ListResult, error) {
@@ -214,9 +220,9 @@ func listRecommendationsIfRequirementsCompleted(service GoogleService, projectsR
 			if err != nil {
 				return nil, err
 			}
-			listResult.recommendations = append(listResult.recommendations, newRecs...)
+			listResult.Recommendations = append(listResult.Recommendations, newRecs...)
 		} else {
-			listResult.failedProjects = append(listResult.failedProjects, projectRequirements)
+			listResult.FailedProjects = append(listResult.FailedProjects, projectRequirements)
 		}
 
 		task.IncrementDone()
