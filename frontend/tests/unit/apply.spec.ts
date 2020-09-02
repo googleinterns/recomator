@@ -198,12 +198,15 @@ describe("checkStatusOnce action", () => {
     jest.useFakeTimers(); // mocked setTimeout
   });
 
-  test("-> in progress", async () => {
-    fetchMock.mockResponseOnce(JSON.stringify({ status: "IN PROGRESS" }));
-    const shouldContinue = await checkStatusOnce(context, firstRec);
+  // applied by us/someone else
+  test("-> in progress/claimed", async () => {
+    for (const status of ["CLAIMED", "IN PROGRESS"]) {
+      fetchMock.mockResponseOnce(JSON.stringify({ status: status }));
+      const shouldContinue = await checkStatusOnce(context, firstRec);
 
-    expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
-    expect(shouldContinue).toBeTruthy();
+      expect(firstRec.statusCol).toBe(getInternalStatusMapping("CLAIMED"));
+      expect(shouldContinue).toBeTruthy();
+    }
   });
 
   test("-> succeeded", async () => {
@@ -215,8 +218,8 @@ describe("checkStatusOnce action", () => {
     expect(shouldContinue).toBeFalsy();
   });
 
-  test("-> not applied", async () => {
-    fetchMock.mockResponseOnce(JSON.stringify({ status: "NOT APPLIED" }));
+  test("-> active", async () => {
+    fetchMock.mockResponseOnce(JSON.stringify({ status: "ACTIVE" }));
     const shouldContinue = await checkStatusOnce(context, firstRec);
 
     expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));

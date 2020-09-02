@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div>
-    <v-tooltip bottom>
+    <v-tooltip bottom transition="none">
       <template v-slot:activator="{ on, attrs }">
         <v-chip
           :color="costColour"
