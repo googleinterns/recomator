@@ -54,7 +54,9 @@ func setUpRouter(auth AuthorizationService) *gin.Engine {
 	router := gin.Default()
 	router.Use(corsMiddleware())
 
-	router.GET("/auth", authHandler)
+	router.GET("/redirect", redirectHandler)
+
+	router.GET("/auth", getAuthHandler(auth))
 
 	router.GET("/recommendations", getListHandler(auth))
 
@@ -76,8 +78,12 @@ func main() {
 
 	applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
 
-	// router := setUpServer(//TODO)
+	auth, err := NewAuthorizationService()
+	if err != nil {
+		log.Fatal(err)
+	}
+	router := setUpRouter(auth)
 
-	// router.Run(":8000")
+	router.Run(":8000")
 
 }
