@@ -62,5 +62,7 @@ export class RecommendationExtra implements RecommendationRaw {
     this.resourceCol = getRecommendationResourceShortName(rec);
     this.typeCol = getRecommendationType(rec);
     this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
+    this.needsStatusWatcher =
+      this.statusCol === getInternalStatusMapping("CLAIMED");
   }
 }
