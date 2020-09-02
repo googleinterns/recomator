@@ -128,7 +128,7 @@ type operationGenerator func() (*compute.Operation, error)
 // AwaitCompletion takes a function that needs to be called repeatedly
 // to check if a process (some Google Service request) has finished.
 // Such a function is usually constructed by wrapping a requestId(x).Do() call.
-func AwaitCompletion(gen operationGenerator) error {
+func AwaitCompletion(gen operationGenerator, sleepTime time.Duration) error {
 	for {
 		oper, err := gen()
 		if err != nil {
@@ -137,6 +137,6 @@ func AwaitCompletion(gen operationGenerator) error {
 		if oper.Status == "DONE" {
 			return nil
 		}
-		time.Sleep(time.Second)
+		time.Sleep(sleepTime)
 	}
 }

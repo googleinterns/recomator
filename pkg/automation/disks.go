@@ -19,6 +19,7 @@ package automation
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/api/compute/v1"
@@ -51,6 +52,11 @@ func randomSnapshotName(zone string, disk string, generator *rand.Rand) (string,
 	return result, nil
 }
 
+const (
+	sleepTimeCreatingSnapshots = 20 * time.Second
+	sleepTimeDeletingDisks     = 5 * time.Second
+)
+
 // CreateSnapshot calls the disks.createSnapshot method.
 // Requires compute.disks.createSnapshot or compute.snapshots.create permission.
 // For a given name, there can only be one snapshot having it.
@@ -64,7 +70,7 @@ func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
 	requestID := uuid.New().String()
 	err := AwaitCompletion(func() (*compute.Operation, error) {
 		return disksService.CreateSnapshot(project, zone, disk, snapshot).RequestId(requestID).Do()
-	})
+	}, sleepTimeCreatingSnapshots)
 	return err
 }
 
@@ -75,6 +81,6 @@ func (s *googleService) DeleteDisk(project, zone, disk string) error {
 	requestID := uuid.New().String()
 	err := AwaitCompletion(func() (*compute.Operation, error) {
 		return disksService.Delete(project, zone, disk).RequestId(requestID).Do()
-	})
+	}, sleepTimeDeletingDisks)
 	return err
 }
