@@ -76,15 +76,24 @@ func DoOperation(service GoogleService, operation *gcloudOperation) error {
 }
 
 // DoOperations calls DoOperation for each operation specified in the recommendation
-func DoOperations(service GoogleService, recommendation *gcloudRecommendation) error {
+func DoOperations(service GoogleService, recommendation *gcloudRecommendation, task *Task) error {
+	task.SetNumberOfSubtasks(len(recommendation.Content.OperationGroups))
 	for _, operationGroup := range recommendation.Content.OperationGroups {
+		subtask := task.GetNextSubtask()
+		subtask.SetNumberOfSubtasks(len(operationGroup.Operations))
 		for _, operation := range operationGroup.Operations {
 			err := DoOperation(service, operation)
 			if err != nil {
 				return err
 			}
+			subtask.IncrementDone()
 		}
+		subtask.SetAllDone()
+
+		task.IncrementDone()
 	}
+
+	task.SetAllDone()
 
 	return nil
 }
@@ -94,18 +103,22 @@ func DoOperations(service GoogleService, recommendation *gcloudRecommendation) e
 // - google.compute.disk.IdleResourceRecommender
 // - google.compute.instance.IdleResourceRecommender
 // - google.compute.instance.MachineTypeRecommender
-func Apply(service GoogleService, recommendation *gcloudRecommendation) error {
+func Apply(service GoogleService, recommendation *gcloudRecommendation, task *Task) error {
 	if strings.ToLower(recommendation.StateInfo.State) != "active" {
 		return errors.New("to apply a recommendation, its status must be active")
 	}
 
+	task.SetNumberOfSubtasks(3) // MarkClaimed + DoOperations + MarkSucceeded
+
+	_ = task.GetNextSubtask()
 	newRecommendation, err := service.MarkRecommendationClaimed(recommendation.Name, recommendation.Etag)
 	if err != nil {
 		return err
 	}
+	task.IncrementDone()
 	*recommendation = *newRecommendation
 
-	err = DoOperations(service, recommendation)
+	err = DoOperations(service, recommendation, task.GetNextSubtask())
 	if err != nil {
 		newRecommendation, errMark := service.MarkRecommendationFailed(recommendation.Name, recommendation.Etag)
 		if errMark != nil {
@@ -115,12 +128,24 @@ func Apply(service GoogleService, recommendation *gcloudRecommendation) error {
 
 		return err
 	}
+	task.IncrementDone()
 
 	newRecommendation, err = service.MarkRecommendationSucceeded(recommendation.Name, recommendation.Etag)
 	if err != nil {
 		return err
 	}
+	task.IncrementDone()
 	*recommendation = *newRecommendation
 
+	task.SetAllDone()
 	return nil
+}
+
+// ApplyByName gets the recommendation by name and applies the recommendation using the Apply function.
+func ApplyByName(service GoogleService, recommendationName string, task *Task) error {
+	recommendation, err := service.GetRecommendation(recommendationName)
+	if err != nil {
+		return err
+	}
+	return Apply(service, recommendation, task)
 }

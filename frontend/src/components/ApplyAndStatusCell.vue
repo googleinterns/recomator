@@ -17,7 +17,7 @@ limitations under the License. -->
     <v-btn
       rounded
       color="primary"
-      v-if="checkStatus('ACTIVE') || checkStatus('CLAIMED')"
+      v-show="checkStatus('ACTIVE') || checkStatus('CLAIMED')"
       v-on:click="applyRecommendation()"
       :loading="checkStatus('CLAIMED')"
       dark
@@ -31,7 +31,7 @@ limitations under the License. -->
       rounded
       small
       label
-      v-if="checkStatus('SUCCEEDED')"
+      v-show="checkStatus('SUCCEEDED')"
       color="green"
       block
     >
@@ -39,14 +39,17 @@ limitations under the License. -->
       {{ rowRecommendation.statusCol }}
     </v-btn>
 
-    <!-- Error dialog -->
-    <v-dialog
-      v-if="checkStatus('FAILED')"
-      v-model="errorDialogOpened"
-      max-width="600px"
-    >
+    <!-- Error dialog (with the 'Failed' button defined inside) -->
+    <v-dialog v-model="errorDialogOpened" max-width="600px">
       <template v-slot:activator="{ on }">
-        <v-btn color="red darken-2" v-on="on" small rounded block>
+        <v-btn
+          v-show="checkStatus('FAILED')"
+          color="red darken-2"
+          v-on="on"
+          small
+          rounded
+          block
+        >
           <v-icon left color="white">mdi-alert-box</v-icon>
           Show Error
         </v-btn>
