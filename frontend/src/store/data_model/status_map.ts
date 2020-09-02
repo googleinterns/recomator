@@ -31,3 +31,7 @@ export function getInternalStatusMapping(statusName: string): string {
   throwIfInvalidStatus(statusName);
   return internalStatusMap[statusName];
 }
+
+export function allInternalStatuses(): string[] {
+  return Object.values(internalStatusMap);
+}

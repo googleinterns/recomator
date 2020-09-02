@@ -14,7 +14,7 @@ limitations under the License. -->
 <template>
   <v-combobox
     v-model="statusesSelected"
-    :items="allStatuses"
+    :items="allInternalStatuses"
     label="Select status"
     multiple
   >
@@ -24,6 +24,7 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../../store/root";
+import { allInternalStatuses } from "../../store/data_model/status_map";
 
 @Component
 export default class StatusFilter extends Vue {
@@ -36,8 +37,9 @@ export default class StatusFilter extends Vue {
     this.$store.commit("coreTableStore/setStatusesSelected", statuses);
   }
 
-  get allStatuses(): string[] {
-    return this.$store.getters["recommendationsStore/allStatuses"];
+  // fixed list of internal names of statuses
+  get allInternalStatuses(): string[] {
+    return allInternalStatuses();
   }
 }
 </script>
