@@ -159,9 +159,7 @@ export function extractFromResource(
 
   const found = regex.exec(resource);
   if (found === null) {
-    // TODO: this function doesn't support snapshots, so I have temporarily disabled errors
-    return "NOT IMPLEMENTED";
-    //throw `couldn't parse resource identifier: ${resource}`;
+    throw `couldn't parse resource identifier: ${resource}`;
   }
 
   const result = found[0].slice(sliceLen);
