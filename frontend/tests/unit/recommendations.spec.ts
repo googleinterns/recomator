@@ -18,11 +18,17 @@ fetchMock.dontMock(); // not mocking fetch in every test by default
 
 import {
   getRecommendationProject,
-  getRecommendationResourceShortName
+  getRecommendationResourceShortName,
+  getRecommendationZone,
+  getResourcePantheonLink
 } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { rootStoreFactory } from "@/store/root";
-import { freshSampleRawRecommendation } from "./sample_recommendation";
+import {
+  freshSampleRawRecommendation,
+  freshSampleSnapshotRawRecommendation,
+  freshSampleStopVMRawRecommendation
+} from "./sample_recommendation";
 
 describe("Store", () => {
   test("addRecommendation", () => {
@@ -40,17 +46,45 @@ describe("Store", () => {
   });
 });
 
-describe("Calculated properties", () => {
-  test("Getting the project that the recommendation references", () => {
-    expect(getRecommendationProject(freshSampleRawRecommendation())).toEqual(
-      "rightsizer-test"
+test("Getting the project that the recommendation references", () => {
+  expect(getRecommendationProject(freshSampleRawRecommendation())).toEqual(
+    "rightsizer-test"
+  );
+});
+
+test("Getting the instance that the recommendation references", () => {
+  expect(
+    getRecommendationResourceShortName(freshSampleRawRecommendation())
+  ).toEqual("alicja-test");
+});
+
+test("Getting the zone of the resource", () => {
+  expect(getRecommendationZone(freshSampleRawRecommendation())).toEqual(
+    "us-east1-b"
+  );
+});
+
+describe("Getting a Pantheon link for the resource", () => {
+  test("type: CHANGE_MACHINE_TYPE ", () => {
+    expect(getResourcePantheonLink(freshSampleRawRecommendation())).toEqual(
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-east1-b/instances/alicja-test?project=rightsizer-test"
     );
   });
 
-  test("Getting the instance that the recommendation references", () => {
+  test("type: SNAPSHOT_AND_DELETE_DISK", () => {
     expect(
-      getRecommendationResourceShortName(freshSampleRawRecommendation())
-    ).toEqual("alicja-test");
+      getResourcePantheonLink(freshSampleSnapshotRawRecommendation())
+    ).toEqual(
+      "https://pantheon.corp.google.com/compute/disksDetail/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress?project=rightsizer-test"
+    );
+  });
+
+  test("type: STOP_VM", () => {
+    expect(
+      getResourcePantheonLink(freshSampleStopVMRawRecommendation())
+    ).toEqual(
+      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test"
+    );
   });
 });
 

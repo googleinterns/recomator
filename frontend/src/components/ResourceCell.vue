@@ -13,13 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div>
-    {{ shortName }}
+    <a :href="pantheonLink"> {{ shortName }} </a>
   </div>
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
+import { getResourcePantheonLink } from "../store/data_model/recommendation_raw";
 
 const ResourceCellProps = Vue.extend({
   props: {
@@ -34,6 +35,9 @@ const ResourceCellProps = Vue.extend({
 export default class ResourceCell extends ResourceCellProps {
   get shortName() {
     return this.rowRecommendation.resourceCol;
+  }
+  get pantheonLink() {
+    return getResourcePantheonLink(this.rowRecommendation);
   }
 }
 </script>

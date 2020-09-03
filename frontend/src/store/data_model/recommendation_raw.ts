@@ -136,6 +136,12 @@ export function getRecommendationFirstResource(
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
+export function getRecommendationSecondResource(
+  recommendation: RecommendationRaw
+): string {
+  return recommendation.content.operationGroups[0].operations[1].resource;
+}
+
 // -> "compute.googleapis.com/Snapshot"
 export function getRecommendationFirstResourceType(
   recommendation: RecommendationRaw
@@ -248,4 +254,30 @@ export function getRecommendationCostPerWeek(
 // "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
 export function getRecommendationType(recommendation: RecommendationRaw) {
   return recommendation.recommenderSubtype;
+}
+
+export function getRecommendationZone(recommendation: RecommendationRaw) {
+  const type = getRecommendationType(recommendation);
+  let resource: string;
+
+  // First resource for instances, second for snapshots
+  if (type === "SNAPSHOT_AND_DELETE_DISK")
+    resource = getRecommendationSecondResource(recommendation);
+  else resource = getRecommendationFirstResource(recommendation);
+
+  return extractFromResource("zones", resource);
+}
+
+export function getResourcePantheonLink(recommendation: RecommendationRaw) {
+  const zone = getRecommendationZone(recommendation);
+  const project = getRecommendationProject(recommendation);
+  const shortName = getRecommendationResourceShortName(recommendation);
+  const type = getRecommendationType(recommendation);
+  switch (type) {
+    case "SNAPSHOT_AND_DELETE_DISK": // disks
+      return `https://pantheon.corp.google.com/compute/disksDetail/zones/${zone}/disks/${shortName}?project=${project}`;
+    default:
+      // instances
+      return `https://pantheon.corp.google.com/compute/instancesDetail/zones/${zone}/instances/${shortName}?project=${project}`;
+  }
 }
