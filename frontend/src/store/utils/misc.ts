@@ -14,25 +14,6 @@ limitations under the License. */
 
 import { ProjectConfig } from "@/config";
 
-export function extractFromResource(
-  property: string,
-  resource: string
-): string {
-  const sliceLen = `/${property}/`.length;
-  const pattern = `/${property}/[^/]*`;
-  const regex = new RegExp(pattern);
-
-  const found = regex.exec(resource);
-  if (found === null) {
-    // TODO: this function doesn't support snapshots, so I have temporarily disabled errors
-    return "NOT IMPLEMENTED";
-    //throw `couldn't parse resource identifier: ${resource}`;
-  }
-
-  const result = found[0].slice(sliceLen);
-  return result;
-}
-
 export function delay(miliseconds: number) {
   return new Promise(resolve => setTimeout(resolve, miliseconds));
 }

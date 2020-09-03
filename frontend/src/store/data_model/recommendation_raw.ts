@@ -12,8 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { extractFromResource } from "../utils/misc";
-
 // Follows data model from:
 //    https://cloud.google.com/recommender/docs/reference/rest/v1beta1/projects.locations.recommenders.recommendations
 
@@ -148,6 +146,25 @@ export function getRecommendationFirstValue(
   recommendation: RecommendationRaw
 ): string | AddOperationValue | undefined {
   return recommendation.content.operationGroups[0].operations[0].value;
+}
+
+export function extractFromResource(
+  property: string,
+  resource: string
+): string {
+  const sliceLen = `/${property}/`.length;
+  const pattern = `/${property}/[^/]*`;
+  const regex = new RegExp(pattern);
+
+  const found = regex.exec(resource);
+  if (found === null) {
+    // TODO: this function doesn't support snapshots, so I have temporarily disabled errors
+    return "NOT IMPLEMENTED";
+    //throw `couldn't parse resource identifier: ${resource}`;
+  }
+
+  const result = found[0].slice(sliceLen);
+  return result;
 }
 
 // Returns a name to identify the related resource by, regardless of recommendation type.
