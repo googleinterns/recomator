@@ -149,6 +149,7 @@ export function getRecommendationFirstValue(
   return recommendation.content.operationGroups[0].operations[0].value;
 }
 
+// (b, /a/b/c/d/e) => c
 export function extractFromResource(
   property: string,
   resource: string
@@ -159,7 +160,7 @@ export function extractFromResource(
 
   const found = regex.exec(resource);
   if (found === null) {
-    throw `couldn't parse resource identifier: ${resource}`;
+    throw `couldn't parse identifier: ${resource}`;
   }
 
   const result = found[0].slice(sliceLen);
