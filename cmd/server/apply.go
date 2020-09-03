@@ -17,12 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
+	"google.golang.org/api/googleapi"
 )
 
 const (
@@ -75,72 +75,83 @@ type applyRequestsMap struct {
 	mutex sync.Mutex
 }
 
-func (m *applyRequestsMap) Load(info applyInfo) (*applyRequestHandler, bool) {
+func (m *applyRequestsMap) Delete(info applyInfo) {
 	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	h, ok := m.data[info]
-	return h, ok
+	delete(m.data, info)
+	m.mutex.Unlock()
 }
 
-func (m *applyRequestsMap) LoadOrStore(info applyInfo, handler *applyRequestHandler) (*applyRequestHandler, bool) {
+func (m *applyRequestsMap) Load(info applyInfo) (CheckStatusResponse, bool) {
+	m.mutex.Lock()
+	handler, ok := m.data[info]
+	m.mutex.Unlock()
+	if ok {
+		done, all := handler.GetProgress()
+		status := inProgressStatus
+		errMessage := ""
+		if done == all {
+			m.Delete(info)
+			status = handler.GetStatus()
+			if status == failedStatus {
+				errMessage = handler.GetError().Error()
+			}
+		}
+		return CheckStatusResponse{status, errMessage}, true
+	}
+	return CheckStatusResponse{}, false
+}
+
+func (m *applyRequestsMap) LoadOrStore(info applyInfo, handler *applyRequestHandler) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	h, ok := m.data[info]
+	_, ok := m.data[info]
 	if !ok {
 		m.data[info] = handler
-		h = handler
+		go handler.Apply()
+		return nil
 	}
-	return h, ok
+	return &googleapi.Error{Message: "Recommendation is already being applied", Code: http.StatusMethodNotAllowed}
+
 }
 
-func getApplyHandler(authService AuthorizationService) func(c *gin.Context) {
+func getApplyHandler(service *sharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		name := c.Query("name")
-		user, err := authorizeRequest(authService, c.Request)
+		user, err := authorizeRequest(service.auth, c.Request)
 
 		if err != nil {
-			sendError(c, err, http.StatusUnauthorized)
+			sendError(c, err)
 			return
 		}
 
-		handler, loaded := applyRequestsInProcess.LoadOrStore(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
-		if !loaded {
-			go handler.Apply()
-		} else {
-			sendError(c, fmt.Errorf("Recommendation is already being applied"), http.StatusMethodNotAllowed)
+		err = service.applyRequestsInProcess.LoadOrStore(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
+		if err != nil {
+			sendError(c, err)
 		}
 	}
 }
 
-func getCheckStatusHandler(authService AuthorizationService) func(c *gin.Context) {
+func getCheckStatusHandler(service *sharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		name := c.Query("name")
-		user, err := authorizeRequest(authService, c.Request)
+		user, err := authorizeRequest(service.auth, c.Request)
 
 		if err != nil {
-			sendError(c, err, http.StatusUnauthorized)
+			sendError(c, err)
 			return
 		}
 
-		handler, loaded := applyRequestsInProcess.Load(applyInfo{name, user.email})
+		response, loaded := service.applyRequestsInProcess.Load(applyInfo{name, user.email})
+
 		if loaded {
-			done, all := handler.GetProgress()
-			status := inProgressStatus
-			errMessage := ""
-			if done == all {
-				status = handler.GetStatus()
-				if status == failedStatus {
-					errMessage = handler.GetError().Error()
-				}
-			}
-			c.JSON(http.StatusOK, CheckStatusResponse{status, errMessage})
+			c.JSON(http.StatusOK, response)
+			return
+		}
+		rec, err := user.service.GetRecommendation(name)
+		if err != nil {
+			sendError(c, err)
 		} else {
-			rec, err := user.service.GetRecommendation(name)
-			if err != nil {
-				sendError(c, err)
-			} else {
-				c.JSON(http.StatusOK, CheckStatusResponse{Status: rec.StateInfo.State})
-			}
+			c.JSON(http.StatusOK, CheckStatusResponse{Status: rec.StateInfo.State})
 		}
 
 	}

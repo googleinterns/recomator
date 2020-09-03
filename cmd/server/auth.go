@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/googleapi"
 )
 
 const tokenExpiry = 24 * time.Hour
@@ -99,7 +100,7 @@ func (s *authorizationService) verify(rawToken string) (string, error) {
 		return "", err
 	}
 	if time.Since(time.Time(idToken.IssuedAt)) > s.tokenExpirationTime {
-		return "", fmt.Errorf("Token expired")
+		return "", &googleapi.Error{Code: http.StatusUnauthorized, Message: "Token expired"}
 	}
 	var claims struct {
 		Email string `json:"email"`
@@ -110,16 +111,12 @@ func (s *authorizationService) verify(rawToken string) (string, error) {
 	return claims.Email, nil
 }
 
-func getAuthHandler(authService AuthorizationService) func(c *gin.Context) {
+func getAuthHandler(service *sharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		authCode := c.Request.Header["Authorization"]
-		if len(authCode) == 0 {
-			sendError(c, fmt.Errorf("Auth code not specified"), http.StatusUnauthorized)
-			return
-		}
-		token, err := authService.CreateUser(authCode[0])
+		authCode := c.Query("code")
+		token, err := service.auth.CreateUser(authCode)
 		if err != nil {
-			sendError(c, err, http.StatusUnauthorized)
+			sendError(c, err, http.StatusBadRequest)
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"token": token})
@@ -130,12 +127,14 @@ func getAuthHandler(authService AuthorizationService) func(c *gin.Context) {
 // and uses it to return authorized user using authService.
 func authorizeRequest(authService AuthorizationService, request *http.Request) (User, error) {
 	token := request.Header["Authorization"]
-	if len(token) == 0 {
-		return User{}, fmt.Errorf("Token not specified")
+	if len(token) != 2 || token[0] != "Bearer" {
+		return User{}, &googleapi.Error{Code: http.StatusBadRequest, Message: "Authorization header not in the form 'Bearer <token>'"}
 	}
-	return authService.Authorize(token[0])
+
+	return authService.Authorize(token[1])
 }
 
+// redirects to google for login, login_hint query parameter(user's email) might be specified for faster login.
 func redirectHandler(c *gin.Context) {
 	email := c.Query("login_hint")
 	authOptions := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}

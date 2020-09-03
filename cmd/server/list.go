@@ -67,15 +67,28 @@ type listRequestsMap struct {
 	mutex sync.Mutex
 }
 
-func (m *listRequestsMap) LoadOrStore(email string, handler *listRequestHandler) (*listRequestHandler, bool) {
+func (m *listRequestsMap) LoadOrStore(email string, handler *listRequestHandler) (interface{}, error) {
 	m.mutex.Lock()
-	defer m.mutex.Unlock()
 	h, ok := m.data[email]
 	if !ok {
 		m.data[email] = handler
+		go handler.ListRecommendations()
 		h = handler
 	}
-	return h, ok
+	m.mutex.Unlock()
+
+	done, all := h.GetProgress()
+	if done < all {
+		return ListRecommendationsProgressResponse{int(done), int(all)}, nil
+	}
+	m.Delete(email)
+	listResult, err := handler.GetResult()
+	if err != nil {
+		return nil, err
+	}
+	return ListRecommendationsResponse{
+		Recommendations: listResult.Recommendations,
+		FailedProjects:  listResult.FailedProjects}, nil
 }
 
 func (m *listRequestsMap) Delete(email string) {
@@ -84,33 +97,21 @@ func (m *listRequestsMap) Delete(email string) {
 	delete(m.data, email)
 }
 
-func getListHandler(authService AuthorizationService) func(c *gin.Context) {
+func getListHandler(service *sharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		user, err := authorizeRequest(authService, c.Request)
+		user, err := authorizeRequest(service.auth, c.Request)
 
 		if err != nil {
-			sendError(c, err, http.StatusUnauthorized)
+			sendError(c, err)
 			return
 		}
 
-		handler, loaded := listRequestsInProcess.LoadOrStore(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
-		if !loaded {
-			go handler.ListRecommendations()
-		}
-		done, all := handler.GetProgress()
-		if done < all {
-			c.JSON(http.StatusOK, ListRecommendationsProgressResponse{int(done), int(all)})
-		} else {
-			listRequestsInProcess.Delete(user.email)
-			listResult, err := handler.GetResult()
-			if err != nil {
-				sendError(c, err)
-			} else {
-				c.JSON(http.StatusOK, ListRecommendationsResponse{
-					Recommendations: listResult.Recommendations,
-					FailedProjects:  listResult.FailedProjects})
-			}
+		response, err := service.listRequestsInProcess.LoadOrStore(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
 
+		if err != nil {
+			sendError(c, err)
+		} else {
+			c.JSON(http.StatusOK, response)
 		}
 	}
 }

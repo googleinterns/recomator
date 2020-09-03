@@ -50,39 +50,53 @@ func sendError(c *gin.Context, err error, errorCode ...int) {
 	c.JSON(code, ErrorResponse{err.Error()})
 }
 
-func setUpRouter(auth AuthorizationService) *gin.Engine {
+func setUpRouter(service *sharedService) *gin.Engine {
 	router := gin.Default()
 	router.Use(corsMiddleware())
 
 	router.GET("/redirect", redirectHandler)
 
-	router.GET("/auth", getAuthHandler(auth))
+	router.GET("/auth", getAuthHandler(service))
 
-	router.GET("/recommendations", getListHandler(auth))
+	router.GET("/recommendations", getListHandler(service))
 
-	router.POST("/recommendations/apply", getApplyHandler(auth))
+	router.POST("/recommendations/apply", getApplyHandler(service))
 
-	router.GET("/recommendations/checkStatus", getCheckStatusHandler(auth))
+	router.GET("/recommendations/checkStatus", getCheckStatusHandler(service))
 	return router
 }
 
-var listRequestsInProcess listRequestsMap
-var applyRequestsInProcess applyRequestsMap
+// sharedService is the struct that contains authorization service
+// and information about currently processed requests.
+type sharedService struct {
+	auth                   AuthorizationService
+	listRequestsInProcess  listRequestsMap
+	applyRequestsInProcess applyRequestsMap
+}
+
+// newSharedService creates new sharedService to access GoogleAPIs.
+func newSharedService() (*sharedService, error) {
+	var service sharedService
+	auth, err := NewAuthorizationService()
+	if err != nil {
+		return nil, err
+	}
+	service.auth = auth
+	service.listRequestsInProcess = listRequestsMap{data: make(map[string]*listRequestHandler)}       // the key is email address of the user
+	service.applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
+	return &service, nil
+}
 
 func main() {
 	if err := setConfig(&config, "config.json"); err != nil {
 		log.Fatal(err)
 	}
 
-	listRequestsInProcess = listRequestsMap{data: make(map[string]*listRequestHandler)} // the key is email address of the user
-
-	applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
-
-	auth, err := NewAuthorizationService()
+	service, err := newSharedService()
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := setUpRouter(auth)
+	router := setUpRouter(service)
 
 	router.Run(":8000")
 
