@@ -18,24 +18,33 @@ limitations under the License. -->
       ref="footer"
       v-if="selectedRowsCount > 0"
       v-bind:fixed="true"
-      color="rgba(255, 210, 20, 1)"
-      class="pa-xl-6 pa-lg-5 pa-md-4 pa-sm-3 pa-xs-0 justify-center"
+      color="primary"
       v-bind:app="true"
     >
-      <v-container>
-        <v-row>
-          <v-col :cols="12" :lg="8">
-            <div data-name="footer-summary" class="font-weight-black">
-              {{ footerMessage }}
+
+      <v-container fluid>
+        <v-row align="center" justify="space-around" justify-md="space-between">
+          <v-btn fab small dark color="secondary" v-on:click="unselectAll">
+            <v-icon dark>mdi-close</v-icon>
+          </v-btn>
+          <div>
+            <div data-name="footer-summary" style="font-weight: bold; color: white">
+              {{ applyPart }}<br />
+              <span v-if="spendingsPart.length > 0"
+                >{{ spendingsPart }}<br
+              /></span>
+              <span v-if="savingsPart.length > 0">{{ savingsPart }}</span>
             </div>
-          </v-col>
-          <v-col :cols="12" :lg="4">
-            <v-btn rounded data-name="footer-button" color="primary" dark v-on:click="dialog = true"
-              >Apply Selected Recommendation{{
-                selectedRowsCount == 1 ? "" : "s"
-              }}</v-btn
-            >
-          </v-col>
+          </div>
+          <div>
+            <v-btn
+              rounded
+              color="secondary"
+              style="font-weight: bold"
+              dark
+              v-on:click="dialog = true"
+              >Apply Selected</v-btn>
+          </div>
         </v-row>
       </v-container>
     </v-footer>
@@ -60,8 +69,8 @@ limitations under the License. -->
             data-name="yes-button"
             color="green white--text"
             v-on:click="
-              applySelectedRecommendations();
               dialog = false;
+              applySelectedRecommendations();
             "
           >
             <v-icon>mdi-check</v-icon>
@@ -119,9 +128,7 @@ export default class Footer extends Vue {
   // Footer summary generators:
 
   get applyPart(): string {
-    return `Apply ${this.selectedRowsCount} recommendation${
-      this.selectedRowsCount == 1 ? "" : "s"
-    }.`;
+    return `Apply ${this.selectedRowsCount} recommendation(s):`;
   }
 
   get savingsPart(): string {
@@ -130,9 +137,7 @@ export default class Footer extends Vue {
       return "";
     }
 
-    return ` Save ${savings.toFixed(
-      2
-    )}$ each week by using only the necessary resources.`;
+    return `Use less resources and save ${savings.toFixed(2)}$ each week.`;
   }
 
   get spendingsPart(): string {
@@ -142,11 +147,7 @@ export default class Footer extends Vue {
 
     return ` Increase performance of ${this.performanceSelectedCount} machine${
       this.performanceSelectedCount == 1 ? "" : "s"
-    }, by spending ${this.spendingsFromSelected.toFixed(2)}$ more each week.`;
-  }
-
-  get footerMessage(): string {
-    return this.applyPart + this.savingsPart + this.spendingsPart;
+    } by spending ${this.spendingsFromSelected.toFixed(2)}$ more each week.`;
   }
 
   // Handler of the 'Apply all selected' button
@@ -155,6 +156,10 @@ export default class Footer extends Vue {
       "recommendationsStore/applyGivenRecommendations",
       this.selectedRows.map(row => row.name)
     );
+    this.unselectAll();
+  }
+
+  unselectAll(): void {
     this.$store.commit("coreTableStore/setSelected", []);
   }
 }

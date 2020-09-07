@@ -23,7 +23,8 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-// ChangeMachineType changes machine type using instances.setMachineType method
+// ChangeMachineType changes machine type using instances.setMachineType method.
+// Requires compute.instances.setMachineType permission.
 func (s *googleService) ChangeMachineType(project string, zone string, instance string, machineType string) error {
 	machineType = fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
 	request := &compute.InstancesSetMachineTypeRequest{MachineType: machineType}
@@ -36,13 +37,15 @@ func (s *googleService) ChangeMachineType(project string, zone string, instance 
 	return err
 }
 
-// GetInstance gets instance using instances.get method
+// GetInstance gets instance using instances.get method.
+// Requires compute.instances.get permission.
 func (s *googleService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
 	instancesService := compute.NewInstancesService(s.computeService)
 	return instancesService.Get(project, zone, instance).Do()
 }
 
-// StopInstance stops instance using instances.stop method
+// StopInstance stops instance using instances.stop method.
+// Requires compute.instances.stop permission.
 func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
 	requestID := uuid.New().String()
@@ -52,9 +55,13 @@ func (s *googleService) StopInstance(project string, zone string, instance strin
 	return err
 }
 
-// StartInstance starts instance using instances.start method
+// StartInstance starts instance using instances.start method.
+// Requires compute.instances.start permission.
 func (s *googleService) StartInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
-	_, err := instancesService.Start(project, zone, instance).Do()
+	requestID := uuid.New().String()
+	err := AwaitCompletion(func() (*compute.Operation, error) {
+		return instancesService.Start(project, zone, instance).RequestId(requestID).Do()
+	})
 	return err
 }

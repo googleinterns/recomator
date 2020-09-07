@@ -35,7 +35,7 @@ limitations under the License. -->
     </template>
 
     <template v-slot:item.data-table-select="{ item }">
-      <v-simple-checkbox ref="test1"
+      <v-simple-checkbox
         v-on:input="select(item, isSelected(item))"
         :value="isSelected(item) && isActive(item)"
         :disabled="!isActive(item)"
