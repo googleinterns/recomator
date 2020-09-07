@@ -6,7 +6,7 @@ import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import {
   freshSampleRawRecommendation,
   freshSavingRawRecommendation,
-  freshPerformanceRawRecommendation,
+  freshPerformanceRawRecommendation
 } from "./sample_recommendations";
 import vuetify from "@/plugins/vuetify";
 import { Store } from "vuex";
@@ -26,10 +26,7 @@ describe("Footer", () => {
       freshPerformanceRawRecommendation()
     );
     fakeStore = rootStoreFactory();
-    fakeStore.commit(
-      "recommendationsStore/addRecommendation",
-      recommendation
-    );
+    fakeStore.commit("recommendationsStore/addRecommendation", recommendation);
     fakeStore.commit(
       "recommendationsStore/addRecommendation",
       savingRecommendation
@@ -40,7 +37,7 @@ describe("Footer", () => {
     );
 
     // So the warning about not finding data-app doesn't happen
-    var app = document.createElement("div");
+    const app = document.createElement("div");
     app.setAttribute("data-app", "true");
     document.body.appendChild(app);
   });
@@ -94,9 +91,9 @@ describe("Footer", () => {
         .find("[data-name=footer-summary]")
         .text()
     ).toEqual(
-      `Apply 1 recommendation. Save ${-savingRecommendation.costCol.toFixed(
+      `Apply 1 recommendation(s):  Use less resources and save ${-savingRecommendation.costCol.toFixed(
         2
-      )}$ each week by using only the necessary resources.`
+      )}$ each week.`
     );
   });
 
@@ -113,7 +110,7 @@ describe("Footer", () => {
         .find("[data-name=footer-summary]")
         .text()
     ).toEqual(
-      `Apply 1 recommendation. Increase performance of 1 machine, by spending ${performanceRecommendation.costCol.toFixed(
+      `Apply 1 recommendation(s):  Increase performance of 1 machine by spending ${performanceRecommendation.costCol.toFixed(
         2
       )}$ more each week.`
     );
@@ -133,11 +130,11 @@ describe("Footer", () => {
         .find("[data-name=footer-summary]")
         .text()
     ).toEqual(
-      `Apply 2 recommendations. Save ${-savingRecommendation.costCol.toFixed(
+      `Apply 2 recommendation(s):  Increase performance of 1 machine by spending ${performanceRecommendation.costCol.toFixed(
         2
-      )}$ each week by using only the necessary resources. Increase performance of 1 machine, by spending ${performanceRecommendation.costCol.toFixed(
+      )}$ more each week. Use less resources and save ${-savingRecommendation.costCol.toFixed(
         2
-      )}$ more each week.`
+      )}$ each week.`
     );
   });
 
@@ -189,9 +186,7 @@ describe("Footer", () => {
     await wrapper.vm.$nextTick();
 
     expect(
-      wrapper
-        .findComponent({ ref: "dialog" })
-        .find("[data-name=dialog]")
+      wrapper.findComponent({ ref: "dialog" }).find("[data-name=dialog]")
         .element
     ).toBeVisible();
   });
@@ -215,16 +210,12 @@ describe("Footer", () => {
       .findComponent({ ref: "dialog" })
       .find("[data-name=cancel-button]")
       .trigger("click");
-    console.log(
-      await wrapper.findComponent({ ref: "dialog" }).find("[data-name=cancel-button]").trigger("click")
-    );
 
     await wrapper.vm.$nextTick();
 
     expect(
-      wrapper
-        .findComponent({ ref: "dialog" })
-        .find("[data-name=dialog]").element
+      wrapper.findComponent({ ref: "dialog" }).find("[data-name=dialog]")
+        .element
     ).not.toBeVisible();
 
     expect(performanceRecommendation.statusCol === "ACTIVE");
@@ -255,9 +246,8 @@ describe("Footer", () => {
     await wrapper.vm.$nextTick();
 
     expect(
-      wrapper
-        .findComponent({ ref: "dialog" })
-        .find("[data-name=dialog]").element
+      wrapper.findComponent({ ref: "dialog" }).find("[data-name=dialog]")
+        .element
     ).not.toBeVisible();
 
     expect(fakeStore.state.coreTableStore?.selected.length).toEqual(0);

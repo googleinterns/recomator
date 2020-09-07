@@ -14,7 +14,7 @@ limitations under the License. -->
 
 <template>
   <v-data-table
-  ref="check"
+    ref="check"
     dense
     :headers="headers"
     :items="this.$store.getters['filteredRecommendationsWithExtras']"

@@ -143,7 +143,6 @@ const performanceRawRecommendation: RecommendationRaw = {
   }
 };
 
-
 export function freshSampleRawRecommendation(): RecommendationRaw {
   // deep copy
   return JSON.parse(

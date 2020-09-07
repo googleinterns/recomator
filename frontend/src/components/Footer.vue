@@ -21,14 +21,16 @@ limitations under the License. -->
       color="primary"
       v-bind:app="true"
     >
-
       <v-container fluid>
         <v-row align="center" justify="space-around" justify-md="space-between">
           <v-btn fab small dark color="secondary" v-on:click="unselectAll">
             <v-icon dark>mdi-close</v-icon>
           </v-btn>
           <div>
-            <div data-name="footer-summary" style="font-weight: bold; color: white">
+            <div
+              data-name="footer-summary"
+              style="font-weight: bold; color: white"
+            >
               {{ applyPart }}<br />
               <span v-if="spendingsPart.length > 0"
                 >{{ spendingsPart }}<br
@@ -38,12 +40,14 @@ limitations under the License. -->
           </div>
           <div>
             <v-btn
+              data-name="footer-button"
               rounded
               color="secondary"
               style="font-weight: bold"
               dark
               v-on:click="dialog = true"
-              >Apply Selected</v-btn>
+              >Apply Selected</v-btn
+            >
           </div>
         </v-row>
       </v-container>
@@ -77,8 +81,11 @@ limitations under the License. -->
             Yes
           </v-btn>
 
-          <v-btn data-name="cancel-button"
-color="primary white--text" v-on:click="dialog = false">
+          <v-btn
+            data-name="cancel-button"
+            color="primary white--text"
+            v-on:click="dialog = false"
+          >
             <v-icon>mdi-window-close</v-icon>
             Cancel
           </v-btn>
