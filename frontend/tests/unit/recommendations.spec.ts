@@ -20,7 +20,7 @@ import {
   getRecommendationProject,
   getRecommendationResourceShortName,
   getRecommendationZone,
-  getResourcePantheonLink
+  getResourceConsoleLink
 } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { rootStoreFactory } from "@/store/root";
@@ -64,26 +64,26 @@ test("Getting the zone of the resource", () => {
   );
 });
 
-describe("Getting a Pantheon link for the resource", () => {
+describe("Getting a Console link for the resource", () => {
   test("type: CHANGE_MACHINE_TYPE ", () => {
-    expect(getResourcePantheonLink(freshSampleRawRecommendation())).toEqual(
-      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-east1-b/instances/alicja-test?project=rightsizer-test"
+    expect(getResourceConsoleLink(freshSampleRawRecommendation())).toEqual(
+      "https://console.cloud.google.com/compute/instancesDetail/zones/us-east1-b/instances/alicja-test?project=rightsizer-test"
     );
   });
 
   test("type: SNAPSHOT_AND_DELETE_DISK", () => {
     expect(
-      getResourcePantheonLink(freshSampleSnapshotRawRecommendation())
+      getResourceConsoleLink(freshSampleSnapshotRawRecommendation())
     ).toEqual(
-      "https://pantheon.corp.google.com/compute/disksDetail/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress?project=rightsizer-test"
+      "https://console.cloud.google.com/compute/disksDetail/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress?project=rightsizer-test"
     );
   });
 
   test("type: STOP_VM", () => {
     expect(
-      getResourcePantheonLink(freshSampleStopVMRawRecommendation())
+      getResourceConsoleLink(freshSampleStopVMRawRecommendation())
     ).toEqual(
-      "https://pantheon.corp.google.com/compute/instancesDetail/zones/us-central1-c/instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test"
+      "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-c/instances/timus-test-for-probers-n2-std-4-idling?project=rightsizer-test"
     );
   });
 });

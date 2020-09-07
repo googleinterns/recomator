@@ -268,16 +268,16 @@ export function getRecommendationZone(recommendation: RecommendationRaw) {
   return extractFromResource("zones", resource);
 }
 
-export function getResourcePantheonLink(recommendation: RecommendationRaw) {
+export function getResourceConsoleLink(recommendation: RecommendationRaw) {
   const zone = getRecommendationZone(recommendation);
   const project = getRecommendationProject(recommendation);
   const shortName = getRecommendationResourceShortName(recommendation);
   const type = getRecommendationType(recommendation);
   switch (type) {
     case "SNAPSHOT_AND_DELETE_DISK": // disks
-      return `https://pantheon.corp.google.com/compute/disksDetail/zones/${zone}/disks/${shortName}?project=${project}`;
+      return `https://console.cloud.google.com/compute/disksDetail/zones/${zone}/disks/${shortName}?project=${project}`;
     default:
       // instances
-      return `https://pantheon.corp.google.com/compute/instancesDetail/zones/${zone}/instances/${shortName}?project=${project}`;
+      return `https://console.cloud.google.com/compute/instancesDetail/zones/${zone}/instances/${shortName}?project=${project}`;
   }
 }
