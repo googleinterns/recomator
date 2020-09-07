@@ -75,13 +75,15 @@ type applyRequestsMap struct {
 	mutex sync.Mutex
 }
 
-func (m *applyRequestsMap) Delete(info applyInfo) {
+func (m *applyRequestsMap) DeleteRequest(info applyInfo) {
 	m.mutex.Lock()
 	delete(m.data, info)
 	m.mutex.Unlock()
 }
 
-func (m *applyRequestsMap) Load(info applyInfo) (CheckStatusResponse, bool) {
+// Returns checkStatusResponse if request is in process.
+// If there's no such request returns false in second value.
+func (m *applyRequestsMap) CheckStatus(info applyInfo) (CheckStatusResponse, bool) {
 	m.mutex.Lock()
 	handler, ok := m.data[info]
 	m.mutex.Unlock()
@@ -90,7 +92,7 @@ func (m *applyRequestsMap) Load(info applyInfo) (CheckStatusResponse, bool) {
 		status := inProgressStatus
 		errMessage := ""
 		if done == all {
-			m.Delete(info)
+			m.DeleteRequest(info)
 			status = handler.GetStatus()
 			if status == failedStatus {
 				errMessage = handler.GetError().Error()
@@ -101,7 +103,8 @@ func (m *applyRequestsMap) Load(info applyInfo) (CheckStatusResponse, bool) {
 	return CheckStatusResponse{}, false
 }
 
-func (m *applyRequestsMap) LoadOrStore(info applyInfo, handler *applyRequestHandler) error {
+// returns error if failed to start applying (e.g. recommendation is already being applied)
+func (m *applyRequestsMap) StartApplying(info applyInfo, handler *applyRequestHandler) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	_, ok := m.data[info]
@@ -124,7 +127,7 @@ func getApplyHandler(service *sharedService) func(c *gin.Context) {
 			return
 		}
 
-		err = service.applyRequestsInProcess.LoadOrStore(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
+		err = service.applyRequestsInProcess.StartApplying(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
 		if err != nil {
 			sendError(c, err)
 		}
@@ -141,12 +144,13 @@ func getCheckStatusHandler(service *sharedService) func(c *gin.Context) {
 			return
 		}
 
-		response, loaded := service.applyRequestsInProcess.Load(applyInfo{name, user.email})
+		response, loaded := service.applyRequestsInProcess.CheckStatus(applyInfo{name, user.email})
 
 		if loaded {
 			c.JSON(http.StatusOK, response)
 			return
 		}
+
 		rec, err := user.service.GetRecommendation(name)
 		if err != nil {
 			sendError(c, err)

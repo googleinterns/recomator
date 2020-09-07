@@ -67,21 +67,21 @@ type listRequestsMap struct {
 	mutex sync.Mutex
 }
 
-func (m *listRequestsMap) LoadOrStore(email string, handler *listRequestHandler) (interface{}, error) {
+func (m *listRequestsMap) GetListRequestResponse(email string, newHandler *listRequestHandler) (interface{}, error) {
 	m.mutex.Lock()
-	h, ok := m.data[email]
+	handler, ok := m.data[email]
 	if !ok {
-		m.data[email] = handler
+		m.data[email] = newHandler
+		handler = newHandler
 		go handler.ListRecommendations()
-		h = handler
 	}
 	m.mutex.Unlock()
 
-	done, all := h.GetProgress()
+	done, all := handler.GetProgress()
 	if done < all {
 		return ListRecommendationsProgressResponse{int(done), int(all)}, nil
 	}
-	m.Delete(email)
+	m.DeleteRequest(email)
 	listResult, err := handler.GetResult()
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (m *listRequestsMap) LoadOrStore(email string, handler *listRequestHandler)
 		FailedProjects:  listResult.FailedProjects}, nil
 }
 
-func (m *listRequestsMap) Delete(email string) {
+func (m *listRequestsMap) DeleteRequest(email string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	delete(m.data, email)
@@ -106,7 +106,7 @@ func getListHandler(service *sharedService) func(c *gin.Context) {
 			return
 		}
 
-		response, err := service.listRequestsInProcess.LoadOrStore(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
+		response, err := service.listRequestsInProcess.GetListRequestResponse(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
 
 		if err != nil {
 			sendError(c, err)

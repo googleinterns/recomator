@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -126,12 +128,16 @@ func getAuthHandler(service *sharedService) func(c *gin.Context) {
 // authorizeRequest extracts the token from Authorization header in request
 // and uses it to return authorized user using authService.
 func authorizeRequest(authService AuthorizationService, request *http.Request) (User, error) {
-	token := request.Header["Authorization"]
-	if len(token) != 2 || token[0] != "Bearer" {
-		return User{}, &googleapi.Error{Code: http.StatusBadRequest, Message: "Authorization header not in the form 'Bearer <token>'"}
+	bearToken := request.Header["Authorization"]
+	log.Println(len(bearToken))
+	if len(bearToken) != 0 {
+		strArr := strings.Split(bearToken[0], " ")
+		if len(strArr) == 2 && strArr[0] == "Bearer" {
+			return authService.Authorize(strArr[1])
+		}
 	}
+	return User{}, &googleapi.Error{Code: http.StatusBadRequest, Message: "Authorization header not in the form 'Bearer <token>'"}
 
-	return authService.Authorize(token[1])
 }
 
 // redirects to google for login, login_hint query parameter(user's email) might be specified for faster login.
