@@ -155,7 +155,8 @@ export function getRecommendationFirstValue(
   return recommendation.content.operationGroups[0].operations[0].value;
 }
 
-// (b, /a/b/c/d/e) => c
+// Searches for property and returns the part after the next slash
+// For example: (b, /a/b/c/d/e) => c (first occurence of /b/ is followed by c)
 export function extractFromResource(
   property: string,
   resource: string
