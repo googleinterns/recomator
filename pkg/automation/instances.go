@@ -18,16 +18,9 @@ package automation
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/api/compute/v1"
-)
-
-const (
-	sleepTimeChangingMachineType = time.Second
-	sleepTimeStoppingInstance    = time.Second
-	sleepTimeStartingInstance    = time.Second
 )
 
 // ChangeMachineType changes machine type using instances.setMachineType method.

@@ -122,6 +122,14 @@ func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Toke
 	}, nil
 }
 
+const (
+	sleepTimeCreatingSnapshots   = 20 * time.Second
+	sleepTimeDeletingDisks       = 5 * time.Second
+	sleepTimeChangingMachineType = time.Second
+	sleepTimeStoppingInstance    = time.Second
+	sleepTimeStartingInstance    = time.Second
+)
+
 // for anonymous functions passed to AwaitCompletion
 type operationGenerator func() (*compute.Operation, error)
 
