@@ -19,25 +19,26 @@ package automation
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/compute/v1"
 )
 
 func TestAwaitCompletionFastFailure(t *testing.T) {
-	err := AwaitCompletion(fastFailingOperationGen)
+	err := AwaitCompletion(fastFailingOperationGen, time.Millisecond)
 	assert.EqualError(t, err, "Oh no")
 }
 
 func TestAwaitingCompletionEndsWithSuccess(t *testing.T) {
 	calledTimes := 0
-	err := AwaitCompletion(longOperationGen(true, &calledTimes))
+	err := AwaitCompletion(longOperationGen(true, &calledTimes), time.Millisecond)
 	assert.Nil(t, err)
 	assert.Equal(t, calledTimes, 3)
 }
 func TestAwaitingCompletionEndsWithFailure(t *testing.T) {
 	calledTimes := 0
-	err := AwaitCompletion(longOperationGen(false, &calledTimes))
+	err := AwaitCompletion(longOperationGen(false, &calledTimes), time.Millisecond)
 	assert.EqualError(t, err, "Oh no")
 	assert.Equal(t, calledTimes, 3)
 }
