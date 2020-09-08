@@ -3,7 +3,6 @@ module github.com/googleinterns/recomator
 go 1.14
 
 require (
-	cloud.google.com/go v0.64.0 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/uuid v1.1.2
@@ -13,7 +12,8 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.2-0.20200814104551-cf221cc87575
 	go.uber.org/config v1.4.0
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
+	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	google.golang.org/api v0.30.0
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect

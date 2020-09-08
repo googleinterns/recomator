@@ -98,6 +98,6 @@ func main() {
 	}
 	router := setUpRouter(service)
 
-	router.Run(":8000")
+	router.Run()
 
 }
