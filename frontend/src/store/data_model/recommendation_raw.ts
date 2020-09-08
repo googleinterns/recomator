@@ -12,8 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { extractFromResource } from "../utils/misc";
-
+// RecommendationRaw definition and parsers
 // Follows data model from:
 //    https://cloud.google.com/recommender/docs/reference/rest/v1beta1/projects.locations.recommenders.recommendations
 
@@ -137,6 +136,12 @@ export function getRecommendationFirstResource(
   return recommendation.content.operationGroups[0].operations[0].resource;
 }
 
+export function getRecommendationSecondResource(
+  recommendation: RecommendationRaw
+): string {
+  return recommendation.content.operationGroups[0].operations[1].resource;
+}
+
 // -> "compute.googleapis.com/Snapshot"
 export function getRecommendationFirstResourceType(
   recommendation: RecommendationRaw
@@ -148,6 +153,25 @@ export function getRecommendationFirstValue(
   recommendation: RecommendationRaw
 ): string | AddOperationValue | undefined {
   return recommendation.content.operationGroups[0].operations[0].value;
+}
+
+// Searches for property and returns the part after the next slash
+// For example: (b, /a/b/c/d/e) => c (first occurence of /b/ is followed by c)
+export function extractFromResource(
+  property: string,
+  resource: string
+): string {
+  const sliceLen = `/${property}/`.length;
+  const pattern = `/${property}/[^/]*`;
+  const regex = new RegExp(pattern);
+
+  const found = regex.exec(resource);
+  if (found === null) {
+    throw `couldn't parse identifier: ${resource}`;
+  }
+
+  const result = found[0].slice(sliceLen);
+  return result;
 }
 
 // Returns a name to identify the related resource by, regardless of recommendation type.
@@ -231,4 +255,30 @@ export function getRecommendationCostPerWeek(
 // "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
 export function getRecommendationType(recommendation: RecommendationRaw) {
   return recommendation.recommenderSubtype;
+}
+
+export function getRecommendationZone(recommendation: RecommendationRaw) {
+  const type = getRecommendationType(recommendation);
+  let resource: string;
+
+  // First resource for instances, second for snapshots
+  if (type === "SNAPSHOT_AND_DELETE_DISK")
+    resource = getRecommendationSecondResource(recommendation);
+  else resource = getRecommendationFirstResource(recommendation);
+
+  return extractFromResource("zones", resource);
+}
+
+export function getResourceConsoleLink(recommendation: RecommendationRaw) {
+  const zone = getRecommendationZone(recommendation);
+  const project = getRecommendationProject(recommendation);
+  const shortName = getRecommendationResourceShortName(recommendation);
+  const type = getRecommendationType(recommendation);
+  switch (type) {
+    case "SNAPSHOT_AND_DELETE_DISK": // disks
+      return `https://console.cloud.google.com/compute/disksDetail/zones/${zone}/disks/${shortName}?project=${project}`;
+    default:
+      // instances
+      return `https://console.cloud.google.com/compute/instancesDetail/zones/${zone}/instances/${shortName}?project=${project}`;
+  }
 }

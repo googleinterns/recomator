@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -133,7 +132,6 @@ func getAuthHandler(service *sharedService) func(c *gin.Context) {
 // and uses it to return authorized user using authService.
 func authorizeRequest(authService AuthorizationService, request *http.Request) (User, error) {
 	bearToken := request.Header["Authorization"]
-	log.Println(len(bearToken))
 	if len(bearToken) != 0 {
 		strArr := strings.Split(bearToken[0], " ")
 		if len(strArr) == 2 && strArr[0] == "Bearer" {
@@ -147,13 +145,14 @@ func authorizeRequest(authService AuthorizationService, request *http.Request) (
 // redirects to google for login, login_hint query parameter(user's email) might be specified for faster login.
 func redirectHandler(c *gin.Context) {
 	email := c.Query("login_hint")
+	redirectURL := c.Query("redirect_uri")
 	authOptions := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}
 
 	if len(email) != 0 {
 		authOptions = append(authOptions, oauth2.SetAuthURLParam("login_hint", email))
 	}
 
-	url := config.AuthCodeURL(config.RedirectURL, authOptions...)
+	url := config.AuthCodeURL(redirectURL, authOptions...)
 	c.Redirect(http.StatusSeeOther, url)
 	return
 }
