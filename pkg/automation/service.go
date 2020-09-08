@@ -122,13 +122,21 @@ func NewGoogleService(ctx context.Context, conf *oauth2.Config, tok *oauth2.Toke
 	}, nil
 }
 
+const (
+	sleepTimeCreatingSnapshots   = 20 * time.Second
+	sleepTimeDeletingDisks       = 5 * time.Second
+	sleepTimeChangingMachineType = time.Second
+	sleepTimeStoppingInstance    = time.Second
+	sleepTimeStartingInstance    = time.Second
+)
+
 // for anonymous functions passed to AwaitCompletion
 type operationGenerator func() (*compute.Operation, error)
 
 // AwaitCompletion takes a function that needs to be called repeatedly
 // to check if a process (some Google Service request) has finished.
 // Such a function is usually constructed by wrapping a requestId(x).Do() call.
-func AwaitCompletion(gen operationGenerator) error {
+func AwaitCompletion(gen operationGenerator, sleepTime time.Duration) error {
 	for {
 		oper, err := gen()
 		if err != nil {
@@ -137,6 +145,6 @@ func AwaitCompletion(gen operationGenerator) error {
 		if oper.Status == "DONE" {
 			return nil
 		}
-		time.Sleep(time.Second)
+		time.Sleep(sleepTime)
 	}
 }
