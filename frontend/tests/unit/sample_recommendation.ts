@@ -17,6 +17,11 @@ import { RecommendationRaw } from "@/store/data_model/recommendation_raw"; // --
 // We don't want to enforce camelCase here
 /* eslint @typescript-eslint/camelcase: 0 */
 
+// only works for simple objects, maps and functions will be lost
+function deepCopy(obj: object): object {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 const sampleRawRecommendation: RecommendationRaw = {
   content: {
     operationGroups: [
@@ -67,13 +72,8 @@ const sampleRawRecommendation: RecommendationRaw = {
   }
 } as RecommendationRaw;
 
-// only works for simple objects, maps and functions will be lost
-function deepCopy(obj: object): object {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-export function freshSavingRawRecommendation(): RecommendationRaw {
-  return deepCopy(savingRawRecommendation) as RecommendationRaw;
+export function freshSampleRawRecommendation(): RecommendationRaw {
+  return deepCopy(sampleRawRecommendation) as RecommendationRaw;
 }
 
 const savingRawRecommendation: RecommendationRaw = {
@@ -117,10 +117,10 @@ const savingRawRecommendation: RecommendationRaw = {
   stateInfo: {
     state: "CLAIMED"
   }
-};
+} as RecommendationRaw;
 
-export function freshPerformanceRawRecommendation(): RecommendationRaw {
-  return deepCopy(performanceRawRecommendation) as RecommendationRaw;
+export function freshSavingRawRecommendation(): RecommendationRaw {
+  return deepCopy(savingRawRecommendation) as RecommendationRaw;
 }
 
 const performanceRawRecommendation: RecommendationRaw = {
@@ -164,10 +164,10 @@ const performanceRawRecommendation: RecommendationRaw = {
   stateInfo: {
     state: "CLAIMED"
   }
-};
+} as RecommendationRaw;
 
-export function freshSampleRawRecommendation(): RecommendationRaw {
-  return deepCopy(sampleRawRecommendation) as RecommendationRaw;
+export function freshPerformanceRawRecommendation(): RecommendationRaw {
+  return deepCopy(performanceRawRecommendation) as RecommendationRaw;
 }
 
 const sampleSnapshotRawRecommendation: RecommendationRaw = {
