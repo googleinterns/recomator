@@ -180,23 +180,11 @@ func TestList(t *testing.T) {
 	}
 }
 
-func TestApply(t *testing.T) {
-	code := "authcode"
-	router := setUpRouter(newMockShared())
-	createUser(code, router)
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
-	req.Header.Add("Authorization", "Bearer "+getToken(code))
-	router.ServeHTTP(w, req)
-
-	if !assert.Equal(t, http.StatusOK, w.Code, "Response code should be OK") {
-		return
-	}
-
+func checkApplySuceeded(t *testing.T, router *gin.Engine, token, recommendationName string) {
 	for {
-		w = httptest.NewRecorder()
-		reqStatus, _ := http.NewRequest("GET", "/recommendations/checkStatus?name=name", nil)
-		reqStatus.Header.Add("Authorization", "Bearer "+getToken(code))
+		w := httptest.NewRecorder()
+		reqStatus, _ := http.NewRequest("GET", "/recommendations/checkStatus?name="+recommendationName, nil)
+		reqStatus.Header.Add("Authorization", "Bearer "+token)
 		router.ServeHTTP(w, reqStatus)
 		if !assert.Equal(t, http.StatusOK, w.Code, "Wrong response code") {
 			break
@@ -209,6 +197,21 @@ func TestApply(t *testing.T) {
 		}
 		assert.Equal(t, inProgressStatus, resp.Status, "Should be in progress if not done")
 	}
+}
+
+func TestApply(t *testing.T) {
+	code := "authcode"
+	router := setUpRouter(newMockShared())
+	createUser(code, router)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req.Header.Add("Authorization", "Bearer "+getToken(code))
+	router.ServeHTTP(w, req)
+
+	if !assert.Equal(t, http.StatusOK, w.Code, "Response code should be OK") {
+		return
+	}
+	checkApplySuceeded(t, router, getToken(code), "name")
 }
 
 func TestWrongAuthFormat(t *testing.T) {
@@ -225,4 +228,46 @@ func TestWrongAuthFormat(t *testing.T) {
 	err := newDecoder(w.Body.Bytes()).Decode(&resp)
 	assert.NoError(t, err, "There should be ErrorResponse in body")
 	assert.NotEmpty(t, resp.ErrorMessage, "ErrorMessage should not be empty")
+}
+
+func TestCheckingStatusOnGCP(t *testing.T) {
+	code := "authcode"
+	router := setUpRouter(newMockShared())
+	createUser(code, router)
+
+	w := httptest.NewRecorder()
+	reqStatus, _ := http.NewRequest("GET", "/recommendations/checkStatus?name=name", nil)
+	reqStatus.Header.Add("Authorization", "Bearer "+getToken(code))
+	router.ServeHTTP(w, reqStatus)
+	if assert.Equal(t, http.StatusOK, w.Code, "Wrong response code") {
+		var resp CheckStatusResponse
+		err := newDecoder(w.Body.Bytes()).Decode(&resp)
+		assert.NoError(t, err, "No error expected")
+		assert.Equal(t, emptyRecommendation.StateInfo.State, resp.Status, "Status should be the same as in GetRecommendation")
+	}
+}
+
+func TestMultipleApplies(t *testing.T) {
+	code := "authcode"
+	router := setUpRouter(newMockShared())
+	createUser(code, router)
+
+	names := []string{"name1", "name2", "name3"}
+	done := make(chan bool, len(names))
+	for _, name := range names {
+		go func(name string) {
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("POST", "/recommendations/apply?name="+name, nil)
+			req.Header.Add("Authorization", "Bearer "+getToken(code))
+			router.ServeHTTP(w, req)
+			if assert.Equal(t, http.StatusOK, w.Code, "Should be okay") {
+				checkApplySuceeded(t, router, getToken(code), name)
+			}
+			done <- true
+		}(name)
+	}
+
+	for range names {
+		<-done
+	}
 }
