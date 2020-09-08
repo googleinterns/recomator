@@ -253,9 +253,11 @@ func TestMultipleApplies(t *testing.T) {
 	createUser(code, router)
 
 	names := []string{"name1", "name2", "name3"}
-	done := make(chan bool, len(names))
+	var wg sync.WaitGroup
 	for _, name := range names {
+		wg.Add(1)
 		go func(name string) {
+			defer wg.Done()
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", "/recommendations/apply?name="+name, nil)
 			req.Header.Add("Authorization", "Bearer "+getToken(code))
@@ -263,11 +265,8 @@ func TestMultipleApplies(t *testing.T) {
 			if assert.Equal(t, http.StatusOK, w.Code, "Should be okay") {
 				checkApplySuceeded(t, router, getToken(code), name)
 			}
-			done <- true
 		}(name)
 	}
 
-	for range names {
-		<-done
-	}
+	wg.Wait()
 }

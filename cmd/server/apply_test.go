@@ -122,10 +122,13 @@ func TestMultipleUsersAndRecommendations(t *testing.T) {
 		recommendations = append(recommendations, fmt.Sprintf("rec %d", i))
 	}
 
+	var wg sync.WaitGroup
 	for i, mock := range mocks {
 		for _, recommendation := range recommendations {
 			info := applyInfo{userEmail: fmt.Sprintf("email %d", i), recommendationName: recommendation}
+			wg.Add(1)
 			go func(info applyInfo, mock automation.GoogleService) {
+				defer wg.Done()
 				handler := &applyRequestHandler{name: info.recommendationName, service: mock}
 				err := applyRequests.StartApplying(info, handler)
 				assert.NoError(t, err, "No error is expected for StartApplying")
@@ -133,4 +136,6 @@ func TestMultipleUsersAndRecommendations(t *testing.T) {
 			}(info, mock)
 		}
 	}
+
+	wg.Wait()
 }
