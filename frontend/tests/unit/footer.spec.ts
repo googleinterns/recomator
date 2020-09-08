@@ -7,7 +7,7 @@ import {
   freshSampleRawRecommendation,
   freshSavingRawRecommendation,
   freshPerformanceRawRecommendation
-} from "./sample_recommendations";
+} from "./sample_recommendation";
 import vuetify from "@/plugins/vuetify";
 import { Store } from "vuex";
 

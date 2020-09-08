@@ -28,7 +28,7 @@ import {
   freshSampleRawRecommendation,
   freshSampleSnapshotRawRecommendation,
   freshSampleStopVMRawRecommendation
-} from "./sample_recommendations";
+} from "./sample_recommendation";
 
 describe("Store", () => {
   test("addRecommendation", () => {
