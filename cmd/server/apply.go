@@ -131,6 +131,7 @@ func getApplyHandler(service *sharedService) func(c *gin.Context) {
 		if err != nil {
 			sendError(c, err)
 		}
+		c.String(http.StatusOK, "")
 	}
 }
 
