@@ -153,11 +153,15 @@ func redirectHandler(c *gin.Context) {
 		authOptions = append(authOptions, oauth2.SetAuthURLParam("login_hint", email))
 	}
 
+<<<<<<< HEAD
 	configuration := config
 	if redirectURL != "" {
 		configuration.RedirectURL = redirectURL
 	}
 	url := configuration.AuthCodeURL("", authOptions...)
+=======
+	url := config.AuthCodeURL(redirectURL, authOptions...)
+>>>>>>> 23ffcea4abd3e2ab6ca9456a1b47376c87142c4d
 	c.Redirect(http.StatusSeeOther, url)
 	return
 }
