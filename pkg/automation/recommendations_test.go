@@ -284,7 +284,7 @@ func makeProjectsQueries(projects []string) []projectRecommender {
 	return result
 }
 
-var okRequirements = []*Requirement{&Requirement{Status: RequirementCompleted}}
+var okRequirements = []*Requirement{&Requirement{Satisfied: true}}
 
 func (s *MockProjectsService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
 	s.mutex.Lock()

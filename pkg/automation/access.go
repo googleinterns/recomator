@@ -28,19 +28,12 @@ import (
 // requiredAPIs are APIs required for googleService
 var requiredAPIs = []string{"compute.googleapis.com", "recommender.googleapis.com", "cloudresourcemanager.googleapis.com"}
 
-const (
-	// RequirementFailed corresponds to the failed status of requirement
-	RequirementFailed = "FAILED"
-	// RequirementCompleted corresponds to the completed status of requirement
-	RequirementCompleted = "COMPLETED"
-)
-
 // Requirement contains information about the required permission or api.
-// Status states whether permission is given and api is enabled.
-// If Status if FAILED, ErrorMessage will contain information about the problem.
+// Satisfied states whether permission is given and API is enabled.
+// If Satisfied if false, ErrorMessage will contain information about the problem.
 type Requirement struct {
 	Name         string `json:"name"`
-	Status       string `json:"status"`
+	Satisfied    bool   `json:"satisfied"`
 	ErrorMessage string `json:"errorMessage"`
 }
 
@@ -54,29 +47,29 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*R
 	serviceUsageName := "Service Usage API and services.get permission"
 	_, err := servicesService.Get("projects/" + project + "/services/" + serviceUsageAPI).Do()
 	if err != nil {
-		googleErr := err.(*googleapi.Error)
-		if googleErr.Code == http.StatusForbidden {
+		googleErr, ok := err.(*googleapi.Error)
+		if ok && googleErr.Code == http.StatusForbidden {
 			return []*Requirement{&Requirement{
 				Name:         serviceUsageName,
-				Status:       RequirementFailed,
+				Satisfied:    false,
 				ErrorMessage: googleErr.Message,
 			}}, nil
 		}
 		return nil, err
 	}
 	result := []*Requirement{&Requirement{
-		Name:   serviceUsageName,
-		Status: RequirementCompleted,
+		Name:      serviceUsageName,
+		Satisfied: true,
 	}}
 	for _, api := range apis {
 		response, err := servicesService.Get("projects/" + project + "/services/" + api).Do()
 		if err != nil {
 			return nil, err
 		}
-		status := RequirementCompleted
+		satisfied := true
 		errorMessage := ""
 		if response.State != "ENABLED" {
-			status = RequirementFailed
+			satisfied = false
 			errorMessage = response.Config.Name + " has not been used in project " + project +
 				" before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/" + api +
 				"/overview?project=" + project + " then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
@@ -84,7 +77,7 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*R
 
 		requirement := &Requirement{
 			Name:         response.Config.Title,
-			Status:       status,
+			Satisfied:    satisfied,
 			ErrorMessage: errorMessage,
 		}
 		result = append(result, requirement)
@@ -118,7 +111,7 @@ var requiredPermissions = [][]string{
 func (s *googleService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
 	var result []*Requirement
 	for _, permissionsGroup := range permissions {
-		status := RequirementCompleted
+		satisfied := true
 		errorMessage := ""
 		request := cloudresourcemanager.TestIamPermissionsRequest{Permissions: permissionsGroup}
 		projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
@@ -128,11 +121,11 @@ func (s *googleService) ListPermissionRequirements(project string, permissions [
 		}
 
 		if len(response.Permissions) == 0 {
-			status = RequirementFailed
+			satisfied = false
 			errorMessage = "At least one of these permissions is needed. None found."
 		}
 		name := strings.Join(permissionsGroup, ", ")
-		result = append(result, &Requirement{Name: name, Status: status, ErrorMessage: errorMessage})
+		result = append(result, &Requirement{Name: name, Satisfied: satisfied, ErrorMessage: errorMessage})
 	}
 	return result, nil
 }
@@ -151,7 +144,7 @@ func ListProjectRequirements(s GoogleService, project string) ([]*Requirement, e
 		return nil, err
 	}
 	for _, req := range requirements {
-		if req.Status == RequirementFailed {
+		if !req.Satisfied {
 			return requirements, nil
 		}
 	}
