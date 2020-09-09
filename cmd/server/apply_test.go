@@ -37,6 +37,15 @@ func (s *mockApply) GetRecommendation(name string) (*recommender.GoogleCloudReco
 	s.mutex.Lock()
 	s.names = append(s.names, name)
 	s.mutex.Unlock()
+	for {
+		// check if wait is false
+		s.mutex.Lock()
+		if !s.wait {
+			s.mutex.Unlock()
+			break
+		}
+		s.mutex.Unlock()
+	}
 	return nil, fmt.Errorf("something happened")
 }
 
@@ -52,9 +61,11 @@ func CheckApplyingFails(t *testing.T, info applyInfo, applyRequests *applyReques
 		assert.True(t, ok, "Recommendation should be in progress/applied now")
 		if status.Status == failedStatus {
 			assert.NotEmpty(t, status.ErrorMessage, "There should be some error message")
-			break
+			return
 		}
-		assert.Equal(t, inProgressStatus, status.Status, "Recommendation should be in progress")
+		if !assert.Equal(t, inProgressStatus, status.Status, "Recommendation should be in progress") {
+			return // return if test already failed
+		}
 	}
 }
 func TestApplySimple(t *testing.T) {
