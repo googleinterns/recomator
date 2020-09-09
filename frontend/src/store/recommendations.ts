@@ -18,7 +18,8 @@ import { delay } from "./utils/misc";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
-import { getBackendAddress } from "../config"
+import { getBackendAddress } from "../config";
+import { authFetch } from "./auth";
 
 // TODO: move all of this to config in some next PR
 const BACKEND_ADDRESS: string = getBackendAddress();
@@ -117,7 +118,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
-      const response = await fetch(`${BACKEND_ADDRESS}/recommendations`);
+      const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`);
       responseJson = await response.json();
       const responseCode = response.status;
 
@@ -183,6 +184,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       newStatus: "CLAIMED"
     });
 
+    const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/apply?name=${rec.name}`,
       { method: "POST" }
     );
@@ -247,6 +249,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     rec: RecommendationExtra
   ): Promise<boolean> {
     // send the request
+    const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
 
