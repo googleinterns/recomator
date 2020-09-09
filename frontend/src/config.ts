@@ -14,5 +14,6 @@ limitations under the License. */
 
 export class ProjectConfig {
   public static DEVELOPMENT_SERVER_ADDRESS = "http://localhost:8000";
-  public static PRODUCTION_SERVER_ADDRESS = "";
+  public static PRODUCTION_SERVER_ADDRESS =
+    "https://recomator-282910.ey.r.appspot.com";
 }
