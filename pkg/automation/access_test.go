@@ -25,30 +25,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockAllCompletedService struct {
+type mockAllSatisfiedService struct {
 	GoogleService
 }
 
-func (s *mockAllCompletedService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
+func (s *mockAllSatisfiedService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
 	var result []*Requirement
 	for _, api := range apis {
-		result = append(result, &Requirement{Name: api, Status: RequirementCompleted})
+		result = append(result, &Requirement{Name: api, Satisfied: true})
 	}
 	return result, nil
 }
 
-func (s *mockAllCompletedService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
+func (s *mockAllSatisfiedService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
 	var result []*Requirement
 	for _, perm := range permissions {
-		result = append(result, &Requirement{Name: perm[0], Status: RequirementCompleted})
+		result = append(result, &Requirement{Name: perm[0], Satisfied: true})
 	}
 	return result, nil
 }
 
-func checkAllRequirementsCompleted(t *testing.T, reqs []*Requirement) {
+func checkAllRequirementsSatisfied(t *testing.T, reqs []*Requirement) {
 	var actualNames, expectedNames []string
 	for _, req := range reqs {
-		assert.Equal(t, RequirementCompleted, req.Status, "Requirements should be compeleted")
+		assert.Equal(t, true, req.Satisfied, "Requirements should be satisfied")
 		actualNames = append(actualNames, req.Name)
 	}
 	for _, api := range requiredAPIs {
@@ -60,11 +60,11 @@ func checkAllRequirementsCompleted(t *testing.T, reqs []*Requirement) {
 	assert.ElementsMatch(t, expectedNames, actualNames, "Requirements should contain all APIs and permissions")
 }
 
-func TestAllCompleted(t *testing.T) {
-	mock := &mockAllCompletedService{}
+func TestAllSatisfied(t *testing.T) {
+	mock := &mockAllSatisfiedService{}
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "No error from ListProjectRequirements expected") {
-		checkAllRequirementsCompleted(t, reqs)
+		checkAllRequirementsSatisfied(t, reqs)
 	}
 }
 
@@ -84,7 +84,7 @@ func (s *mockService) ListPermissionRequirements(project string, permissions [][
 	return s.permissionReqs, nil
 }
 
-var failedRequirements = []*Requirement{&Requirement{Status: RequirementFailed}}
+var failedRequirements = []*Requirement{&Requirement{Satisfied: false}}
 
 func TestFailAPIRequirements(t *testing.T) {
 	mock := &mockService{apiReqs: failedRequirements}
@@ -97,13 +97,13 @@ func TestFailAPIRequirements(t *testing.T) {
 }
 
 func TestFailPermissionRequirements(t *testing.T) {
-	mock := &mockService{apiReqs: []*Requirement{&Requirement{Status: RequirementCompleted}},
+	mock := &mockService{apiReqs: []*Requirement{&Requirement{Satisfied: true}},
 		permissionReqs: failedRequirements}
 
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "ListProjectRequirements should not return error") {
 		assert.ElementsMatch(t, append(mock.apiReqs, mock.permissionReqs...), reqs,
-			"ListProjectRequirements should return api & permission requirements, if api requirements are completed")
+			"ListProjectRequirements should return api & permission requirements, if api requirements are satisfied")
 	}
 }
 
@@ -156,7 +156,7 @@ func getService(project string) GoogleService {
 	case failedProject:
 		service = &mockService{apiReqs: failedRequirements}
 	default:
-		service = &mockAllCompletedService{}
+		service = &mockAllSatisfiedService{}
 	}
 	return service
 }
@@ -193,7 +193,7 @@ func TestListRequirements(t *testing.T) {
 					if req.Project == failedProject {
 						assert.ElementsMatch(t, failedRequirements, req.Requirements, "Should be equal to failed requirements for this project")
 					} else {
-						checkAllRequirementsCompleted(t, req.Requirements)
+						checkAllRequirementsSatisfied(t, req.Requirements)
 					}
 				}
 				assert.ElementsMatch(t, projects, actualProjects, "Should contain the same projects")
