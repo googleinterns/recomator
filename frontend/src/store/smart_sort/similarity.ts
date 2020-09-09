@@ -49,7 +49,10 @@ export function similarityAvg(
 }
 
 // Orders (in place) by average similarity to applied recommendations.
-// See the design doc for details
+// The summary of seen recommendations is stored in localStorage in the browser.
+// Similarity between two recommendations is defined to be the number of features
+// that are different between them. For example, if they have different projects (1)
+// but the same type (0), then the similarity is 1 + 0 = 1 between these two.
 export function similaritySort(
   recommendations: RecommendationExtra[],
   data: TrainingData
