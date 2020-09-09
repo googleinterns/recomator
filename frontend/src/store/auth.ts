@@ -59,7 +59,7 @@ export async function authFetch(
   const responseCode = response.status;
 
   // access denied
-  if (responseCode === 403) {
+  if (responseCode === 401) {
     // redirect to GoogleSignIn
     router.push({ name: "GoogleSignIn" });
   }
