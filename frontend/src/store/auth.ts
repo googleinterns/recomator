@@ -47,7 +47,6 @@ export async function authFetch(
   input: string,
   init?: RequestInit
 ): Promise<Response> {
-
   // first, make sure that init, init.headers exist
   if (init == undefined) init = {};
   if (init.headers == undefined) init.headers = {};
