@@ -22,17 +22,28 @@ limitations under the License. -->
       </v-btn>
     </v-toolbar>
     <v-data-table
-    v-model="selectedRows"
-    :items ="this.allRows"
-    :hide-default-header="true"
-    :headers="headers"
-    :expanded.sync="expanded"
-    item-key="name"
-    show-select
-    show-expand>
-    <template v-slot:expanded-item="{ headers, item }">
-      <td :colspan="headers.length">More info about {{ item.name }}</td>
-    </template>
+      v-model="selectedRows"
+      :items="this.allRows"
+      :hide-default-header="true"
+      :headers="headers"
+      :expanded.sync="expanded"
+      item-key="name"
+      show-select
+      show-expand
+      class="elevation-1"
+    >
+      <template v-slot:expanded-item="{ headers, item }">
+        <td :colspan="headers.length">
+          <v-toolbar color="primary"  dark flat dense>
+       Project requirements:
+    </v-toolbar>
+          <v-list>
+          <v-list-item v-for="requirement in item.requirements" :key="requirement">
+            <v-list-item-content>{{ requirement }}</v-list-item-content>
+          </v-list-item>
+          </v-list>
+        </td></template
+      >
     </v-data-table>
   </v-card>
 </template>
@@ -65,10 +76,10 @@ export default class ProjectList extends Vue {
   headers = [
     {
       value: "name",
-    }, 
+    },
     {
-      value: 'data-table-expand'
-    }
+      value: "data-table-expand",
+    },
   ];
 
   expanded = [];
