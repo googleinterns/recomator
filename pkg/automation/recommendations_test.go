@@ -301,7 +301,7 @@ func (s *MockProjectsService) ListPermissionRequirements(project string, permiss
 	return okRequirements, nil
 }
 
-func TestListAllProjectsRecommendations(t *testing.T) {
+func TestListProjectsRecommendations(t *testing.T) {
 	for numConcurrentCalls := 0; numConcurrentCalls < 10; numConcurrentCalls++ {
 		for numProjects := 0; numProjects < 5; numProjects++ {
 			for numFailed := 0; numFailed <= numProjects; numFailed++ {
@@ -316,7 +316,7 @@ func TestListAllProjectsRecommendations(t *testing.T) {
 				projects := append(okProjects, failedProjects...)
 				task := &Task{}
 				mock := &MockProjectsService{}
-				res, err := ListAllProjectsRecommendations(mock, projects, numConcurrentCalls, task)
+				res, err := ListProjectsRecommendations(mock, projects, numConcurrentCalls, task)
 				if assert.NoError(t, err) {
 					done, all := task.GetProgress()
 					assert.True(t, done == all, "Task List all recommendations should be finished already")
