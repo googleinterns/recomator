@@ -20,11 +20,17 @@ import {
 } from "./recommendations";
 
 import {
+  IProjectsStoreState,
+  projectStoreFactory
+} from "./projects";
+
+import {
   ICoreTableStoreState,
   isRecommendationInResults,
   coreTableStoreFactory
 } from "./core_table";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
+import { Project } from './data_model/project';
 
 Vue.use(Vuex);
 
@@ -35,6 +41,7 @@ export interface IRootStoreState {
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
+  projectsStore?: IProjectsStoreState;
   coreTableStore?: ICoreTableStoreState;
 }
 
@@ -44,6 +51,10 @@ const getters: GetterTree<IRootStoreState, IRootStoreState> = {
       (recExtra: RecommendationExtra) =>
         isRecommendationInResults(state.coreTableStore!, recExtra)
     );
+  },
+
+  projects(state): Project[] {
+    return state.projectsStore!.projects;
   }
 };
 
@@ -53,6 +64,7 @@ export function rootStoreFactory(): Store<IRootStoreState> {
     getters: getters,
     modules: {
       recommendationsStore: recommendationStoreFactory(),
+      projectsStore: projectStoreFactory(),
       coreTableStore: coreTableStoreFactory()
     }
   };

@@ -21,16 +21,23 @@ limitations under the License. -->
       <v-progress-linear
         :value="$store.state.recommendationsStore.progress"
         data-name="main_progress_bar"
-        v-if="$store.state.recommendationsStore.progress !== null"
+        v-if="$store.state.projectsStore.chosen && $store.state.recommendationsStore.progress !== null"
       />
+      <v-progress-linear v-if="!$store.state.projectsStore.loaded" indeterminate/>
+      <v-row>
+          <v-col>
+            <ProjectList v-if="$store.state.projectsStore.loaded && !$store.state.projectsStore.chosen"/>
+          </v-col>
+        </v-row>
+
       <v-container
         fluid
         data-name="main_container"
-        v-if="$store.state.recommendationsStore.progress === null"
+        v-if="$store.state.projectsStore.chosen && $store.state.recommendationsStore.progress === null"
       >
         <v-row>
           <v-col>
-            <CoreTable />
+            <CoreTable v-if="$store.state.projectsStore.chosen"/>
           </v-col>
         </v-row>
       </v-container>
@@ -42,10 +49,11 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
+import ProjectList from "@/components/ProjectList.vue";
 import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { CoreTable, Footer }
+  components: { CoreTable, Footer, ProjectList }
 })
 export default class Home extends Vue {}
 </script>
