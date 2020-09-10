@@ -26,8 +26,13 @@ limitations under the License. -->
     :items ="this.allRows"
     :hide-default-header="true"
     :headers="headers"
+    :expanded.sync="expanded"
     item-key="name"
-    show-select>
+    show-select
+    show-expand>
+    <template v-slot:expanded-item="{ headers, item }">
+      <td :colspan="headers.length">More info about {{ item.name }}</td>
+    </template>
     </v-data-table>
   </v-card>
 </template>
@@ -59,11 +64,14 @@ import { Project } from "../store/data_model/project";
 export default class ProjectList extends Vue {
   headers = [
     {
-      text: "Name",
       value: "name",
-      sortable: true
+    }, 
+    {
+      value: 'data-table-expand'
     }
   ];
+
+  expanded = [];
 
   // Sync selected with the store
   get allRows(): Project[] {
