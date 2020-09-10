@@ -58,6 +58,8 @@ func setUpRouter(service *sharedService) *gin.Engine {
 
 	router.GET("/auth", getAuthHandler(service))
 
+	router.GET("/projects", getProjectsHandler(service))
+
 	router.GET("/recommendations", getListHandler(service))
 
 	router.POST("/recommendations/apply", getApplyHandler(service))
