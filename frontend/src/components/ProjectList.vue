@@ -34,12 +34,13 @@ limitations under the License. -->
     >
       <template v-slot:expanded-item="{ headers, item }">
         <td :colspan="headers.length">
-          <v-toolbar color="primary"  dark flat dense>
-       Project requirements:
-    </v-toolbar>
-          <v-list>
-          <v-list-item v-for="requirement in item.requirements" :key="requirement">
-            <v-list-item-content>{{ requirement }}</v-list-item-content>
+          <v-list class="pa-0 ma-1" dense>
+            <v-list-item class="font-weight-bold pa-0 ma-1">
+            <v-list-item-content  dense>Requirements:</v-list-item-content>
+          </v-list-item>
+
+          <v-list-item class="text-caption pa-0 ma-1" dense v-for="requirement in item.requirements" :key="requirement">
+            <v-list-item-content  dense>{{ requirement }}</v-list-item-content>
           </v-list-item>
           </v-list>
         </td></template
