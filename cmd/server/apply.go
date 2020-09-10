@@ -127,7 +127,7 @@ func getApplyHandler(service *sharedService) func(c *gin.Context) {
 			return
 		}
 
-		err = service.applyRequestsInProcess.StartApplying(applyInfo{name, user.email}, &applyRequestHandler{service: user.service})
+		err = service.applyRequestsInProcess.StartApplying(applyInfo{name, user.email}, &applyRequestHandler{service: user.service, name: name})
 		if err != nil {
 			sendError(c, err)
 		}
