@@ -16,13 +16,14 @@ import { Project } from "@/store/data_model/project";
 import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from './root';
+import { Requirement } from './data_model/project';
 
 const FETCH_WAIT_TIME = 500; // (1/2)s
 const REQUIREMENT_LIST = [
-  "Cloud Resource Manager API", 
-  "Compute Engine API",
-  "Service Usage API",
-  "Recommender API",
+  new Requirement("Cloud Resource Manager API", true), 
+  new Requirement("Compute Engine API", false),
+  new Requirement("Service Usage API", true),
+  new Requirement("Recommender API", false),
 ]
 
 export interface IProjectsStoreState {
@@ -80,9 +81,9 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     context.commit("endFetch");
   },
 
-  async fetchRequirements(context, projectName: string): Promise<string[]> {
+  async fetchRequirements(context, projectName: string): Promise<Requirement[]> {
     await delay(FETCH_WAIT_TIME);
-    return [REQUIREMENT_LIST[parseInt(projectName[projectName.length - 1], 10)]];
+    return [REQUIREMENT_LIST[parseInt(projectName[projectName.length - 1], 10) % 4]];
   }
 };
 

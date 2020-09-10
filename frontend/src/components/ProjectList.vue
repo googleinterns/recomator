@@ -18,7 +18,12 @@ limitations under the License. -->
       <v-toolbar-title> Select projects </v-toolbar-title>
       <v-spacer />
       <v-btn icon @click="acceptSelection">
-        <v-icon>mdi-checkbox-marked-circle</v-icon>
+        <v-tooltip top transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs">mdi-checkbox-marked-circle</v-icon>
+          </template>
+            Proceed to fetching recommendations from the selected projects.
+        </v-tooltip>
       </v-btn>
     </v-toolbar>
     <v-data-table
@@ -36,12 +41,32 @@ limitations under the License. -->
         <td :colspan="headers.length">
           <v-list class="pa-0 ma-1" dense>
             <v-list-item class="font-weight-bold pa-0 ma-1">
-            <v-list-item-content  dense>Requirements:</v-list-item-content>
-          </v-list-item>
+              <v-list-item-content dense>Requirements:</v-list-item-content>
+            </v-list-item>
 
-          <v-list-item class="text-caption pa-0 ma-1" dense v-for="requirement in item.requirements" :key="requirement">
-            <v-list-item-content  dense>{{ requirement }}</v-list-item-content>
-          </v-list-item>
+            <v-list-item
+              class="text-caption pa-0 ma-1"
+              dense
+              v-for="requirement in item.requirements"
+              :key="requirement"
+            >
+              <v-list-item-content dense>
+                {{ requirement.text }}
+              </v-list-item-content>
+              <v-spacer />
+              <v-list-item-consent
+                v-if="requirement.satisfied"
+                class="text--color-green"
+              >
+                Satisfied
+              </v-list-item-consent>
+              <v-list-item-consent
+                v-if="!requirement.satisfied"
+                class="text--color-green"
+              >
+                Not Satisfied
+              </v-list-item-consent>
+            </v-list-item>
           </v-list>
         </td></template
       >
@@ -60,7 +85,7 @@ import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
 import { getInternalStatusMapping } from "../store/data_model/status_map";
 import { IRootStoreState } from "../store/root";
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
-import { Project } from "../store/data_model/project";
+import { Project, Requirement } from "../store/data_model/project";
 
 @Component({
   components: {
