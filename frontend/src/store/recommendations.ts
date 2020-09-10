@@ -18,6 +18,7 @@ import { delay, getServerAddress } from "./utils/misc";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
+import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
 
 // TODO: move all of this to config in some next PR
 const SERVER_ADDRESS: string = getServerAddress();
@@ -144,9 +145,12 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
 
-    for (const recommendation of responseJson.recommendations) {
+    for (const recommendation of responseJson.recommendations)
       context.commit("addRecommendation", recommendation);
-    }
+    for (const recommendation of context.state.recommendations)
+      trainingDataHandler.addRecommendation(recommendation);
+
+    similaritySort(context.state.recommendations, trainingDataHandler.data);
 
     context.commit("endFetching");
   },
@@ -167,9 +171,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (selectedRecs.includes(undefined))
       throw "Name given doesn't match an existing recommendation";
 
+    // update training data; if a recommenadation fails and is re-applied,
+    // it will be counted twice but we don't expect too many failures,
+    // so this should have a negligible effect.
+    for (const rec of selectedRecs)
+      trainingDataHandler.applyAddedRecommendation(rec!);
+    trainingDataHandler.saveToLocalStorage();
+
     // Apply all, waiting for them to send one by one
     for (const rec of selectedRecs)
-      await dispatch("applySingleRecommendation", rec);
+      await dispatch("applySingleRecommendation", rec!);
   },
 
   // should return nearly immediately

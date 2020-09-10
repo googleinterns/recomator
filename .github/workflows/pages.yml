@@ -1,0 +1,32 @@
+name: pages-build
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      with:
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Build files
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+    - name: Commit files
+      run: |
+        cd frontend
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -f dist 
+        git commit -am "Changes introduced in a github action"
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: 'pages'
+        force: 'true' 
