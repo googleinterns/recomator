@@ -251,11 +251,6 @@ type MockProjectsService struct {
 	apiCalls                         []string
 	permissionCalls                  []string
 	mutex                            sync.Mutex
-	projects                         []string
-}
-
-func (s *MockProjectsService) ListProjects() ([]string, error) {
-	return s.projects, nil
 }
 
 func (s *MockProjectsService) ListZonesNames(project string) ([]string, error) {
@@ -320,8 +315,8 @@ func TestListAllProjectsRecommendations(t *testing.T) {
 				}
 				projects := append(okProjects, failedProjects...)
 				task := &Task{}
-				mock := &MockProjectsService{projects: projects}
-				res, err := ListAllProjectsRecommendations(mock, numConcurrentCalls, task)
+				mock := &MockProjectsService{}
+				res, err := ListAllProjectsRecommendations(mock, projects, numConcurrentCalls, task)
 				if assert.NoError(t, err) {
 					done, all := task.GetProgress()
 					assert.True(t, done == all, "Task List all recommendations should be finished already")

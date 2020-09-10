@@ -60,6 +60,8 @@ func setUpRouter(service *sharedService) *gin.Engine {
 
 	router.GET("/recommendations", getListHandler(service))
 
+	router.POST("/recommendations", getStartListingHandler(service))
+
 	router.POST("/recommendations/apply", getApplyHandler(service))
 
 	router.GET("/recommendations/checkStatus", getCheckStatusHandler(service))
@@ -82,7 +84,7 @@ func newSharedService() (*sharedService, error) {
 		return nil, err
 	}
 	service.auth = auth
-	service.listRequestsInProcess = listRequestsMap{data: make(map[string]*listRequestHandler)}       // the key is email address of the user
+	service.listRequestsInProcess = listRequestsMap{data: make(map[listInfo]*listRequestHandler)}     // the key is projects & user email
 	service.applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
 	return &service, nil
 }
@@ -98,6 +100,6 @@ func main() {
 	}
 	router := setUpRouter(service)
 
-	router.Run(":8000")
+	router.Run()
 
 }

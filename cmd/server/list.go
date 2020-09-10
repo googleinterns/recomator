@@ -17,11 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
 )
 
@@ -33,9 +37,8 @@ type ListRecommendationsResponse struct {
 	FailedProjects  []*automation.ProjectRequirements                     `json:"failedProjects"`
 }
 
-// ListRecommendationsProgressResponse is response to list/recommendations method
-// if not all recommendations have been processed yet.
-type ListRecommendationsProgressResponse struct {
+// Progress is the structure that contains information about request that is not finished yet.
+type Progress struct {
 	BatchesProcessed int `json:"batchesProcessed"`
 	NumberOfBatches  int `json:"numberOfBatches"`
 }
@@ -45,12 +48,13 @@ type listRequestHandler struct {
 	service            automation.GoogleService
 	task               automation.Task
 	numConcurrentCalls int
+	request            ListRequest
 	err                error
 }
 
 func (h *listRequestHandler) ListRecommendations() {
 	h.task.SetNumberOfSubtasks(1) // 1 call to ListAllProjectsRecommendations
-	h.result, h.err = automation.ListAllProjectsRecommendations(h.service, h.numConcurrentCalls, h.task.GetNextSubtask())
+	h.result, h.err = automation.ListProjectsRecommendations(h.service, h.request.Projects, h.numConcurrentCalls, h.task.GetNextSubtask())
 	h.task.SetAllDone()
 }
 
@@ -62,26 +66,41 @@ func (h *listRequestHandler) GetResult() (*automation.ListResult, error) {
 	return h.result, h.err
 }
 
+type listInfo struct {
+	userEmail string
+}
+
 type listRequestsMap struct {
-	data  map[string]*listRequestHandler
+	data  map[listInfo]*listRequestHandler
 	mutex sync.Mutex
 }
 
-func (m *listRequestsMap) GetListRequestResponse(email string, newHandler *listRequestHandler) (interface{}, error) {
+func (m *listRequestsMap) StartListing(info listInfo, handler *listRequestHandler) {
 	m.mutex.Lock()
-	handler, ok := m.data[email]
+	_, ok := m.data[info]
 	if !ok {
-		m.data[email] = newHandler
-		handler = newHandler
+		m.data[info] = handler
 		go handler.ListRecommendations()
 	}
 	m.mutex.Unlock()
+}
+
+// Return either ListRecommendationsResponse of Progress
+func (m *listRequestsMap) GetListRequestResponse(info listInfo) (interface{}, error) {
+	m.mutex.Lock()
+	handler, ok := m.data[info]
+	m.mutex.Unlock()
+
+	if !ok {
+		return nil, &googleapi.Error{Message: fmt.Sprintf("Specified request %v is not found", info),
+			Code: http.StatusNotFound}
+	}
 
 	done, all := handler.GetProgress()
 	if done < all {
-		return ListRecommendationsProgressResponse{int(done), int(all)}, nil
+		return Progress{int(done), int(all)}, nil
 	}
-	m.DeleteRequest(email)
+	m.DeleteRequest(info)
 	listResult, err := handler.GetResult()
 	if err != nil {
 		return nil, err
@@ -91,10 +110,46 @@ func (m *listRequestsMap) GetListRequestResponse(email string, newHandler *listR
 		FailedProjects:  listResult.FailedProjects}, nil
 }
 
-func (m *listRequestsMap) DeleteRequest(email string) {
+func (m *listRequestsMap) DeleteRequest(info listInfo) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	delete(m.data, email)
+	delete(m.data, info)
+}
+
+// ListRequest is a struct containing fields from /recommendations request body.
+type ListRequest struct {
+	Projects []string `json:"projects"`
+}
+
+func getStartListingHandler(service *sharedService) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var listRequest ListRequest
+
+		body, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			sendError(c, fmt.Errorf("Error reading body: %s", err.Error()), http.StatusBadRequest)
+			return
+		}
+
+		err = json.Unmarshal(body, &listRequest)
+
+		if err != nil {
+			sendError(c, fmt.Errorf("Error parsing body: %s", err.Error()), http.StatusBadRequest)
+			return
+		}
+
+		user, err := authorizeRequest(service.auth, c.Request)
+
+		if err != nil {
+			sendError(c, err)
+			return
+		}
+
+		service.listRequestsInProcess.StartListing(
+			listInfo{user.email},
+			&listRequestHandler{service: user.service, request: listRequest, numConcurrentCalls: defaultNumConcurrentCalls})
+		c.String(http.StatusOK, "")
+	}
 }
 
 func getListHandler(service *sharedService) func(c *gin.Context) {
@@ -106,12 +161,13 @@ func getListHandler(service *sharedService) func(c *gin.Context) {
 			return
 		}
 
-		response, err := service.listRequestsInProcess.GetListRequestResponse(user.email, &listRequestHandler{service: user.service, numConcurrentCalls: defaultNumConcurrentCalls})
+		response, err := service.listRequestsInProcess.GetListRequestResponse(
+			listInfo{user.email})
 
 		if err != nil {
 			sendError(c, err)
-		} else {
-			c.JSON(http.StatusOK, response)
+			return
 		}
+		c.JSON(http.StatusOK, response)
 	}
 }
