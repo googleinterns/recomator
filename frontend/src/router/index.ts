@@ -15,6 +15,7 @@ limitations under the License. */
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
+import store from "../store/root";
 
 Vue.use(VueRouter);
 
@@ -22,7 +23,14 @@ const routes: Array<RouteConfig> = [
   {
     path: "/",
     name: "Home",
-    component: Home
+    component: Home,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive recommendations from the middleware
+      store.dispatch("recommendationsStore/fetchRecommendations");
+      // Start status watchers
+      store.dispatch("recommendationsStore/startCentralStatusWatcher");
+      next();
+    }
   }
 ];
 
