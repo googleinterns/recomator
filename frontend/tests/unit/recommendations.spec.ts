@@ -27,7 +27,8 @@ import { rootStoreFactory } from "@/store/root";
 import {
   freshSampleRawRecommendation,
   freshSampleSnapshotRawRecommendation,
-  freshSampleStopVMRawRecommendation
+  freshSampleStopVMRawRecommendation,
+  freshSampleDeleteDiskRawRecommendation
 } from "./sample_recommendation";
 
 describe("Store", () => {
@@ -58,7 +59,8 @@ test("Getting the instance that the recommendation references", () => {
   ).toEqual("alicja-test");
 });
 
-test("Getting the zone of the resource", () => {
+// zones are already tested by the tests for links, so they don't need to be as thorough
+test("Getting the zone of the resource for CHANGE_MACHINE_TYPE", () => {
   expect(getRecommendationZone(freshSampleRawRecommendation())).toEqual(
     "us-east1-b"
   );
@@ -76,6 +78,14 @@ describe("Getting a Console link for the resource", () => {
       getResourceConsoleLink(freshSampleSnapshotRawRecommendation())
     ).toEqual(
       "https://console.cloud.google.com/compute/disksDetail/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress?project=rightsizer-test"
+    );
+  });
+
+  test("type: DELETE_DISK", () => {
+    expect(
+      getResourceConsoleLink(freshSampleDeleteDiskRawRecommendation())
+    ).toEqual(
+      "https://console.cloud.google.com/compute/disksDetail/zones/us-central1-a/disks/stanislawm-test-1?project=rightsizer-test"
     );
   });
 
