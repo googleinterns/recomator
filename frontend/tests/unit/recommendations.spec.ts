@@ -20,7 +20,8 @@ import {
   getRecommendationProject,
   getRecommendationResourceShortName,
   getRecommendationZone,
-  getResourceConsoleLink
+  getResourceConsoleLink,
+  getRecommendationCostPerWeek
 } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { rootStoreFactory } from "@/store/root";
@@ -28,7 +29,8 @@ import {
   freshSampleRawRecommendation,
   freshSampleSnapshotRawRecommendation,
   freshSampleStopVMRawRecommendation,
-  freshSampleDeleteDiskRawRecommendation
+  freshSampleDeleteDiskRawRecommendation,
+  freshPerformanceRawRecommendation
 } from "./sample_recommendation";
 
 describe("Store", () => {
@@ -64,6 +66,18 @@ test("Getting the zone of the resource for CHANGE_MACHINE_TYPE", () => {
   expect(getRecommendationZone(freshSampleRawRecommendation())).toEqual(
     "us-east1-b"
   );
+});
+
+test("Getting the cost of the recommendation from primaryImpact", () => {
+  expect(
+    getRecommendationCostPerWeek(freshSampleRawRecommendation())
+  ).toBeCloseTo(-17.0961);
+});
+
+test("Getting the cost of the recommendation from additionalImpact", () => {
+  expect(
+    getRecommendationCostPerWeek(freshPerformanceRawRecommendation())
+  ).toBeCloseTo(16.9);
 });
 
 describe("Getting a Console link for the resource", () => {

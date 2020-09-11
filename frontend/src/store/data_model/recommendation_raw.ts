@@ -21,13 +21,18 @@ export interface RecommendationRaw {
   description: string;
   recommenderSubtype: string;
   primaryImpact: Impact;
+  additionalImpact?: ImpactList;
   content: RecommendationContent;
   stateInfo: RecommendationStateInfo;
 }
 
 export interface Impact {
   category: string; // originally enum
-  costProjection: CostProjection;
+  costProjection?: CostProjection;
+}
+
+export interface ImpactList {
+  [index: number]: Impact;
 }
 
 export interface CostProjection {
@@ -69,6 +74,7 @@ export interface Operation {
   // This is a part of a union field, which other type ValueMatcher is not currently in use
   // This might well fail to parse for non-standard (not seen in recommendations now) operations
   value?: string | AddOperationValue;
+  valueMatcher?: any;
 }
 
 // Operation value used for snapshots
@@ -223,11 +229,11 @@ export function getRecomendationDescription(
   return recommendation.description;
 }
 
-// "3.5" ($ per week)
-export function getRecommendationCostPerWeek(
-  recommendation: RecommendationRaw
+// Get rid of duration and units/nanos representation
+export function extractCostPerWeekFromCostProjection(
+  costProjection: CostProjection
 ): number {
-  const costObject = recommendation.primaryImpact.costProjection.cost;
+  const costObject = costProjection.cost;
   console.assert(
     costObject.currencyCode === "USD",
     "Only USD supported, got %s",
@@ -236,9 +242,7 @@ export function getRecommendationCostPerWeek(
 
   // As a month doesn't have a fixed number of seconds, weekly cost is used
   // example duration: "2592000s"
-  const secs = parseInt(
-    recommendation.primaryImpact.costProjection.duration.slice(0, -1)
-  );
+  const secs = parseInt(costProjection.duration.slice(0, -1));
   // example units: "-73", example nanos: 4200000000 => -73.42
   // Sometimes we will only get the 'nanos' field
   //  (only observed for snaphshots for now)
@@ -250,6 +254,23 @@ export function getRecommendationCostPerWeek(
     cost += costObject.nanos! / (1000 * 1000 * 1000);
 
   return (cost * 60 * 60 * 24 * 7) / secs;
+}
+
+// "3.5" ($ per week)
+export function getRecommendationCostPerWeek(
+  recommendation: RecommendationRaw
+): number {
+  let costProjection: CostProjection;
+  // if "improve performance" recommendation, take from additionalImpact
+  if (recommendation.primaryImpact.category == "PERFORMANCE") {
+    costProjection = Object.values(recommendation.additionalImpact!).find(
+      (impact: Impact) => impact.category === "COST"
+    ).costProjection;
+  } else {
+    costProjection = recommendation.primaryImpact.costProjection!;
+  }
+
+  return extractCostPerWeekFromCostProjection(costProjection);
 }
 
 // "CHANGE_MACHINE_TYPE", "INCREASE_PERFORMANCE", ...
