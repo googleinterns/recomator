@@ -20,7 +20,8 @@ import {
   getRecommendationCostPerWeek,
   getRecommendationProject,
   getRecommendationResourceShortName,
-  getRecommendationType
+  getRecommendationType,
+  ImpactList
 } from "./recommendation_raw";
 
 import { getInternalStatusMapping } from "./status_map";
@@ -34,6 +35,7 @@ export class RecommendationExtra implements RecommendationRaw {
   readonly primaryImpact: Impact;
   readonly content: RecommendationContent;
   readonly stateInfo: RecommendationStateInfo; // original status
+  readonly additionalImpact?: ImpactList;
 
   // need to remember them so that v-data-table knows what to sort by
   readonly costCol: number;
@@ -56,6 +58,7 @@ export class RecommendationExtra implements RecommendationRaw {
     this.primaryImpact = rec.primaryImpact;
     this.content = rec.content;
     this.stateInfo = rec.stateInfo;
+    this.additionalImpact = rec.additionalImpact;
 
     this.costCol = getRecommendationCostPerWeek(rec);
     this.projectCol = getRecommendationProject(rec);

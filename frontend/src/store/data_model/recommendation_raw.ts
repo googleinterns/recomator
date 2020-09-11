@@ -21,13 +21,18 @@ export interface RecommendationRaw {
   description: string;
   recommenderSubtype: string;
   primaryImpact: Impact;
+  additionalImpact?: ImpactList;
   content: RecommendationContent;
   stateInfo: RecommendationStateInfo;
 }
 
 export interface Impact {
   category: string; // originally enum
-  costProjection: CostProjection;
+  costProjection?: CostProjection;
+}
+
+export interface ImpactList {
+  [index: number]: Impact;
 }
 
 export interface CostProjection {
@@ -69,6 +74,7 @@ export interface Operation {
   // This is a part of a union field, which other type ValueMatcher is not currently in use
   // This might well fail to parse for non-standard (not seen in recommendations now) operations
   value?: string | AddOperationValue;
+  valueMatcher?: any;
 }
 
 // Operation value used for snapshots
