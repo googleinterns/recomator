@@ -15,6 +15,7 @@ limitations under the License. -->
 <template>
   <v-card max-width="475" class="mx-auto">
     <v-toolbar color="primary" dark>
+      <v-simple-checkbox class="mr-2" @click="selectAll" :indeterminate="!areAllSelected() && isSomeSelected()" :value="areAllSelected()"> </v-simple-checkbox>
       <v-toolbar-title> Select projects </v-toolbar-title>
       <v-spacer />
       <v-btn icon @click="acceptSelection">
@@ -22,7 +23,7 @@ limitations under the License. -->
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs">mdi-checkbox-marked-circle</v-icon>
           </template>
-            Proceed to fetching recommendations from the selected projects.
+          Proceed to fetching recommendations from the selected projects.
         </v-tooltip>
       </v-btn>
     </v-toolbar>
@@ -31,45 +32,10 @@ limitations under the License. -->
       :items="this.allRows"
       :hide-default-header="true"
       :headers="headers"
-      :expanded.sync="expanded"
       item-key="name"
       show-select
-      show-expand
       class="elevation-1"
     >
-      <template v-slot:expanded-item="{ headers, item }">
-        <td :colspan="headers.length">
-          <v-list class="pa-0 ma-1" dense>
-            <v-list-item class="font-weight-bold pa-0 ma-1">
-              <v-list-item-content dense>Requirements:</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item
-              class="text-caption pa-0 ma-1"
-              dense
-              v-for="requirement in item.requirements"
-              :key="requirement"
-            >
-              <v-list-item-content dense>
-                {{ requirement.text }}
-              </v-list-item-content>
-              <v-spacer />
-              <v-list-item-consent
-                v-if="requirement.satisfied"
-                class="text--color-green"
-              >
-                Satisfied
-              </v-list-item-consent>
-              <v-list-item-consent
-                v-if="!requirement.satisfied"
-                class="text--color-green"
-              >
-                Not Satisfied
-              </v-list-item-consent>
-            </v-list-item>
-          </v-list>
-        </td></template
-      >
     </v-data-table>
   </v-card>
 </template>
@@ -103,15 +69,12 @@ export default class ProjectList extends Vue {
     {
       value: "name",
     },
-    {
-      value: "data-table-expand",
-    },
   ];
 
   expanded = [];
 
   // Sync selected with the store
-  get allRows(): Project[] {
+  get allRows(): string[] {
     return (this.$store.state as IRootStoreState).projectsStore!.projects;
   }
 
@@ -122,6 +85,22 @@ export default class ProjectList extends Vue {
 
   set selectedRows(rows: string[]) {
     this.$store.commit("projectsStore/setSelected", rows);
+  }
+
+  areAllSelected(): boolean {
+    return this.allRows.length === this.selectedRows.length;
+  }
+
+  isSomeSelected(): boolean {
+    return this.selectedRows.length > 0;
+  }
+
+  selectAll() {
+    if (this.areAllSelected()) {
+      this.selectedRows = [];
+    } else {
+      this.selectedRows = this.allRows;
+    }
   }
 
   acceptSelection() {
