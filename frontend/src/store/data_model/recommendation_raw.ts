@@ -282,7 +282,7 @@ export function getRecommendationZone(recommendation: RecommendationRaw) {
   const type = getRecommendationType(recommendation);
   let resource: string;
 
-  // First resource for instances, second for snapshots
+  // Only snapshots have the main resource as second
   if (type === "SNAPSHOT_AND_DELETE_DISK")
     resource = getRecommendationSecondResource(recommendation);
   else resource = getRecommendationFirstResource(recommendation);
@@ -296,7 +296,9 @@ export function getResourceConsoleLink(recommendation: RecommendationRaw) {
   const shortName = getRecommendationResourceShortName(recommendation);
   const type = getRecommendationType(recommendation);
   switch (type) {
-    case "SNAPSHOT_AND_DELETE_DISK": // disks
+    // disks
+    case "SNAPSHOT_AND_DELETE_DISK":
+    case "DELETE_DISK":
       return `https://console.cloud.google.com/compute/disksDetail/zones/${zone}/disks/${shortName}?project=${project}`;
     default:
       // instances

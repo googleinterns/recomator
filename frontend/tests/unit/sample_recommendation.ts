@@ -288,3 +288,43 @@ const sampleStopVMRawRecommendation: RecommendationRaw = {
 export function freshSampleStopVMRawRecommendation(): RecommendationRaw {
   return deepCopy(sampleStopVMRawRecommendation) as RecommendationRaw;
 }
+
+const sampleDeleteDiskRecommendation: RecommendationRaw = {
+  name:
+    "projects/323016592286/locations/us-central1-a/recommenders/google.compute.disk.IdleResourceRecommender/recommendations/33d373d1-e6ad-45b8-991a-83d9dcdb5ea5",
+  description:
+    "Save cost by deleting idle persistent disk 'stanislawm-test-1'.",
+  recommenderSubtype: "DELETE_DISK",
+  primaryImpact: {
+    category: "COST",
+    costProjection: {
+      cost: {
+        currencyCode: "USD",
+        nanos: -400000000
+      },
+      duration: "2592000s"
+    }
+  },
+  content: {
+    operationGroups: [
+      {
+        operations: [
+          {
+            action: "remove",
+            path: "/",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-central1-a/disks/stanislawm-test-1",
+            resourceType: "compute.googleapis.com/Disk"
+          }
+        ]
+      }
+    ]
+  },
+  stateInfo: {
+    state: "ACTIVE"
+  }
+} as RecommendationRaw;
+
+export function freshSampleDeleteDiskRawRecommendation(): RecommendationRaw {
+  return deepCopy(sampleDeleteDiskRecommendation) as RecommendationRaw;
+}
