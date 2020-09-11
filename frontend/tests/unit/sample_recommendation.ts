@@ -17,6 +17,11 @@ import { RecommendationRaw } from "@/store/data_model/recommendation_raw"; // --
 // We don't want to enforce camelCase here
 /* eslint @typescript-eslint/camelcase: 0 */
 
+// only works for simple objects, maps and functions will be lost
+function deepCopy(obj: object): object {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 const sampleRawRecommendation: RecommendationRaw = {
   content: {
     operationGroups: [
@@ -67,13 +72,102 @@ const sampleRawRecommendation: RecommendationRaw = {
   }
 } as RecommendationRaw;
 
-// only works for simple objects, maps and functions will be lost
-function deepCopy(obj: object): object {
-  return JSON.parse(JSON.stringify(obj));
-}
-
 export function freshSampleRawRecommendation(): RecommendationRaw {
   return deepCopy(sampleRawRecommendation) as RecommendationRaw;
+}
+
+const savingRawRecommendation: RecommendationRaw = {
+  content: {
+    operationGroups: [
+      {
+        operations: [
+          {
+            action: "test",
+            path: "/machineType",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
+            resourceType: "compute.googleapis.com/Instance"
+          },
+          {
+            action: "replace",
+            path: "/machineType",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
+            resourceType: "compute.googleapis.com/Instance"
+          }
+        ]
+      }
+    ]
+  },
+  description:
+    "Save cost by changing machine type from n1-standard-4 to custom-2-5120.",
+  name:
+    "projects/323016592286/locations/us-east1-b/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/6dfd692f-14b7-499a-be95-a21370893911",
+  primaryImpact: {
+    category: "COST",
+    costProjection: {
+      cost: {
+        currencyCode: "USD",
+        units: "-73"
+      },
+      duration: "2592000s"
+    }
+  },
+  recommenderSubtype: "CHANGE_MACHINE_TYPE",
+  stateInfo: {
+    state: "CLAIMED"
+  }
+} as RecommendationRaw;
+
+export function freshSavingRawRecommendation(): RecommendationRaw {
+  return deepCopy(savingRawRecommendation) as RecommendationRaw;
+}
+
+const performanceRawRecommendation: RecommendationRaw = {
+  content: {
+    operationGroups: [
+      {
+        operations: [
+          {
+            action: "test",
+            path: "/machineType",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
+            resourceType: "compute.googleapis.com/Instance"
+          },
+          {
+            action: "replace",
+            path: "/machineType",
+            resource:
+              "//compute.googleapis.com/projects/rightsizer-test/zones/us-east1-b/instances/alicja-test",
+            resourceType: "compute.googleapis.com/Instance"
+          }
+        ]
+      }
+    ]
+  },
+  description:
+    "Increase performance by changing machine type from custom-2-5120 to n1-standard-4.",
+  name:
+    "projects/323016592286/locations/us-east1-b/recommenders/google.compute.instance.MachineTypeRecommender/recommendations/6dfd6d2137-14b7-499a-be95-a09fe0893911",
+  primaryImpact: {
+    category: "COST",
+    costProjection: {
+      cost: {
+        currencyCode: "USD",
+        units: "145"
+      },
+      duration: "2592000s"
+    }
+  },
+  recommenderSubtype: "CHANGE_MACHINE_TYPE",
+  stateInfo: {
+    state: "CLAIMED"
+  }
+} as RecommendationRaw;
+
+export function freshPerformanceRawRecommendation(): RecommendationRaw {
+  return deepCopy(performanceRawRecommendation) as RecommendationRaw;
 }
 
 const sampleSnapshotRawRecommendation: RecommendationRaw = {

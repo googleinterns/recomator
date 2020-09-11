@@ -15,6 +15,7 @@ limitations under the License. -->
   <div>
     <!-- Footer with 'Apply Selected' button -->
     <v-footer
+      ref="footer"
       v-if="selectedRowsCount > 0"
       v-bind:fixed="true"
       color="primary"
@@ -26,7 +27,10 @@ limitations under the License. -->
             <v-icon dark>mdi-close</v-icon>
           </v-btn>
           <div>
-            <div style="font-weight: bold; color: white">
+            <div
+              data-name="footer-summary"
+              style="font-weight: bold; color: white"
+            >
               {{ applyPart }}<br />
               <span v-if="spendingsPart.length > 0"
                 >{{ spendingsPart }}<br
@@ -36,6 +40,7 @@ limitations under the License. -->
           </div>
           <div>
             <v-btn
+              data-name="footer-button"
               rounded
               color="secondary"
               style="font-weight: bold"
@@ -49,8 +54,8 @@ limitations under the License. -->
     </v-footer>
 
     <!-- Confirmation dialog -->
-    <v-dialog v-model="dialog" max-width="640px">
-      <v-card>
+    <v-dialog ref="dialog" v-model="dialog" max-width="640px">
+      <v-card data-name="dialog">
         <v-card-title class="headline">
           <v-row>
             <v-col
@@ -65,6 +70,7 @@ limitations under the License. -->
         <v-card-actions>
           <v-spacer />
           <v-btn
+            data-name="yes-button"
             color="green white--text"
             v-on:click="
               dialog = false;
@@ -75,7 +81,11 @@ limitations under the License. -->
             Yes
           </v-btn>
 
-          <v-btn color="primary white--text" v-on:click="dialog = false">
+          <v-btn
+            data-name="cancel-button"
+            color="primary white--text"
+            v-on:click="dialog = false"
+          >
             <v-icon>mdi-window-close</v-icon>
             Cancel
           </v-btn>
