@@ -38,13 +38,13 @@ export class RecommendationExtra implements RecommendationRaw {
   readonly additionalImpact?: ImpactList;
 
   // need to remember them so that v-data-table knows what to sort by
-  readonly costCol: number;
-  readonly projectCol: string;
-  readonly resourceCol: string;
-  readonly typeCol: string;
+  readonly costCol: number = 0;
+  readonly projectCol: string = "Undefined";
+  readonly resourceCol: string = "Undefined";
+  readonly typeCol: string = "Undefined";
 
   // These can be modified:
-  statusCol: string; // follows the current recommendation status, unlike stateInfo
+  statusCol = "Undefined"; // follows the current recommendation status, unlike stateInfo
   errorHeader?: string; // if apply fails,
   errorDescription?: string; // error details are stored here
 
@@ -60,12 +60,18 @@ export class RecommendationExtra implements RecommendationRaw {
     this.stateInfo = rec.stateInfo;
     this.additionalImpact = rec.additionalImpact;
 
-    this.costCol = getRecommendationCostPerWeek(rec);
-    this.projectCol = getRecommendationProject(rec);
-    this.resourceCol = getRecommendationResourceShortName(rec);
-    this.typeCol = getRecommendationType(rec);
-    this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
-    this.needsStatusWatcher =
-      this.statusCol === getInternalStatusMapping("CLAIMED");
+    // let's make sure that even if we make an invalid assumption in
+    // one of the parsers, we don't kill the app
+    try {
+      this.costCol = getRecommendationCostPerWeek(rec);
+      this.projectCol = getRecommendationProject(rec);
+      this.resourceCol = getRecommendationResourceShortName(rec);
+      this.typeCol = getRecommendationType(rec);
+      this.statusCol = getInternalStatusMapping(rec.stateInfo.state);
+      this.needsStatusWatcher =
+        this.statusCol === getInternalStatusMapping("CLAIMED");
+    } catch (err) {
+      console.log([`Failed to parse recommendation: Continuing.`, err, rec]);
+    }
   }
 }
