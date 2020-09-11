@@ -18,6 +18,7 @@ package automation
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -110,21 +111,39 @@ var requiredPermissions = [][]string{
 // No permissions required for this method.
 func (s *googleService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
 	var result []*Requirement
+	var allPermissions []string
+
 	for _, permissionsGroup := range permissions {
-		satisfied := true
+		allPermissions = append(allPermissions, permissionsGroup...)
+	}
+
+	request := cloudresourcemanager.TestIamPermissionsRequest{Permissions: allPermissions}
+	projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
+	response, err := projectsService.TestIamPermissions(project, &request).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	satisfiedPermissions := response.Permissions
+	sort.Strings(satisfiedPermissions)
+
+	for _, permissionsGroup := range permissions {
+		satisfied := false
 		errorMessage := ""
-		request := cloudresourcemanager.TestIamPermissionsRequest{Permissions: permissionsGroup}
-		projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
-		response, err := projectsService.TestIamPermissions(project, &request).Do()
-		if err != nil {
-			return nil, err
+
+		for _, permission := range permissionsGroup {
+			ind := sort.SearchStrings(satisfiedPermissions, permission)
+			// if one permission in group is satisfied then we are done
+			if ind < len(satisfiedPermissions) && satisfiedPermissions[ind] == permission {
+				satisfied = true
+				break
+			}
 		}
 
-		if len(response.Permissions) == 0 {
-			satisfied = false
+		if !satisfied {
 			errorMessage = "At least one of these permissions is needed. None found."
 		}
-		name := strings.Join(permissionsGroup, ", ")
+		name := strings.Join(permissionsGroup, " or ")
 		result = append(result, &Requirement{Name: name, Satisfied: satisfied, ErrorMessage: errorMessage})
 	}
 	return result, nil
