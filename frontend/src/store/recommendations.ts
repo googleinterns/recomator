@@ -116,6 +116,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
+    // Temporarily hard-coded project selection
+    const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
+      body: JSON.stringify({
+        projects: ["rightsizer-test", "recomator", "recomator-282910"]
+      }),
+      method: "POST"
+    });
+
+    console.log(["Response code: ", response.status]);
+
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
