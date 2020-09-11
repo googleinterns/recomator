@@ -148,8 +148,8 @@ describe("Filtering predicates individually", () => {
     expect(costFilterAccepted(tableState, extra())).toBeTruthy();
 
     // cost: -1/1000$ (this is a gain)
-    recommendation.primaryImpact.costProjection.cost.units = "0";
-    recommendation.primaryImpact.costProjection.cost.nanos = -1000000;
+    recommendation.primaryImpact.costProjection!.cost.units = "0";
+    recommendation.primaryImpact.costProjection!.cost.nanos = -1000000;
     // selected: [costs]
     tableState.costCategoriesSelected = [costCategoriesNames.costs];
     expect(costFilterAccepted(tableState, extra())).toBeFalsy();
@@ -164,8 +164,8 @@ describe("Filtering predicates individually", () => {
     expect(costFilterAccepted(tableState, extra())).toBeTruthy();
 
     // cost: 5.01$ (this is an actual cost)
-    recommendation.primaryImpact.costProjection.cost.units = "5";
-    recommendation.primaryImpact.costProjection.cost.nanos = 10 * 1000 * 1000;
+    recommendation.primaryImpact.costProjection!.cost.units = "5";
+    recommendation.primaryImpact.costProjection!.cost.nanos = 10 * 1000 * 1000;
     // selected: [costs]
     tableState.costCategoriesSelected = [costCategoriesNames.costs];
     expect(costFilterAccepted(tableState, extra())).toBeTruthy();
@@ -180,8 +180,8 @@ describe("Filtering predicates individually", () => {
     expect(costFilterAccepted(tableState, extra())).toBeTruthy();
 
     // cost: 0$
-    recommendation.primaryImpact.costProjection.cost.units = "0";
-    recommendation.primaryImpact.costProjection.cost.nanos = undefined;
+    recommendation.primaryImpact.costProjection!.cost.units = "0";
+    recommendation.primaryImpact.costProjection!.cost.nanos = undefined;
     // selected: [costs]
     tableState.costCategoriesSelected = [costCategoriesNames.costs];
     expect(costFilterAccepted(tableState, extra())).toBeTruthy();
