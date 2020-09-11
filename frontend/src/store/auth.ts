@@ -14,6 +14,8 @@ limitations under the License. */
 
 import { Module, MutationTree } from "vuex";
 import { IRootStoreState } from "./root";
+import store from "@/store/root";
+import router from "@/router/index";
 
 export interface IAuthStoreState {
   idToken?: string;
