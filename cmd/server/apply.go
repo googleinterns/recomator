@@ -103,7 +103,7 @@ func getCheckStatusHandler(service *SharedService) func(c *gin.Context) {
 		response, loaded := service.requests.GetResponse(RequestInfo{user.email, name})
 
 		if loaded {
-			c.JSON(http.StatusOK, response)
+			c.JSON(http.StatusOK, response.Content)
 			return
 		}
 

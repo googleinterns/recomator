@@ -28,7 +28,7 @@ type User struct {
 type AuthorizationService interface {
 	// Returns idToken that should be used to authorize
 	CreateUser(authCode string) (string, error)
-	//
+	// Verify checks that token is valid, not expired and issued by our app and returns user email
 	Verify(token string) (string, error)
 	// Returns GoogleService that should be used to make requests to Google APIs
 	GetUser(email string) (User, bool)
