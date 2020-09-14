@@ -47,8 +47,8 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*R
 	serviceUsageName := "Service Usage API and services.get permission"
 	_, err := servicesService.Get("projects/" + project + "/services/" + serviceUsageAPI).Do()
 	if err != nil {
-		googleErr := err.(*googleapi.Error)
-		if googleErr.Code == http.StatusForbidden {
+		googleErr, ok := err.(*googleapi.Error)
+		if ok && googleErr.Code == http.StatusForbidden {
 			return []*Requirement{&Requirement{
 				Name:         serviceUsageName,
 				Satisfied:    false,

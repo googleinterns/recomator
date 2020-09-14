@@ -56,7 +56,7 @@ limitations under the License. -->
         </v-row>
       </v-container>
     </v-main>
-    <Footer />
+    <Footer data-name="main-footer" />
   </v-app>
 </template>
 

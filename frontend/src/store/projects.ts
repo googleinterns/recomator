@@ -66,34 +66,29 @@ const mutations: MutationTree<IProjectsStoreState> = {
 };
 
 const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
-  // Makes requests to the middleware and adds obtained recommendations to the store
+  // Makes requests to the middleware and adds obtained projects to the store
   async fetchProjects(context): Promise<void> {
+    // TODO when 
     await delay(FETCH_WAIT_TIME);
 
     const ProjectCount = 10;
     for (let i = 0; i < ProjectCount; i++) {
-      const projectName = `Project ${i}`;
-      const projectRequirements = await context.dispatch(
-        "fetchRequirements",
-        projectName
-      );
+      const projectName = `Project ${i}`
 
       context.commit(
         "addProject",
-        new Project(projectName, projectRequirements)
+        new Project(projectName, [])
       );
     }
-
+    
     context.commit("endFetch");
   },
 
   async fetchRequirements(
-    context,
-    projectName: string
-  ): Promise<Requirement[]> {
+    context  ): Promise<Requirement[]> {
     await delay(FETCH_WAIT_TIME);
     return [
-      REQUIREMENT_LIST[parseInt(projectName[projectName.length - 1], 10) % 4]
+      REQUIREMENT_LIST[parseInt([projectName.length - 1], 10) % 4]
     ];
   }
 };

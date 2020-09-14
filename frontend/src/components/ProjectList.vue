@@ -58,6 +58,7 @@ limitations under the License. -->
       :hide-default-header="true"
       :headers="headers"
       :search="search"
+      item-key="name"
       show-select
       class="elevation-1"
     >
