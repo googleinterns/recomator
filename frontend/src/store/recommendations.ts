@@ -31,6 +31,7 @@ const HTTP_OK_CODE = 200;
 export interface IRecommendationsStoreState {
   recommendations: RecommendationExtra[];
   recommendationsByName: Map<string, RecommendationExtra>;
+  requestId: string;
   errorCode: number | undefined;
   errorMessage: string | undefined;
   progress: number | null; // % recommendations loaded, null if no fetching is happening
@@ -41,6 +42,7 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
     recommendationsByName: new Map<string, RecommendationExtra>(),
+    requestId: "null",
     progress: null,
     errorCode: undefined,
     errorMessage: undefined,
@@ -70,6 +72,9 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
   setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
     state.errorCode = errorInfo.errorCode;
     state.errorMessage = errorInfo.errorMessage;
+  },
+  setRequestId(state, requestId: string) {
+    state.requestId = requestId;
   },
   doSimilaritySort(state) {
     similaritySort(state.recommendations, trainingDataHandler.data);
@@ -119,32 +124,46 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
-    // Temporarily hard-coded project selection
+    // First, select the projects (temporarily hard-coded)
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
         projects: ["rightsizer-test", "recomator", "recomator-282910"]
       }),
       method: "POST"
     });
+    const responseCode = response.status;
+    // 201 = Created (Success)
+    if (responseCode !== 201) {
+      context.commit("setError", {
+        errorCode: responseCode,
+        errorMessage: `selecting projects failed: ${response.statusText}`
+      });
+      return;
+    }
 
-    console.log(["Response code: ", response.status]);
+    // An id has just been assigned for our us/project selection combination
+    // that we need to refer to in future requests
+    context.commit("setRequestId", await response.text());
 
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
-      const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`);
-      responseJson = await response.json();
+      const response = await authFetch(
+        `${BACKEND_ADDRESS}/recommendations?request_id=${context.state.requestId}`
+      );
       const responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
         context.commit("setError", {
           errorCode: responseCode,
-          errorMessage: responseJson.errorMessage
+          errorMessage: `progress check failed: ${response.statusText}`
         });
 
         context.commit("endFetching");
         return;
       }
+
+      responseJson = await response.json();
 
       if (responseJson.recommendations !== undefined) {
         break;
