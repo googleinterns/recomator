@@ -232,16 +232,11 @@ func listRecommendationsIfRequirementsSatisfied(service GoogleService, projectsR
 	return &listResult, nil
 }
 
-// ListAllProjectsRecommendations gets all projects for which user has projects.get permission.
-// If the user has enough permissions to apply and list recommendations, recommendations for projects are listed.
+// ListProjectsRecommendations gets recommendations for the specified projects.
+// If the user has enough permissions to apply and list recommendations, recommendations for project are listed.
 // Otherwise, projects requirements, including failed ones, are added to `failedProjects` to help show warnings to the user.
 // task structure tracks how many subtasks have been done already.
-func ListAllProjectsRecommendations(service GoogleService, numConcurrentCalls int, task *Task) (*ListResult, error) {
-	projects, err := service.ListProjects()
-	if err != nil {
-		return nil, err
-	}
-
+func ListProjectsRecommendations(service GoogleService, projects []string, numConcurrentCalls int, task *Task) (*ListResult, error) {
 	task.SetNumberOfSubtasks(2) // 2 subtasks are calls to ListRequirements and listRecommendationsIfRequirementsSatisfied
 
 	projectsRequirements, err := ListRequirements(service, projects, task.GetNextSubtask())
