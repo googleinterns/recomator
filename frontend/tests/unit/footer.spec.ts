@@ -11,6 +11,11 @@ import {
 import vuetify from "@/plugins/vuetify";
 import { Store } from "vuex";
 
+// We want all fetches to be mocked to do nothing here,
+//  so that tests do not depenend on network requests
+import { enableFetchMocks } from "jest-fetch-mock";
+enableFetchMocks();
+
 describe("Footer", () => {
   let recommendation: RecommendationExtra;
   let savingRecommendation: RecommendationExtra;
