@@ -19,10 +19,7 @@ import {
   recommendationStoreFactory
 } from "./recommendations";
 
-import {
-  IProjectsStoreState,
-  projectStoreFactory
-} from "./projects";
+import { IProjectsStoreState, projectStoreFactory } from "./projects";
 
 import {
   ICoreTableStoreState,
@@ -30,7 +27,7 @@ import {
   coreTableStoreFactory
 } from "./core_table";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
-import { Project } from './data_model/project';
+import { Project } from "./data_model/project";
 
 Vue.use(Vuex);
 

@@ -14,21 +14,21 @@ limitations under the License. */
 
 import { Project } from "@/store/data_model/project";
 import { delay } from "./utils/misc";
-import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
-import { IRootStoreState } from './root';
-import { Requirement } from './data_model/project';
+import { Module, MutationTree, ActionTree } from "vuex";
+import { IRootStoreState } from "./root";
+import { Requirement } from "./data_model/project";
 
 const FETCH_WAIT_TIME = 500; // (1/2)s
 const REQUIREMENT_LIST = [
-  new Requirement("Cloud Resource Manager API", true), 
+  new Requirement("Cloud Resource Manager API", true),
   new Requirement("Compute Engine API", false),
   new Requirement("Service Usage API", true),
-  new Requirement("Recommender API", false),
-]
+  new Requirement("Recommender API", false)
+];
 
 export interface IProjectsStoreState {
   projects: Project[];
-  projectsSelected: string[];
+  projectsSelected: Project[];
   chosen: boolean;
   loaded: boolean;
 }
@@ -38,7 +38,7 @@ export function projectsStoreStateFactory(): IProjectsStoreState {
     projects: [],
     projectsSelected: [],
     chosen: false,
-    loaded: false,
+    loaded: false
   };
 }
 
@@ -47,7 +47,7 @@ const mutations: MutationTree<IProjectsStoreState> = {
   addProject(state, project: Project): void {
     if (state.projects.filter(elt => elt.name === project.name).length !== 0) {
       throw "Duplicate project name";
-    } 
+    }
 
     state.projects.push(project);
   },
@@ -56,7 +56,7 @@ const mutations: MutationTree<IProjectsStoreState> = {
     state.loaded = true;
   },
 
-  setSelected(state, projects: string[]): void {
+  setSelected(state, projects: Project[]): void {
     state.projectsSelected = projects;
   },
 
@@ -73,17 +73,28 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     const ProjectCount = 10;
     for (let i = 0; i < ProjectCount; i++) {
       const projectName = `Project ${i}`;
-      const projectRequirements = await context.dispatch("fetchRequirements", projectName);
+      const projectRequirements = await context.dispatch(
+        "fetchRequirements",
+        projectName
+      );
 
-      context.commit("addProject", new Project(projectName, projectRequirements));
+      context.commit(
+        "addProject",
+        new Project(projectName, projectRequirements)
+      );
     }
 
     context.commit("endFetch");
   },
 
-  async fetchRequirements(context, projectName: string): Promise<Requirement[]> {
+  async fetchRequirements(
+    context,
+    projectName: string
+  ): Promise<Requirement[]> {
     await delay(FETCH_WAIT_TIME);
-    return [REQUIREMENT_LIST[parseInt(projectName[projectName.length - 1], 10) % 4]];
+    return [
+      REQUIREMENT_LIST[parseInt(projectName[projectName.length - 1], 10) % 4]
+    ];
   }
 };
 
@@ -95,6 +106,6 @@ export function projectStoreFactory(): Module<
     namespaced: true,
     state: projectsStoreStateFactory(),
     mutations: mutations,
-    actions: actions,
+    actions: actions
   };
 }

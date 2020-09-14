@@ -21,23 +21,37 @@ limitations under the License. -->
       <v-progress-linear
         :value="$store.state.recommendationsStore.progress"
         data-name="main_progress_bar"
-        v-if="$store.state.projectsStore.chosen && $store.state.recommendationsStore.progress !== null"
+        v-if="
+          $store.state.projectsStore.chosen &&
+            $store.state.recommendationsStore.progress !== null
+        "
       />
-      <v-progress-linear v-if="!$store.state.projectsStore.loaded" indeterminate/>
+      <v-progress-linear
+        v-if="!$store.state.projectsStore.loaded"
+        indeterminate
+      />
       <v-row>
-          <v-col>
-            <ProjectList v-if="$store.state.projectsStore.loaded && !$store.state.projectsStore.chosen"/>
-          </v-col>
-        </v-row>
+        <v-col>
+          <ProjectList
+            v-if="
+              $store.state.projectsStore.loaded &&
+                !$store.state.projectsStore.chosen
+            "
+          />
+        </v-col>
+      </v-row>
 
       <v-container
         fluid
         data-name="main_container"
-        v-if="$store.state.projectsStore.chosen && $store.state.recommendationsStore.progress === null"
+        v-if="
+          $store.state.projectsStore.chosen &&
+            $store.state.recommendationsStore.progress === null
+        "
       >
         <v-row>
           <v-col>
-            <CoreTable v-if="$store.state.projectsStore.chosen"/>
+            <CoreTable v-if="$store.state.projectsStore.chosen" />
           </v-col>
         </v-row>
       </v-container>

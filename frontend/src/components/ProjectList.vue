@@ -13,11 +13,67 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 
 <template>
-  <v-card max-width="475" class="mx-auto">
+  <v-card max-width="550" class="mx-auto">
     <v-toolbar color="primary" dark>
-      <v-simple-checkbox class="mr-2" @click="selectAll" :indeterminate="!areAllSelected() && isSomeSelected()" :value="areAllSelected()"> </v-simple-checkbox>
+      <v-simple-checkbox
+        class="mr-2"
+        @click="selectAll"
+        :indeterminate="!areAllSelected() && isSomeSelected()"
+        :value="areAllSelected()"
+      >
+      </v-simple-checkbox>
       <v-toolbar-title> Select projects </v-toolbar-title>
       <v-spacer />
+      <v-text-field
+        v-if="searchEnabled"
+        v-model="search"
+        single-line
+        hide-details
+      >
+        <template v-slot:append>
+          <v-btn
+            icon
+            @click="
+              searchEnabled = false;
+              search = true;
+            "
+          >
+            <v-icon> mdi-magnify </v-icon>
+          </v-btn>
+        </template>
+      </v-text-field>
+
+      <v-btn v-else icon @click="searchEnabled = true">
+        <v-tooltip top transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs">mdi-magnify</v-icon>
+          </template>
+          Search projects
+        </v-tooltip>
+      </v-btn>
+    </v-toolbar>
+    <v-data-table
+      v-model="selectedRows"
+      :items="this.allRows"
+      :hide-default-header="true"
+      :headers="headers"
+      :search="search"
+      show-select
+      class="elevation-1"
+    >
+    </v-data-table>
+
+    <v-toolbar color="primary" dark>
+      <v-spacer />
+      <v-btn icon @click="acceptSelection">
+        <v-tooltip top transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs">mdi-equal-box</v-icon>
+          </template>
+          Proceed to testing requirements for the selected projects.
+        </v-tooltip>
+      </v-btn>
+
       <v-btn icon @click="acceptSelection">
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
@@ -27,63 +83,35 @@ limitations under the License. -->
         </v-tooltip>
       </v-btn>
     </v-toolbar>
-    <v-data-table
-      v-model="selectedRows"
-      :items="this.allRows"
-      :hide-default-header="true"
-      :headers="headers"
-      item-key="name"
-      show-select
-      class="elevation-1"
-    >
-    </v-data-table>
   </v-card>
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import FiltersRow from "@/components/FiltersRow.vue";
-import ResourceCell from "@/components/ResourceCell.vue";
-import ProjectCell from "@/components/ProjectCell.vue";
-import DescriptionCell from "@/components/DescriptionCell.vue";
-import TypeCell from "@/components/TypeCell.vue";
-import SavingsCostCell from "@/components/SavingsCostCell.vue";
-import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
-import { getInternalStatusMapping } from "../store/data_model/status_map";
 import { IRootStoreState } from "../store/root";
-import { RecommendationExtra } from "../store/data_model/recommendation_extra";
-import { Project, Requirement } from "../store/data_model/project";
+import { Project } from "../store/data_model/project";
 
-@Component({
-  components: {
-    FiltersRow,
-    ResourceCell,
-    ProjectCell,
-    TypeCell,
-    DescriptionCell,
-    SavingsCostCell,
-    ApplyAndStatusCell,
-  },
-})
+@Component({})
 export default class ProjectList extends Vue {
   headers = [
     {
-      value: "name",
-    },
+      value: "name"
+    }
   ];
 
-  expanded = [];
+  searchEnabled = false;
+  search = "";
 
   // Sync selected with the store
-  get allRows(): string[] {
+  get allRows(): Project[] {
     return (this.$store.state as IRootStoreState).projectsStore!.projects;
   }
 
-  get selectedRows(): string[] {
+  get selectedRows(): Project[] {
     return (this.$store.state as IRootStoreState).projectsStore!
       .projectsSelected;
   }
 
-  set selectedRows(rows: string[]) {
+  set selectedRows(rows: Project[]) {
     this.$store.commit("projectsStore/setSelected", rows);
   }
 
