@@ -71,6 +71,9 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     state.errorCode = errorInfo.errorCode;
     state.errorMessage = errorInfo.errorMessage;
   },
+  doSimilaritySort(state) {
+    similaritySort(state.recommendations, trainingDataHandler.data);
+  },
   setRecommendationStatus(
     state,
     payload: { recName: string; newStatus: string }
@@ -162,8 +165,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     for (const recommendation of context.state.recommendations)
       trainingDataHandler.addRecommendation(recommendation);
 
-    similaritySort(context.state.recommendations, trainingDataHandler.data);
-
+    context.commit("doSimilaritySort");
     context.commit("endFetching");
   },
 
