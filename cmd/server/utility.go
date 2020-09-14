@@ -16,33 +16,20 @@ limitations under the License.
 
 package main
 
-import (
-	"net/http"
+import "math/rand"
 
-	"github.com/gin-gonic/gin"
-)
+const characters = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-// ProjectsResponse is the response to projects.list method
-type ProjectsResponse struct {
-	Projects []string `json:"projects"`
-}
-
-func getProjectsHandler(service *SharedService) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		user, err := authorizeRequest(service.auth, c.Request)
-
-		if err != nil {
-			sendError(c, err)
-			return
-		}
-
-		projects, err := user.service.ListProjects()
-
-		if err != nil {
-			sendError(c, err)
-			return
-		}
-
-		c.JSON(http.StatusOK, ProjectsResponse{projects})
+// Returns a random string of the given length
+// generated using the given generator.
+// This function will only be thread safe, if the given
+// generator is thread safe.
+func randomString(sequenceLen int, generator *rand.Rand) string {
+	result := make([]byte, sequenceLen)
+	for i := range result {
+		result[i] = characters[generator.Intn(len(characters))]
 	}
+
+	return string(result)
 }
