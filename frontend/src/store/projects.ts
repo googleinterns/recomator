@@ -22,18 +22,16 @@ const FETCH_WAIT_TIME = 500; // (1/2)s
 export interface IProjectsStoreState {
   projects: Project[];
   projectsSelected: Project[];
-  requirements: boolean;
-  recommendations: boolean;
   loaded: boolean;
+  display: boolean;
 }
 
 export function projectsStoreStateFactory(): IProjectsStoreState {
   return {
     projects: [],
     projectsSelected: [],
-    requirements: false,
-    recommendations: false,
-    loaded: false
+    loaded: false,
+    display: false
   };
 }
 
@@ -47,18 +45,28 @@ const mutations: MutationTree<IProjectsStoreState> = {
     state.projects.push(project);
   },
 
+  startFetch(state): void {
+    state.display = true;
+  },
+
   endFetch(state): void {
     state.loaded = true;
   },
 
   setSelected(state, projects: Project[]): void {
     state.projectsSelected = projects;
+  },
+
+  endDisplaying(state): void {
+    state.display = false;
   }
 };
 
 const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained projects to the store
   async fetchProjects(context): Promise<void> {
+    context.commit("startFetch");
+
     await delay(FETCH_WAIT_TIME);
 
     const ProjectCount = 10;
@@ -75,10 +83,12 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
   },
 
   proceedToRequirements(context, selectedProjects) {
+    context.commit("endDisplay");
     context.dispatch("/requirementsStore/fetchRequirements", selectedProjects);
   },
 
   proceedToRecommendations(context, selectedProjects) {
+    context.commit("endDisplay");
     context.dispatch("/recommendationsStore/fetchRecommendations", selectedProjects);
   }
 

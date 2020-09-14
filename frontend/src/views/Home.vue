@@ -22,20 +22,44 @@ limitations under the License. -->
         :value="$store.state.recommendationsStore.progress"
         data-name="main_progress_bar"
         v-if="
-          $store.state.projectsStore.chosen &&
+          $store.state.recommendationsStore.display &&
             $store.state.recommendationsStore.progress !== null
         "
       />
+
       <v-progress-linear
-        v-if="!$store.state.projectsStore.loaded"
+        :value="$store.state.requirementsStore.progress"
+        data-name="main_progress_bar"
+        v-if="
+          $store.state.requirementsStore.display &&
+            $store.state.requirementsStore.progress !== null
+        "
+      />
+
+      <v-progress-linear
+        v-if="
+          $store.state.projectsStore.display &&
+            !$store.state.projectsStore.loaded
+        "
         indeterminate
       />
       <v-row>
         <v-col>
           <ProjectList
             v-if="
-              $store.state.projectsStore.loaded &&
-                !$store.state.projectsStore.chosen
+              $store.state.projectsStore.display &&
+                !$store.state.projectsStore.loaded
+            "
+          />
+        </v-col>
+      </v-row>
+
+      <v-row>
+        <v-col>
+          <ProjectsWithRequirements
+            v-if="
+              $store.state.requirementsStore.display &&
+                !$store.state.requirementsStore.progress === null
             "
           />
         </v-col>
@@ -45,13 +69,13 @@ limitations under the License. -->
         fluid
         data-name="main_container"
         v-if="
-          $store.state.projectsStore.chosen &&
+          $store.state.recommendationsStore.display &&
             $store.state.recommendationsStore.progress === null
         "
       >
         <v-row>
           <v-col>
-            <CoreTable v-if="$store.state.projectsStore.chosen" />
+            <CoreTable />
           </v-col>
         </v-row>
       </v-container>
@@ -64,10 +88,11 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
 import ProjectList from "@/components/ProjectList.vue";
+import ProjectWithRequirements from "@/components/ProjectsWithRequirements.vue";
 import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { CoreTable, Footer, ProjectList }
+  components: { CoreTable, Footer, ProjectList },
 })
 export default class Home extends Vue {}
 </script>

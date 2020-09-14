@@ -28,6 +28,7 @@ import {
 } from "./core_table";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
 import { Project } from "./data_model/project";
+import { requirementStoreFactory, IRequirementsStoreState } from './requirement';
 
 Vue.use(Vuex);
 
@@ -38,6 +39,7 @@ export interface IRootStoreState {
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
+  requirementsStore?: IRequirementsStoreState;
   projectsStore?: IProjectsStoreState;
   coreTableStore?: ICoreTableStoreState;
 }
@@ -61,6 +63,7 @@ export function rootStoreFactory(): Store<IRootStoreState> {
     getters: getters,
     modules: {
       recommendationsStore: recommendationStoreFactory(),
+      requirementsStore: requirementStoreFactory(),
       projectsStore: projectStoreFactory(),
       coreTableStore: coreTableStoreFactory()
     }

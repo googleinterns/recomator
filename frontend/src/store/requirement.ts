@@ -12,79 +12,86 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { Project } from "@/store/data_model/project";
+import { ProjectRequirement } from "@/store/data_model/project_with_requirement";
 import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root";
-import { Requirement } from "./data_model/project";
+import { Requirement } from "./data_model/project_with_requirement";
+import { Project } from './data_model/project';
 
 const FETCH_WAIT_TIME = 500; // (1/2)s
 const REQUIREMENT_LIST = [
-  new Requirement("Cloud Resource Manager API", true),
-  new Requirement("Compute Engine API", false),
-  new Requirement("Service Usage API", true),
-  new Requirement("Recommender API", false)
+  new Requirement("Cloud Resource Manager API", true, "xxx"),
+  new Requirement("Compute Engine API", false, "xxx"),
+  new Requirement("Service Usage API", true, "xxx"),
+  new Requirement("Recommender API", false, "xxx"),
 ];
 
-export interface IProjectsStoreState {
-  projects: Project[];
-  projectsSelected: Project[];
-  requirements: boolean;
-  recommendations: boolean;
-  loaded: boolean;
+export interface IRequirementsStoreState {
+  projects: ProjectRequirement[];
+  projectsSelected: ProjectRequirement[];
+  progress: null|number;
+  errorCode: undefined|number;
+  errorMessage: undefined|string;
+  display: boolean;
 }
 
-export function projectsStoreStateFactory(): IProjectsStoreState {
+export function requirementsStoreStateFactory(): IRequirementsStoreState {
   return {
     projects: [],
     projectsSelected: [],
-    requirements: false,
-    recommendations: false,
-    loaded: false
+    progress: null,
+    errorCode: undefined,
+    errorMessage: undefined,
+    display: false,
   };
 }
 
-const mutations: MutationTree<IProjectsStoreState> = {
+const mutations: MutationTree<IRequirementsStoreState> = {
   // only entry point for projects
-  addProject(state, project: Project): void {
-    if (state.projects.filter(elt => elt.name === project.name).length !== 0) {
+  addProject(state, project: ProjectRequirement): void {
+    if (
+      state.projects.filter((elt) => elt.name === project.name).length !== 0
+    ) {
       throw "Duplicate project name";
     }
 
     state.projects.push(project);
   },
 
-  endFetch(state): void {
-    state.loaded = true;
+  startFetch(state): void {
+    state.display = true;
   },
 
-  setSelected(state, projects: Project[]): void {
+  endFetch(state): void {
+    state.display = true;
+  },
+
+  setSelected(state, projects: ProjectRequirement[]): void {
     state.projectsSelected = projects;
-  }
+  },
+  setProgress(state, progress: number) {
+    state.progress = progress;
+  },
+
+  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
+    state.errorCode = errorInfo.errorCode;
+    state.errorMessage = errorInfo.errorMessage;
+  },
 };
 
-const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
+const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained projects to the store
-  async fetchProjects(context): Promise<void> {
-    await delay(FETCH_WAIT_TIME);
+  async fetchRequirements(context, selectedProjects: Project[]): Promise<void> {
+    context.commit("startFetch");
 
-    const ProjectCount = 10;
-    for (let i = 0; i < ProjectCount; i++) {
-      const projectName = `Project ${i}`
+    for (const project of selectedProjects) {
+      await delay(FETCH_WAIT_TIME);
 
-      context.commit(
-        "addProject",
-        new Project(projectName, [])
-      );
+      context.commit("addProject", new ProjectRequirement(project.name, REQUIREMENT_LIST));
     }
-    
-    context.commit("endFetch");
-  },
 
-  async fetchRequirements(
-    context, selectedProjects  ): Promise<void> {
-    await delay(FETCH_WAIT_TIME);
-    context.commit("setRequirements");
+    context.commit("endFetch");
   },
 
   proceedToRequirements(context, selectedProjects) {
@@ -92,19 +99,21 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
   },
 
   proceedToRecommendations(context, selectedProjects) {
-    context.dispatch("/recommendationsStore/fetchRecommendations", selectedProjects);
-  }
-
+    context.dispatch(
+      "/recommendationsStore/fetchRecommendations",
+      selectedProjects
+    );
+  },
 };
 
 export function requirementStoreFactory(): Module<
-  IProjectsStoreState,
+  IRequirementsStoreState,
   IRootStoreState
 > {
   return {
     namespaced: true,
-    state: requirementStoreStateFactory(),
+    state: requirementsStoreStateFactory(),
     mutations: mutations,
-    actions: actions
+    actions: actions,
   };
 }

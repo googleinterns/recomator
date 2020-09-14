@@ -30,6 +30,7 @@ const HTTP_OK_CODE = 200;
 export interface IRecommendationsStoreState {
   recommendations: RecommendationExtra[];
   recommendationsByName: Map<string, RecommendationExtra>;
+  display: boolean;
   errorCode: number | undefined;
   errorMessage: string | undefined;
   progress: number | null; // % recommendations loaded, null if no fetching is happening
@@ -40,6 +41,7 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
     recommendationsByName: new Map<string, RecommendationExtra>(),
+    display: false,
     progress: null,
     errorCode: undefined,
     errorMessage: undefined,
@@ -56,6 +58,11 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     state.recommendations.push(extended);
     state.recommendationsByName.set(extended.name, extended);
   },
+
+  startFetching(state): void {
+    state.display = true;
+  },
+
   endFetching(state) {
     state.progress = null;
   },
@@ -109,6 +116,8 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained recommendations to the store
   async fetchRecommendations(context): Promise<void> {
     // one fetch at a time only
+    context.commit("startFetching");
+
     if (context.state.progress !== null) {
       return;
     }
