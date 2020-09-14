@@ -17,22 +17,22 @@ import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root";
 import { Requirement } from "./data_model/project_with_requirement";
-import { Project } from './data_model/project';
+import { Project } from "./data_model/project";
 
 const FETCH_WAIT_TIME = 500; // (1/2)s
 const REQUIREMENT_LIST = [
   new Requirement("Cloud Resource Manager API", true, "xxx"),
   new Requirement("Compute Engine API", false, "xxx"),
   new Requirement("Service Usage API", true, "xxx"),
-  new Requirement("Recommender API", false, "xxx"),
+  new Requirement("Recommender API", false, "xxx")
 ];
 
 export interface IRequirementsStoreState {
   projects: ProjectRequirement[];
   projectsSelected: ProjectRequirement[];
-  progress: null|number;
-  errorCode: undefined|number;
-  errorMessage: undefined|string;
+  progress: null | number;
+  errorCode: undefined | number;
+  errorMessage: undefined | string;
   display: boolean;
 }
 
@@ -43,16 +43,14 @@ export function requirementsStoreStateFactory(): IRequirementsStoreState {
     progress: null,
     errorCode: undefined,
     errorMessage: undefined,
-    display: false,
+    display: false
   };
 }
 
 const mutations: MutationTree<IRequirementsStoreState> = {
   // only entry point for projects
   addProject(state, project: ProjectRequirement): void {
-    if (
-      state.projects.filter((elt) => elt.name === project.name).length !== 0
-    ) {
+    if (state.projects.filter(elt => elt.name === project.name).length !== 0) {
       throw "Duplicate project name";
     }
 
@@ -61,10 +59,11 @@ const mutations: MutationTree<IRequirementsStoreState> = {
 
   startFetch(state): void {
     state.display = true;
+    state.progress = 0.50;
   },
 
   endFetch(state): void {
-    state.display = true;
+    state.progress = null;
   },
 
   setSelected(state, projects: ProjectRequirement[]): void {
@@ -77,7 +76,7 @@ const mutations: MutationTree<IRequirementsStoreState> = {
   setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
     state.errorCode = errorInfo.errorCode;
     state.errorMessage = errorInfo.errorMessage;
-  },
+  }
 };
 
 const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
@@ -88,14 +87,13 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     for (const project of selectedProjects) {
       await delay(FETCH_WAIT_TIME);
 
-      context.commit("addProject", new ProjectRequirement(project.name, REQUIREMENT_LIST));
+      context.commit(
+        "addProject",
+        new ProjectRequirement(project.name, REQUIREMENT_LIST)
+      );
     }
 
     context.commit("endFetch");
-  },
-
-  proceedToRequirements(context, selectedProjects) {
-    context.dispatch("/projectsStore/fetchRequirements", selectedProjects);
   },
 
   proceedToRecommendations(context, selectedProjects) {
@@ -103,7 +101,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       "/recommendationsStore/fetchRecommendations",
       selectedProjects
     );
-  },
+  }
 };
 
 export function requirementStoreFactory(): Module<
@@ -114,6 +112,6 @@ export function requirementStoreFactory(): Module<
     namespaced: true,
     state: requirementsStoreStateFactory(),
     mutations: mutations,
-    actions: actions,
+    actions: actions
   };
 }

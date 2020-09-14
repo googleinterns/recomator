@@ -16,6 +16,7 @@ import { Project } from "@/store/data_model/project";
 import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root";
+import router from '../router/index';
 
 const FETCH_WAIT_TIME = 500; // (1/2)s
 
@@ -23,7 +24,6 @@ export interface IProjectsStoreState {
   projects: Project[];
   projectsSelected: Project[];
   loaded: boolean;
-  display: boolean;
 }
 
 export function projectsStoreStateFactory(): IProjectsStoreState {
@@ -31,7 +31,6 @@ export function projectsStoreStateFactory(): IProjectsStoreState {
     projects: [],
     projectsSelected: [],
     loaded: false,
-    display: false
   };
 }
 
@@ -45,10 +44,6 @@ const mutations: MutationTree<IProjectsStoreState> = {
     state.projects.push(project);
   },
 
-  startFetch(state): void {
-    state.display = true;
-  },
-
   endFetch(state): void {
     state.loaded = true;
   },
@@ -56,42 +51,30 @@ const mutations: MutationTree<IProjectsStoreState> = {
   setSelected(state, projects: Project[]): void {
     state.projectsSelected = projects;
   },
-
-  endDisplaying(state): void {
-    state.display = false;
-  }
 };
 
 const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained projects to the store
   async fetchProjects(context): Promise<void> {
-    context.commit("startFetch");
-
-    await delay(FETCH_WAIT_TIME);
+    await delay(10 * FETCH_WAIT_TIME);
 
     const ProjectCount = 10;
     for (let i = 0; i < ProjectCount; i++) {
-      const projectName = `Project ${i}`
+      const projectName = `Project ${i}`;
 
-      context.commit(
-        "addProject",
-        new Project(projectName)
-      );
+      context.commit("addProject", new Project(projectName));
     }
-    
+
     context.commit("endFetch");
   },
 
   proceedToRequirements(context, selectedProjects) {
-    context.commit("endDisplay");
-    context.dispatch("/requirementsStore/fetchRequirements", selectedProjects);
+    router.push("requirements");
   },
 
   proceedToRecommendations(context, selectedProjects) {
-    context.commit("endDisplay");
-    context.dispatch("/recommendationsStore/fetchRecommendations", selectedProjects);
+    router.push("recommendations");
   }
-
 };
 
 export function projectStoreFactory(): Module<

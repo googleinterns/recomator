@@ -18,22 +18,31 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
-
       <v-progress-linear
-        v-if="!$store.state.projectsStore.loaded"
-        indeterminate
+        :value="$store.state.recommendationsStore.progress"
+        data-name="main_progress_bar"
+        v-if="
+          $store.state.recommendationsStore.display &&
+            $store.state.recommendationsStore.progress !== null
+        "
       />
 
       <v-container
         fluid
-        v-if="$store.state.projectsStore.loaded">
-      <v-row>
-        <v-col>
-          <ProjectList />
-        </v-col>
-      </v-row>
+        data-name="main_container"
+        v-if="
+          $store.state.recommendationsStore.display &&
+            $store.state.recommendationsStore.progress === null
+        "
+      >
+        <v-row>
+          <v-col>
+            <CoreTable />
+          </v-col>
+        </v-row>
       </v-container>
     </v-main>
+    <Footer data-name="main-footer" />
   </v-app>
 </template>
 
@@ -47,5 +56,5 @@ import Footer from "@/components/Footer.vue";
 @Component({
   components: { CoreTable, Footer, ProjectList },
 })
-export default class Home extends Vue {}
+export default class Recommendation extends Vue {}
 </script>

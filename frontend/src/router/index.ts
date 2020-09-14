@@ -15,6 +15,8 @@ limitations under the License. */
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
+import Requirements from "../views/Requirements.vue";
+import Recommendations from "../views/Recommendations.vue";
 import store from "../store/root";
 
 Vue.use(VueRouter);
@@ -27,8 +29,28 @@ const routes: Array<RouteConfig> = [
     beforeEnter(_, __, next) {
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
-      // Start status watchers
-      store.dispatch("recommendationsStore/startCentralStatusWatcher");
+      next();
+    }
+  },
+
+  {
+    path: "/requirements",
+    name: "Requirements",
+    component: Requirements,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive requirements from the middleware
+      store.dispatch("requirementsStore/fetchRequirements", store.state.projectsStore?.projectsSelected);
+      next();
+    }
+  },
+
+  {
+    path: "/recommendations",
+    name: "Recommendations",
+    component: Recommendations,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive recommendations from the middleware
+      store.dispatch("recommendationsStore/fetchRecommendations", store.state.projectsStore?.projectsSelected);
       next();
     }
   }

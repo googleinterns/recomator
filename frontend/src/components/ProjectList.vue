@@ -90,6 +90,7 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root";
 import { Project } from "../store/data_model/project";
+import router from "../router";
 
 @Component({})
 export default class ProjectList extends Vue {
@@ -133,11 +134,11 @@ export default class ProjectList extends Vue {
   }
 
   getRequirements() {
-    this.$store.dispatch("projectsStore/proceedToRequirements")
-  }
+    router.push("requirements");
+}
 
   getRecommendations() {
-    this.$store.dispatch("projectsStore/proceedToRecommendations");
+    this.$store.dispatch("projectsStore/proceedToRecommendations", this.selectedRows);
   }
 }
 </script>

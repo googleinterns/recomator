@@ -28,7 +28,10 @@ import {
 } from "./core_table";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
 import { Project } from "./data_model/project";
-import { requirementStoreFactory, IRequirementsStoreState } from './requirement';
+import {
+  requirementStoreFactory,
+  IRequirementsStoreState
+} from "./requirements";
 
 Vue.use(Vuex);
 
