@@ -28,8 +28,10 @@ type User struct {
 type AuthorizationService interface {
 	// Returns idToken that should be used to authorize
 	CreateUser(authCode string) (string, error)
+	// Verify checks that token is valid, not expired and issued by our app and returns user email
+	Verify(token string) (string, error)
 	// Returns GoogleService that should be used to make requests to Google APIs
-	Authorize(token string) (User, error)
+	GetUser(email string) (User, bool)
 }
 
 type authorizationService struct {
@@ -50,23 +52,6 @@ func NewAuthorizationService() (AuthorizationService, error) {
 	return authService, nil
 }
 
-func (s *authorizationService) Authorize(idToken string) (User, error) {
-	email, err := s.verify(idToken)
-	if err != nil {
-		return User{}, err
-	}
-
-	s.mutex.Lock()
-	service, ok := s.services[email]
-	s.mutex.Unlock()
-
-	if !ok {
-		return User{}, fmt.Errorf("User with %s email not found", email)
-	}
-
-	return User{service: service, email: email}, nil
-}
-
 // Returns idToken that should be used for authorization later.
 func (s *authorizationService) CreateUser(authCode string) (string, error) {
 	token, err := config.Exchange(oauth2.NoContext, authCode)
@@ -83,7 +68,7 @@ func (s *authorizationService) CreateUser(authCode string) (string, error) {
 		return "", err
 	}
 
-	email, err := s.verify(idToken)
+	email, err := s.Verify(idToken)
 	if err != nil {
 		return "", err
 	}
@@ -94,8 +79,18 @@ func (s *authorizationService) CreateUser(authCode string) (string, error) {
 	return idToken, nil
 }
 
+func (s *authorizationService) GetUser(email string) (User, bool) {
+	s.mutex.Lock()
+	service, ok := s.services[email]
+	s.mutex.Unlock()
+	if ok {
+		return User{service, email}, true
+	}
+	return User{}, false
+}
+
 // Verifies idToken and returns email if everything suceeded.
-func (s *authorizationService) verify(rawToken string) (string, error) {
+func (s *authorizationService) Verify(rawToken string) (string, error) {
 	idToken, err := s.verifier.Verify(oauth2.NoContext, rawToken)
 	if err != nil {
 		return "", err
@@ -112,7 +107,7 @@ func (s *authorizationService) verify(rawToken string) (string, error) {
 	return claims.Email, nil
 }
 
-func getAuthHandler(service *sharedService) func(c *gin.Context) {
+func getAuthHandler(service *SharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		authCode := c.Query("code")
 		token, err := service.auth.CreateUser(authCode)
@@ -124,14 +119,31 @@ func getAuthHandler(service *sharedService) func(c *gin.Context) {
 	}
 }
 
+func authorize(authService AuthorizationService, idToken string) (User, error) {
+	email, err := authService.Verify(idToken)
+	if err != nil {
+		return User{}, err
+	}
+
+	user, ok := authService.GetUser(email)
+
+	if !ok {
+		return User{}, &googleapi.Error{Message: fmt.Sprintf("User with %s email not found", email),
+			Code: http.StatusNotFound}
+	}
+
+	return user, nil
+}
+
 // authorizeRequest extracts the token from Authorization header in request
 // and uses it to return authorized user using authService.
 func authorizeRequest(authService AuthorizationService, request *http.Request) (User, error) {
 	bearToken := request.Header["Authorization"]
 	if len(bearToken) != 0 {
+
 		strArr := strings.Split(bearToken[0], " ")
 		if len(strArr) == 2 && strArr[0] == "Bearer" {
-			return authService.Authorize(strArr[1])
+			return authorize(authService, strArr[1])
 		}
 	}
 	return User{}, &googleapi.Error{Code: http.StatusBadRequest, Message: "Authorization header not in the form 'Bearer <token>'"}
@@ -141,14 +153,13 @@ func authorizeRequest(authService AuthorizationService, request *http.Request) (
 // redirects to google for login, login_hint query parameter(user's email) might be specified for faster login.
 func redirectHandler(c *gin.Context) {
 	email := c.Query("login_hint")
-	redirectURL := c.Query("redirect_uri")
 	authOptions := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}
 
 	if len(email) != 0 {
 		authOptions = append(authOptions, oauth2.SetAuthURLParam("login_hint", email))
 	}
 
-	url := config.AuthCodeURL(redirectURL, authOptions...)
+	url := config.AuthCodeURL("", authOptions...)
 	c.Redirect(http.StatusSeeOther, url)
 	return
 }

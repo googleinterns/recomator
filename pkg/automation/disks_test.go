@@ -19,6 +19,7 @@ package automation
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -57,7 +58,7 @@ func TestCorrectName(t *testing.T) {
 	expectedDisk := testDisk[:min(maxDisknameLen, len(testDisk))]
 
 	result, err := randomSnapshotName(testZone, testDisk, generator)
-	assert.Nilf(t, err, "Error should not happen when zone name is not to long")
+	assert.Nilf(t, err, "Error should not happen when zone name is not too long")
 
 	index := 0
 	assert.Equal(t, result[:min(maxDisknameLen, len(testDisk))], expectedDisk, "The first part of the snapshot name should  be a prefix of the disk name")
@@ -81,6 +82,20 @@ func TestCorrectName(t *testing.T) {
 	assert.LessOrEqual(t, len(result), maxSnapshotnameLen, fmt.Sprintf("The length of the returned snapshot name must be less than %d", maxSnapshotnameLen))
 }
 
+// Tests whether the snapshot name matches the required regexp
+func TestMatchesRegexp(t *testing.T) {
+	generator := rand.New(rand.NewSource(42))
+	zone := "us-central1-a"
+	disk := "my-disk"
+
+	result, err := randomSnapshotName(zone, disk, generator)
+	assert.NoError(t, err, "No error expected")
+
+	exp := regexp.MustCompile("(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)")
+	exp.Longest()
+	assert.Equal(t, result, exp.FindString(result), "The whole string should match the regexp")
+}
+
 // Tests that an error is returned if the zone name is long
 func TestLongZoneName(t *testing.T) {
 	generator := rand.New(rand.NewSource(0))
@@ -98,7 +113,7 @@ func TestLongDiskName(t *testing.T) {
 	testDisk := strings.Repeat("a", 2*maxSnapshotnameLen)
 
 	result, err := randomSnapshotName(testZone, testDisk, generator)
-	assert.Nilf(t, err, "Error should not happen when zone name is not to long")
+	assert.Nilf(t, err, "Error should not happen when zone name is not too long")
 
 	assert.LessOrEqual(t, len(result), maxSnapshotnameLen, fmt.Sprintf("The length of the returned snapshot name must be less than %d", maxSnapshotnameLen))
 }

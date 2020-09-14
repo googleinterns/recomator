@@ -17,6 +17,7 @@ limitations under the License.
 package automation
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -236,15 +237,30 @@ func TestReplaceStatusOperation(t *testing.T) {
 
 // Checks if the add snapshot operation works as expected.
 func TestAddSnapshotOperation(t *testing.T) {
+	var value interface{}
+	val := `
+	{
+		"name": "$snapshot-name",
+		"source_disk": "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress",
+		"storage_locations": [
+			"us-central1-f"
+		]
+	}
+	`
+
+	err := json.Unmarshal([]byte(val), &value)
+	if !assert.NoError(t, err, "No error expected from json.Unmarshal") {
+		return
+	}
 	operation := gcloudOperation{
 		Action:       "add",
 		Path:         "//compute.googleapis.com/projects/rightsizer-test/global/snapshots/$snapshot-name",
 		ResourceType: "compute.googleapis.com/Snapshot",
-		Value:        valueAddSnapshot{Name: "$snapshot-name", SourceDisk: "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress", StorageLocations: []string{"europe-west1-d"}},
+		Value:        value,
 	}
 
 	service := ApplyMockService{}
-	err := DoOperation(&service, &operation)
+	err = DoOperation(&service, &operation)
 	assert.NoError(t, err, "DoOperation shouldn't return an error")
 
 	expectedFunctions := []string{"CreateSnapshot"}
@@ -353,6 +369,22 @@ func TestStopRecommendation(t *testing.T) {
 // Checks if applying recommmendation with adding snapshot of a machine
 // and then deleting it works as expected.
 func TestSnapshotAndDeleteRecommendation(t *testing.T) {
+	var valueAddSnapshot interface{}
+	value := `
+	{
+		"name": "$snapshot-name",
+		"source_disk": "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress",
+		"storage_locations": [
+			"us-central1-f"
+		]
+	}
+	`
+
+	err := json.Unmarshal([]byte(value), &valueAddSnapshot)
+	if !assert.NoError(t, err, "No error expected from json.Unmarshal") {
+		return
+	}
+
 	recommendation := gcloudRecommendation{
 		Content: &gcloudContent{
 			OperationGroups: []*gcloudOperationGroup{
@@ -363,7 +395,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 							Path:         "/",
 							Resource:     "//compute.googleapis.com/projects/rightsizer-test/global/snapshots/$snapshot-name",
 							ResourceType: "compute.googleapis.com/Snapshot",
-							Value:        valueAddSnapshot{Name: "$snapshot-name", SourceDisk: "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress", StorageLocations: []string{"europe-west1-d"}},
+							Value:        valueAddSnapshot,
 						},
 						&gcloudOperation{
 							Action:       "remove",
@@ -381,7 +413,7 @@ func TestSnapshotAndDeleteRecommendation(t *testing.T) {
 	}
 
 	service := ApplyMockService{}
-	err := DoOperations(&service, &recommendation, &Task{})
+	err = DoOperations(&service, &recommendation, &Task{})
 	assert.NoError(t, err, "DoOperations shouldn't return an error")
 
 	expectedFunctions := []string{
@@ -676,6 +708,22 @@ func TestUnsupportedReplaceValue(t *testing.T) {
 // Checks, that the attempt to apply a recommendation that adds
 // a resource of unknown type results in the expected error.
 func TestUnsupportedAddResourceType(t *testing.T) {
+	var valueAddSnapshot interface{}
+	value := `
+	{
+		"name": "$snapshot-name",
+		"source_disk": "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress",
+		"storage_locations": [
+			"us-central1-f"
+		]
+	}
+	`
+
+	err := json.Unmarshal([]byte(value), &valueAddSnapshot)
+	if !assert.NoError(t, err, "No error expected from json.Unmarshal") {
+		return
+	}
+
 	recommendation := gcloudRecommendation{
 		Content: &gcloudContent{
 			OperationGroups: []*gcloudOperationGroup{
@@ -686,13 +734,7 @@ func TestUnsupportedAddResourceType(t *testing.T) {
 							Path:         "/",
 							Resource:     "//compute.googleapis.com/projects/rightsizer-test/global/snapshots/$snapshot-name",
 							ResourceType: "compute.googleapis.com/Schnappschuss",
-							Value: &valueAddSnapshot{
-								Name:       "$snapshot-name",
-								SourceDisk: "projects/rightsizer-test/zones/europe-west1-d/disks/vertical-scaling-krzysztofk-wordpress",
-								StorageLocations: []string{
-									"europe-west1-d",
-								},
-							},
+							Value:        valueAddSnapshot,
 						},
 						&gcloudOperation{
 							Action:       "remove",
@@ -710,7 +752,7 @@ func TestUnsupportedAddResourceType(t *testing.T) {
 	}
 
 	service := ApplyMockService{}
-	err := DoOperations(&service, &recommendation, &Task{})
+	err = DoOperations(&service, &recommendation, &Task{})
 	assert.EqualError(t, err, operationNotSupportedMessage)
 	var nilCalledFunction []calledFunction = nil
 
