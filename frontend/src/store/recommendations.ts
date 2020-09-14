@@ -232,7 +232,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     );
 
     // If server accepted the request, watch the status. Otherwise, save the error.
-    if (response.status === HTTP_OK_CODE)
+    if (response.status === 201)
       commit("setRecommendationNeedsStatusWatcher", {
         recName: rec.name,
         needs: true
