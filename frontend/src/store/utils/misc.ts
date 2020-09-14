@@ -12,16 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { ProjectConfig } from "@/config";
-
 export function delay(miliseconds: number) {
   return new Promise(resolve => setTimeout(resolve, miliseconds));
-}
-
-export function getServerAddress(): string {
-  if (process.env.NODE_ENV === "development") {
-    return ProjectConfig.DEVELOPMENT_SERVER_ADDRESS;
-  }
-
-  return ProjectConfig.PRODUCTION_SERVER_ADDRESS;
 }

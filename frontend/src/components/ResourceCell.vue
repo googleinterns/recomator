@@ -13,7 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div>
-    <a :href="consoleLink"> {{ shortName }} </a>
+    <!-- Stackoverflow points to a potential security problem with opening the
+         link in a new tab; the newly opened tab will have access to our data. 
+         As long as the link is to Google Console, this shouldn't be a problem. 
+         Related Stackoverflow question:
+         https://stackoverflow.com/questions/17711146/how-to-open-link-in-new-tab-on-html 
+    -->
+    <a :href="consoleLink" target="_blank" rel="noopener noreferrer">
+      {{ shortName }}
+    </a>
   </div>
 </template>
 <script lang="ts">

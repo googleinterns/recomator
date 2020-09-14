@@ -14,13 +14,15 @@ limitations under the License. */
 
 import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
-import { delay, getServerAddress } from "./utils/misc";
+import { delay } from "./utils/misc";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
+import { getBackendAddress } from "../config";
+import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
 
 // TODO: move all of this to config in some next PR
-const SERVER_ADDRESS: string = getServerAddress();
+const BACKEND_ADDRESS: string = getBackendAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
 const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
@@ -116,7 +118,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
-      const response = await fetch(`${SERVER_ADDRESS}/recommendations`);
+      const response = await fetch(`${BACKEND_ADDRESS}/recommendations`);
       responseJson = await response.json();
       const responseCode = response.status;
 
@@ -144,9 +146,12 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
 
-    for (const recommendation of responseJson.recommendations) {
+    for (const recommendation of responseJson.recommendations)
       context.commit("addRecommendation", recommendation);
-    }
+    for (const recommendation of context.state.recommendations)
+      trainingDataHandler.addRecommendation(recommendation);
+
+    similaritySort(context.state.recommendations, trainingDataHandler.data);
 
     context.commit("endFetching");
   },
@@ -167,9 +172,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (selectedRecs.includes(undefined))
       throw "Name given doesn't match an existing recommendation";
 
+    // update training data; if a recommenadation fails and is re-applied,
+    // it will be counted twice but we don't expect too many failures,
+    // so this should have a negligible effect.
+    for (const rec of selectedRecs)
+      trainingDataHandler.applyAddedRecommendation(rec!);
+    trainingDataHandler.saveToLocalStorage();
+
     // Apply all, waiting for them to send one by one
     for (const rec of selectedRecs)
-      await dispatch("applySingleRecommendation", rec);
+      await dispatch("applySingleRecommendation", rec!);
   },
 
   // should return nearly immediately
@@ -183,7 +195,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     });
 
     const response = await fetch(
-      `${SERVER_ADDRESS}/recommendations/apply?name=${rec.name}`,
+      `${BACKEND_ADDRESS}/recommendations/apply?name=${rec.name}`,
       { method: "POST" }
     );
 
@@ -248,7 +260,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   ): Promise<boolean> {
     // send the request
     const response = await fetch(
-      `${SERVER_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
+      `${BACKEND_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
 
     // handle all possible types of responses
