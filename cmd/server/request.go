@@ -82,7 +82,7 @@ func (m *RequestsMap) StartProcessing(info RequestInfo, handler RequestHandler) 
 		go handler.Start()
 		return nil
 	}
-	return &googleapi.Error{Message: "Recommendation is already being applied", Code: http.StatusMethodNotAllowed}
+	return &googleapi.Error{Message: "The request was already added", Code: http.StatusMethodNotAllowed}
 }
 
 // GetResponse returns response if request is in process or finished.
