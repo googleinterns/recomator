@@ -66,7 +66,7 @@ limitations under the License. -->
 
     <v-toolbar color="primary" dark>
       <v-spacer />
-      <v-btn icon @click="acceptSelection">
+      <v-btn icon @click="getRequirements">
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs">mdi-equal-box</v-icon>
@@ -75,7 +75,7 @@ limitations under the License. -->
         </v-tooltip>
       </v-btn>
 
-      <v-btn icon @click="acceptSelection">
+      <v-btn icon @click="getRecommendations">
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs">mdi-checkbox-marked-circle</v-icon>
@@ -132,8 +132,12 @@ export default class ProjectList extends Vue {
     }
   }
 
-  acceptSelection() {
-    this.$store.commit("projectsStore/chooseProjects");
+  getRequirements() {
+    this.$store.dispatch("projectsStore/proceedToRequirements")
+  }
+
+  getRecommendations() {
+    this.$store.dispatch("projectsStore/proceedToRecommendations");
   }
 }
 </script>

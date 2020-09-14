@@ -16,8 +16,15 @@ import { Project } from "@/store/data_model/project";
 import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root";
+import { Requirement } from "./data_model/project";
 
 const FETCH_WAIT_TIME = 500; // (1/2)s
+const REQUIREMENT_LIST = [
+  new Requirement("Cloud Resource Manager API", true),
+  new Requirement("Compute Engine API", false),
+  new Requirement("Service Usage API", true),
+  new Requirement("Recommender API", false)
+];
 
 export interface IProjectsStoreState {
   projects: Project[];
@@ -67,15 +74,21 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
 
       context.commit(
         "addProject",
-        new Project(projectName)
+        new Project(projectName, [])
       );
     }
     
     context.commit("endFetch");
   },
 
+  async fetchRequirements(
+    context, selectedProjects  ): Promise<void> {
+    await delay(FETCH_WAIT_TIME);
+    context.commit("setRequirements");
+  },
+
   proceedToRequirements(context, selectedProjects) {
-    context.dispatch("/requirementsStore/fetchRequirements", selectedProjects);
+    context.dispatch("/projectsStore/fetchRequirements", selectedProjects);
   },
 
   proceedToRecommendations(context, selectedProjects) {
@@ -84,13 +97,13 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
 
 };
 
-export function projectStoreFactory(): Module<
+export function requirementStoreFactory(): Module<
   IProjectsStoreState,
   IRootStoreState
 > {
   return {
     namespaced: true,
-    state: projectsStoreStateFactory(),
+    state: requirementStoreStateFactory(),
     mutations: mutations,
     actions: actions
   };
