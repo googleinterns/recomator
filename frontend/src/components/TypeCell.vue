@@ -46,9 +46,9 @@ export default class TypeCell extends TypeCellProps {
         return "mdi-move-resize-variant";
       case "STOP_VM":
         return "mdi-monitor-off";
-      case "INCREASE_PERFORMANCE":
-        return "mdi-monitor-screenshot";
       case "SNAPSHOT_AND_DELETE_DISK":
+        return "mdi-monitor-screenshot";
+      case "DELETE_DISK":
         return "mdi-harddisk-remove";
       default:
         return "mdi-cloud-question";
