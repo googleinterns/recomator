@@ -15,14 +15,22 @@ jobs:
     - name: Build files
       run: |
         cd frontend
+        sed -i 's/history/hash/g' src/router/index.ts
+        sed -i 's/""/"https:\/\/recomator-282910.ey.r.appspot.com"/g' src/config.ts
         npm ci
         npm run build
+        sed -i 's/=\/js\//=js\//g' dist/index.html
+        sed -i 's/=\/css\//=css\//g' dist/index.html
+        mv dist/index.html ../index.html
+        mv dist/css ../css
+        mv dist/js ../js
     - name: Commit files
       run: |
-        cd frontend
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add -f dist 
+        git add -f index.html
+        git add -f css
+        git add -f js 
         git commit -am "Changes introduced in a github action"
     - name: Push changes
       uses: ad-m/github-push-action@master

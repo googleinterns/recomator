@@ -25,14 +25,6 @@ import (
 	"google.golang.org/api/recommender/v1"
 )
 
-// The type, that the value field of operation should be
-// interpretable as in add snapshot operation
-type valueAddSnapshot struct {
-	Name             string
-	SourceDisk       string
-	StorageLocations []string
-}
-
 type gcloudOperation = recommender.GoogleCloudRecommenderV1Operation
 
 // Assumes that the operation action is test.
@@ -132,11 +124,16 @@ func stopInstance(service GoogleService, operation *gcloudOperation) error {
 // Assumes that operation's action is add, and ResourceType
 // is compute.googleapis.com/Snapshot. Adds a snapshot of the given machine.
 func addSnapshot(service GoogleService, operation *gcloudOperation) error {
-	value, ok := operation.Value.(valueAddSnapshot)
+	value, ok := operation.Value.(map[string]interface{})
+
 	if !ok {
 		return errors.New("wrong value type for operation add snapshot")
 	}
-	path := value.SourceDisk
+
+	path, ok := value["source_disk"].(string)
+	if !ok {
+		return fmt.Errorf("wrong source disk type for operation add snapshot: %t", value["source_disk"])
+	}
 
 	project, errProject := extractFromURL(path, projectParam)
 	zone, errZone := extractFromURL(path, zoneParam)
@@ -148,6 +145,7 @@ func addSnapshot(service GoogleService, operation *gcloudOperation) error {
 
 	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
 	name, err := randomSnapshotName(zone, disk, generator)
+
 	if err != nil {
 		return err
 	}

@@ -130,12 +130,8 @@ describe("Fetching recommendations", () => {
 
     const sampleRecommendation = freshSampleRawRecommendation();
     responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
-    // use the just defined responses followed by 404s
-    fetchMock
-      .mockResponses(...responses)
-      .mockImplementation(async () =>
-        Promise.resolve(new Response("", { status: 404 }))
-      );
+
+    fetchMock.mockResponses(...responses);
 
     const store = rootStoreFactory();
     store.commit("recommendationsStore/resetRecommendations");
@@ -171,11 +167,7 @@ describe("Fetching recommendations", () => {
     responses.push(
       JSON.stringify({ recommendations: [freshSampleRawRecommendation()] })
     );
-    fetchMock
-      .mockResponses(...responses)
-      .mockImplementation(async () =>
-        Promise.resolve(new Response("", { status: 404 }))
-      );
+    fetchMock.mockResponses(...responses);
     const store = rootStoreFactory();
     store.commit("recommendationsStore/resetRecommendations");
     await store.dispatch("recommendationsStore/fetchRecommendations");
