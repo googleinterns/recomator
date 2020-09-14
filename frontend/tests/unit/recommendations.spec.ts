@@ -113,11 +113,23 @@ describe("Getting a Console link for the resource", () => {
 });
 
 describe("Fetching recommendations", () => {
+  const responsesPrefix = [
+    async () => {
+      return {
+        status: 201,
+        body: "someRequestId123"
+      };
+    },
+    JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 }),
+    JSON.stringify({ batchesProcessed: 40, numberOfBatches: 100 }),
+    JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
+  ];
   test("Fetching works correctly when given response without errors", async () => {
     jest.setTimeout(30000);
     fetchMock.doMock();
 
-    const responses = [];
+    const responses = responsesPrefix.map(r => r);
+
     responses.push(
       JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 })
     );
@@ -148,16 +160,7 @@ describe("Fetching recommendations", () => {
     jest.setTimeout(30000);
     fetchMock.doMock();
 
-    const responses = [];
-    responses.push(
-      JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 })
-    );
-    responses.push(
-      JSON.stringify({ batchesProcessed: 40, numberOfBatches: 100 })
-    );
-    responses.push(
-      JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
-    );
+    const responses = responsesPrefix.map(r => r);
     responses.push(async () => {
       return {
         status: 302,
@@ -174,7 +177,7 @@ describe("Fetching recommendations", () => {
 
     expect(store.state.recommendationsStore!.errorCode).toEqual(302);
     expect(store.state.recommendationsStore!.errorMessage).toEqual(
-      "Something failed"
+      "progress check failed: Found"
     );
     expect(store.state.recommendationsStore!.recommendations).toEqual([]);
     fetchMock.dontMock();
