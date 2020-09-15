@@ -50,7 +50,7 @@ const routes: Array<RouteConfig> = [
     component: Recommendations,
     beforeEnter(_, __, next) {
       // Asynchronously request and receive recommendations from the middleware
-      store.dispatch("recommendationsStore/fetchRecommendations", store.state.projectsStore?.projectsSelected);
+      store.dispatch("recommendationsStore/fetchRecommendations");// , store.state.projectsStore?.projectsSelected);
       next();
     }
   }

@@ -21,19 +21,13 @@ limitations under the License. -->
       <v-progress-linear
         :value="$store.state.recommendationsStore.progress"
         data-name="main_progress_bar"
-        v-if="
-          $store.state.recommendationsStore.display &&
-            $store.state.recommendationsStore.progress !== null
-        "
+        v-if="$store.state.recommendationsStore.progress !== null"
       />
 
       <v-container
         fluid
         data-name="main_container"
-        v-if="
-          $store.state.recommendationsStore.display &&
-            $store.state.recommendationsStore.progress === null
-        "
+        v-if="$store.state.recommendationsStore.progress === null"
       >
         <v-row>
           <v-col>

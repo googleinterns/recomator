@@ -26,7 +26,7 @@ limitations under the License. -->
 
       <v-container
         fluid
-        v-if="$store.state.recommendationsStore.progress === null"
+        v-if="$store.state.requirementsStore.progress === null"
       >
         <v-row>
           <v-col>

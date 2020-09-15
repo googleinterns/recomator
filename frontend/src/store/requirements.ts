@@ -49,7 +49,7 @@ export function requirementsStoreStateFactory(): IRequirementsStoreState {
 
 const mutations: MutationTree<IRequirementsStoreState> = {
   // only entry point for projects
-  addProject(state, project: ProjectRequirement): void {
+  addProjectRequirement(state, project: ProjectRequirement): void {
     if (state.projects.filter(elt => elt.name === project.name).length !== 0) {
       throw "Duplicate project name";
     }
@@ -58,8 +58,7 @@ const mutations: MutationTree<IRequirementsStoreState> = {
   },
 
   startFetch(state): void {
-    state.display = true;
-    state.progress = 0.50;
+    state.progress = 0;
   },
 
   endFetch(state): void {
@@ -83,12 +82,14 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
   // Makes requests to the middleware and adds obtained projects to the store
   async fetchRequirements(context, selectedProjects: Project[]): Promise<void> {
     context.commit("startFetch");
+    let i = 0;
 
     for (const project of selectedProjects) {
-      await delay(FETCH_WAIT_TIME);
-
+      i++;
+      await delay(2*FETCH_WAIT_TIME);
+      context.commit("setProgress", i/selectedProjects.length)
       context.commit(
-        "addProject",
+        "addProjectRequirement",
         new ProjectRequirement(project.name, REQUIREMENT_LIST)
       );
     }

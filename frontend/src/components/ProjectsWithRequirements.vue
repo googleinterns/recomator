@@ -15,9 +15,9 @@ limitations under the License. -->
 <template>
   <div>
     <v-toolbar color="primary" dark>
-      <v-toolbar-title> Select projects </v-toolbar-title>
+      <v-toolbar-title> Project requirements </v-toolbar-title>
       <v-spacer />
-      <v-btn icon @click="acceptSelection">
+      <v-btn icon @click="getRecommendations">
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs">mdi-checkbox-marked-circle</v-icon>
@@ -31,48 +31,69 @@ limitations under the License. -->
       :hide-default-header="true"
       :headers="headers"
       item-key="name"
-      class="elevation-1"
+      class="text-center elevation-1"
     >
       <template v-slot:header="">
         <thead>
           <tr>
-            <th colspan="1"></th>
+            <th colspan="1" class="text-center">Project</th>
             <th colspan="4" class="text-center">APIs</th>
-            <th colspan="3" class="text-center">VM permissions</th>
-            <th colspan="3" class="text-center">Disks permissions</th>
-            <th colspan="2" class="text-center">etc.</th>
+            <th colspan="8" class="text-center">VM permissions</th>
+            <th colspan="4" class="text-center">Disks permissions</th>
+            <th colspan="3" class="text-center">Other permission</th>
           </tr>
         </thead>
       </template>
 
-      <template v-for="requirement in requirementList" v-slot:[`item.${requirement}`]>
-        <v-tooltip :key=requirement v-if="Math.random() < 4/5" top transition="none">
+      <template
+        v-for="requirement in requirementList"
+        v-slot:[`item.${requirement}`]
+      >
+        <v-tooltip
+          :key="requirement"
+          v-if="Math.random() < 4 / 5"
+          top
+          transition="none"
+        >
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs" color="green">mdi-check-bold</v-icon>
+            <v-icon v-on="on" v-bind="attrs" color="green"
+              >mdi-check-bold</v-icon
+            >
           </template>
           Requirement for API xxx is satisfied or the API is not required.
         </v-tooltip>
-        <v-tooltip :key=requirement v-else-if="Math.random() < 1/2" top transition="none">
+        <v-tooltip
+          :key="requirement"
+          v-else-if="Math.random() < 1 / 2"
+          top
+          transition="none"
+        >
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs" color="grey">mdi-help</v-icon>
           </template>
           Requirement for API xxx is not satisfied, but other APIs can be tried.
         </v-tooltip>
-        <v-tooltip :key=requirement v-else top transition="none">
+        <v-tooltip :key="requirement" v-else top transition="none">
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs" color="red">mdi-alert-circle</v-icon>
+            <v-icon v-on="on" v-bind="attrs" color="red"
+              >mdi-alert-circle</v-icon
+            >
           </template>
           Requirement for API xxx is not satisfied, please enable this API.
         </v-tooltip>
       </template>
-      
     </v-data-table>
   </div>
 </template>
 
-<style>
+<style scoped src="./ProjectsWithRequirements.vue">
 table th + th {
   border-left: 1px solid #dddddd;
+}
+
+.td {
+    align-content: center;
+    justify-content: center;
 }
 </style>
 
@@ -111,45 +132,52 @@ export default class ProjectList extends Vue {
     "Compute Engine API",
     "Cloud Resource Manager API",
     "Recommender API",
-    "services.get",
+
     "compute.instances.setMachineType",
+    "compute.instances.start",
+    "compute.instances.stop",
+    "compute.instances.get",
+    "recommender.computeInstanceIdleResourceRecommendations.list",
+    "recommender.computeInstanceMachineTypeRecommendations.list",
+    "recommender.computeInstanceIdleResourceRecommendations.update",
+    "recommender.computeInstanceMachineTypeRecommendations.update",
+
     "compute.disks.createSnapshot",
     "compute.snapshots.create",
     "compute.disks.delete",
-    "compute.instances.get",
     "recommender.computeDiskIdleResourceRecommendations.list",
-    "recommender.computeInstanceIdleResourceRecommendations.list",
-    "recommender.computeInstanceMachineTypeRecommendations.list",
     "recommender.computeDiskIdleResourceRecommendations.update",
-    "recommender.computeInstanceIdleResourceRecommendations.update",
-    "recommender.computeInstanceMachineTypeRecommendations.update",
+
+    "services.get",
     "compute.regions.list",
     "compute.zones.list",
-    "compute.instances.start",
-    "compute.instances.stop",
   ];
 
   headers = [
-    { value: "name",
-    sortable: true },
+    { value: "name" },
+
+    { value: "Service Usage API" },
     { value: "Compute Engine API" },
     { value: "Cloud Resource Manager API" },
     { value: "Recommender API" },
-    { value: "services.get" },
+
     { value: "compute.instances.setMachineType" },
-    { value: "compute.snapshots.create" },
-    { value: "compute.disks.delete" },
-    { value: "compute.instances.get" },
-    { value: "recommender.computeDiskIdleResourceRecommendations.list" },
-    { value: "recommender.computeInstanceIdleResourceRecommendations.list" },
-    { value: "recommender.computeInstanceMachineTypeRecommendations.list" },
-    { value: "recommender.computeDiskIdleResourceRecommendations.update" },
-    { value: "recommender.computeInstanceIdleResourceRecommendations.update" },
-    { value: "recommender.computeInstanceMachineTypeRecommendations.update" },
-    { value: "compute.regions.list" },
-    { value: "compute.zones.list" },
     { value: "compute.instances.start" },
     { value: "compute.instances.stop" },
+    { value: "compute.instances.get" },
+    { value: "recommender.computeInstanceIdleResourceRecommendations.update" },
+    { value: "recommender.computeInstanceMachineTypeRecommendations.update" },
+    { value: "recommender.computeInstanceIdleResourceRecommendations.list" },
+    { value: "recommender.computeInstanceMachineTypeRecommendations.list" },
+
+    { value: "compute.snapshots.create" },
+    { value: "compute.disks.delete" },
+    { value: "recommender.computeDiskIdleResourceRecommendations.list" },
+    { value: "recommender.computeDiskIdleResourceRecommendations.update" },
+
+    { value: "services.get" },
+    { value: "compute.regions.list" },
+    { value: "compute.zones.list" },
   ];
 
   // Sync selected with the store
@@ -157,7 +185,7 @@ export default class ProjectList extends Vue {
     return (this.$store.state as IRootStoreState).requirementsStore!.projects;
   }
 
-  acceptSelection() {
+  getRecommendations() {
     router.push("recommendations");
   }
 }
