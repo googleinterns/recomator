@@ -47,7 +47,7 @@ limitations under the License. -->
 
       <template
         v-for="requirement in requirementList"
-        v-slot:[`item.${requirement}`]
+        v-slot:[`item.${requirement}`] = "item"
       >
         <v-tooltip
           :key="requirement"
@@ -60,7 +60,7 @@ limitations under the License. -->
               >mdi-check-bold</v-icon
             >
           </template>
-          Requirement for API xxx is satisfied or the API is not required.
+          Requirement for {{ requirement }} is satisfied.
         </v-tooltip>
         <v-tooltip
           :key="requirement"
@@ -71,7 +71,8 @@ limitations under the License. -->
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs" color="grey">mdi-help</v-icon>
           </template>
-          Requirement for API xxx is not satisfied, but other APIs can be tried.
+          One of the requirements needed for checking this requirement is not
+          satisfied.
         </v-tooltip>
         <v-tooltip :key="requirement" v-else top transition="none">
           <template v-slot:activator="{ on, attrs }">
@@ -79,7 +80,7 @@ limitations under the License. -->
               >mdi-alert-circle</v-icon
             >
           </template>
-          Requirement for API xxx is not satisfied, please enable this API.
+          {{ item.item.getErrorMessage(requirement) }}
         </v-tooltip>
       </template>
     </v-data-table>
@@ -89,11 +90,6 @@ limitations under the License. -->
 <style scoped src="./ProjectsWithRequirements.vue">
 table th + th {
   border-left: 1px solid #dddddd;
-}
-
-.td {
-    align-content: center;
-    justify-content: center;
 }
 </style>
 
@@ -178,7 +174,13 @@ export default class ProjectList extends Vue {
     { value: "services.get" },
     { value: "compute.regions.list" },
     { value: "compute.zones.list" },
-  ];
+  ].map((elt) => {
+    if (elt.value === "name") {
+      return elt;
+    } else {
+      return Object.assign(elt, { align: "center" });
+    }
+  });
 
   // Sync selected with the store
   get allRows(): ProjectRequirement[] {

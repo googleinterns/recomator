@@ -87,7 +87,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     for (const project of selectedProjects) {
       i++;
       await delay(2*FETCH_WAIT_TIME);
-      context.commit("setProgress", i/selectedProjects.length)
+      context.commit("setProgress", i / selectedProjects.length * 100)
       context.commit(
         "addProjectRequirement",
         new ProjectRequirement(project.name, REQUIREMENT_LIST)
