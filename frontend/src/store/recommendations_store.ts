@@ -17,38 +17,20 @@ import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { delay } from "./utils/misc";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
-import { IRootStoreState } from "./root";
+import { IRootStoreState } from "./root_state";
 import { getBackendAddress } from "../config";
-import { authFetch } from "./auth";
+import { authFetch } from "./auth/auth_fetch";
 import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
+import {
+  IRecommendationsStoreState,
+  recommendationsStoreStateFactory
+} from "./recommendations_state";
 
 // TODO: move all of this to config in some next PR
 const BACKEND_ADDRESS: string = getBackendAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
 const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
-
-export interface IRecommendationsStoreState {
-  recommendations: RecommendationExtra[];
-  recommendationsByName: Map<string, RecommendationExtra>;
-  requestId: string;
-  errorCode: number | undefined;
-  errorMessage: string | undefined;
-  progress: number | null; // % recommendations loaded, null if no fetching is happening
-  centralStatusWatcherRunning: boolean;
-}
-
-export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
-  return {
-    recommendations: [],
-    recommendationsByName: new Map<string, RecommendationExtra>(),
-    requestId: "null",
-    progress: null,
-    errorCode: undefined,
-    errorMessage: undefined,
-    centralStatusWatcherRunning: false
-  };
-}
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
   // only entry point for recommendations

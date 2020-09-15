@@ -15,8 +15,8 @@ limitations under the License. */
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
-import store from "../store/root";
-import { IRootStoreState } from "../store/root";
+import store from "../store/root_store";
+import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
 
 Vue.use(VueRouter);

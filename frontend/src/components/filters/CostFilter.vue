@@ -23,8 +23,8 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { IRootStoreState } from "../../store/root";
-import { costCategoriesNames } from "../../store/core_table";
+import { IRootStoreState } from "../../store/root_state";
+import { costCategoriesNames } from "../../store/core_table_filters/cost_categories";
 
 @Component
 export default class CostFilter extends Vue {

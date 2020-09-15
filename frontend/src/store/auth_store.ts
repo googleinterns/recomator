@@ -12,17 +12,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import Vue from "vue";
-import App from "./App.vue";
-import router from "./router";
-import store from "./store/root_store";
-import vuetify from "./plugins/vuetify";
+import { Module, MutationTree } from "vuex";
+import { IRootStoreState } from "./root_state";
+import { IAuthStoreState, authStoreStateFactory } from "./auth_state";
 
-Vue.config.productionTip = false;
+const mutations: MutationTree<IAuthStoreState> = {
+  setIDToken(state, token: string) {
+    state.idToken = token;
+  }
+};
 
-new Vue({
-  router,
-  store,
-  vuetify,
-  render: h => h(App)
-}).$mount("#app");
+export function authStoreFactory(): Module<IAuthStoreState, IRootStoreState> {
+  return {
+    namespaced: true,
+    state: authStoreStateFactory(),
+    mutations: mutations
+  };
+}

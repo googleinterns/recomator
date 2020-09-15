@@ -97,7 +97,7 @@ limitations under the License. -->
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { IRootStoreState } from "../store/root";
+import { IRootStoreState } from "../store/root_state";
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 
 @Component
