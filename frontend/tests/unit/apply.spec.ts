@@ -42,10 +42,14 @@ beforeEach(() => {
     store.commit("recommendationsStore/" + name, payload);
   };
 
+  // make sure that authFetch will not get an undefined token
+  store.state.authStore.idToken = "idToken123";
+
   context = {
     dispatch: dispatch,
     commit: commit,
-    state: modState
+    state: modState,
+    rootState: store.state
   };
 
   const recsRaw = [

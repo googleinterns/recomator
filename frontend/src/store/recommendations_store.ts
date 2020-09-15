@@ -19,7 +19,7 @@ import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root_state";
 import { getBackendAddress } from "../config";
-import { authFetch } from "./auth/auth_fetch";
+import { getAuthFetch } from "./auth/auth_fetch";
 import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
 import {
   IRecommendationsStoreState,
@@ -107,6 +107,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("setProgress", 0);
 
     // First, select the projects (temporarily hard-coded)
+    const authFetch = getAuthFetch(context.rootState);
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
         projects: ["rightsizer-test", "recomator", "recomator-282910"]
@@ -130,6 +131,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
+      const authFetch = getAuthFetch(context.rootState);
       const response = await authFetch(
         `${BACKEND_ADDRESS}/recommendations?request_id=${context.state.requestId}`
       );
@@ -200,7 +202,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
   // should return nearly immediately
   async applySingleRecommendation(
-    { commit },
+    { commit, rootState },
     rec: RecommendationExtra
   ): Promise<void> {
     commit("setRecommendationStatus", {
@@ -208,6 +210,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       newStatus: "CLAIMED"
     });
 
+    const authFetch = getAuthFetch(rootState);
     const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/apply?name=${rec.name}`,
       { method: "POST" }
@@ -269,10 +272,11 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   // Assumes the recommendation has been applied already (by us/Pantheon/something else).
   // Returns: do we want to continue watching this recommendation?
   async checkStatusOnce(
-    { commit },
+    { commit, rootState },
     rec: RecommendationExtra
   ): Promise<boolean> {
     // send the request
+    const authFetch = getAuthFetch(rootState);
     const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );

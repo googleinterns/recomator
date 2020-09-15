@@ -20,6 +20,8 @@ import vuetify from "./plugins/vuetify";
 
 Vue.config.productionTip = false;
 
+store.state.router = router;
+
 new Vue({
   router,
   store,
