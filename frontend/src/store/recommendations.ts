@@ -19,6 +19,7 @@ import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
 import { IRootStoreState } from "./root";
 import { getBackendAddress } from "../config";
+import { authFetch } from "./auth";
 import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
 
 // TODO: move all of this to config in some next PR
@@ -30,6 +31,7 @@ const HTTP_OK_CODE = 200;
 export interface IRecommendationsStoreState {
   recommendations: RecommendationExtra[];
   recommendationsByName: Map<string, RecommendationExtra>;
+  requestId: string;
   errorCode: number | undefined;
   errorMessage: string | undefined;
   progress: number | null; // % recommendations loaded, null if no fetching is happening
@@ -40,6 +42,7 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
     recommendationsByName: new Map<string, RecommendationExtra>(),
+    requestId: "null",
     progress: null,
     errorCode: undefined,
     errorMessage: undefined,
@@ -69,6 +72,12 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
   setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
     state.errorCode = errorInfo.errorCode;
     state.errorMessage = errorInfo.errorMessage;
+  },
+  setRequestId(state, requestId: string) {
+    state.requestId = requestId;
+  },
+  doSimilaritySort(state) {
+    similaritySort(state.recommendations, trainingDataHandler.data);
   },
   setRecommendationStatus(
     state,
@@ -115,22 +124,46 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
+    // First, select the projects (temporarily hard-coded)
+    const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
+      body: JSON.stringify({
+        projects: ["rightsizer-test", "recomator", "recomator-282910"]
+      }),
+      method: "POST"
+    });
+    const responseCode = response.status;
+    // 201 = Created (Success)
+    if (responseCode !== 201) {
+      context.commit("setError", {
+        errorCode: responseCode,
+        errorMessage: `selecting projects failed: ${response.statusText}`
+      });
+      return;
+    }
+
+    // An id has just been assigned for our us/project selection combination
+    // that we need to refer to in future requests
+    context.commit("setRequestId", await response.text());
+
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
-      const response = await fetch(`${BACKEND_ADDRESS}/recommendations`);
-      responseJson = await response.json();
+      const response = await authFetch(
+        `${BACKEND_ADDRESS}/recommendations?request_id=${context.state.requestId}`
+      );
       const responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
         context.commit("setError", {
           errorCode: responseCode,
-          errorMessage: responseJson.errorMessage
+          errorMessage: `progress check failed: ${response.statusText}`
         });
 
         context.commit("endFetching");
         return;
       }
+
+      responseJson = await response.json();
 
       if (responseJson.recommendations !== undefined) {
         break;
@@ -151,8 +184,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     for (const recommendation of context.state.recommendations)
       trainingDataHandler.addRecommendation(recommendation);
 
-    similaritySort(context.state.recommendations, trainingDataHandler.data);
-
+    context.commit("doSimilaritySort");
     context.commit("endFetching");
   },
 
@@ -194,13 +226,13 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       newStatus: "CLAIMED"
     });
 
-    const response = await fetch(
+    const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/apply?name=${rec.name}`,
       { method: "POST" }
     );
 
     // If server accepted the request, watch the status. Otherwise, save the error.
-    if (response.status === HTTP_OK_CODE)
+    if (response.status === 201)
       commit("setRecommendationNeedsStatusWatcher", {
         recName: rec.name,
         needs: true
@@ -259,7 +291,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     rec: RecommendationExtra
   ): Promise<boolean> {
     // send the request
-    const response = await fetch(
+    const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
 

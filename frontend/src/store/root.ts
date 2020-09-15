@@ -25,6 +25,7 @@ import {
   coreTableStoreFactory
 } from "./core_table";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
+import { authStoreFactory, IAuthStoreState } from "./auth";
 
 Vue.use(Vuex);
 
@@ -36,6 +37,7 @@ export interface IRootStoreState {
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
   coreTableStore?: ICoreTableStoreState;
+  authStore?: IAuthStoreState;
 }
 
 const getters: GetterTree<IRootStoreState, IRootStoreState> = {
@@ -53,7 +55,8 @@ export function rootStoreFactory(): Store<IRootStoreState> {
     getters: getters,
     modules: {
       recommendationsStore: recommendationStoreFactory(),
-      coreTableStore: coreTableStoreFactory()
+      coreTableStore: coreTableStoreFactory(),
+      authStore: authStoreFactory()
     }
   };
   return new Store<IRootStoreState>(storeOptions);
