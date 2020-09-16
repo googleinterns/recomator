@@ -103,7 +103,9 @@ describe("applySingleRecommendation action", () => {
   });
 
   test("success", async () => {
-    fetchMock.mockResponseOnce("");
+    fetchMock.mockResponseOnce(async () => {
+      return { status: 201, body: "All good" };
+    });
     await applier(context, firstRec);
 
     expect((fetch as any).mock.calls.length).toEqual(1);

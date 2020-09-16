@@ -32,6 +32,7 @@ import {
   requirementStoreFactory,
   IRequirementsStoreState
 } from "./requirements";
+import { authStoreFactory, IAuthStoreState } from "./auth";
 
 Vue.use(Vuex);
 
@@ -45,6 +46,7 @@ export interface IRootStoreState {
   requirementsStore?: IRequirementsStoreState;
   projectsStore?: IProjectsStoreState;
   coreTableStore?: ICoreTableStoreState;
+  authStore?: IAuthStoreState;
 }
 
 const getters: GetterTree<IRootStoreState, IRootStoreState> = {
@@ -68,7 +70,8 @@ export function rootStoreFactory(): Store<IRootStoreState> {
       recommendationsStore: recommendationStoreFactory(),
       requirementsStore: requirementStoreFactory(),
       projectsStore: projectStoreFactory(),
-      coreTableStore: coreTableStoreFactory()
+      coreTableStore: coreTableStoreFactory(),
+      authStore: authStoreFactory()
     }
   };
   return new Store<IRootStoreState>(storeOptions);
