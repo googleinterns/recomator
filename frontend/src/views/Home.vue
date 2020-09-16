@@ -21,6 +21,9 @@ limitations under the License. -->
       <v-progress-linear
         :value="$store.state.recommendationsStore.progress"
         data-name="main_progress_bar"
+        :indeterminate="$store.state.recommendationsStore.progress === 0"
+        height="10"
+        color="info"
         v-if="$store.state.recommendationsStore.progress !== null"
       />
       <v-container
