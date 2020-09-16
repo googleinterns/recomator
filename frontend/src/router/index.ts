@@ -29,7 +29,6 @@ const routes: Array<RouteConfig> = [
     name: "Home",
     component: Home,
     beforeEnter(_, __, next) {
-      // Asynchronously request and receive projects from the middleware
       const token = (store.state as IRootStoreState).authStore!.idToken;
       // redirect to google sign in if we don't have a token
       if (token == undefined) {
@@ -48,7 +47,7 @@ const routes: Array<RouteConfig> = [
     component: Requirements,
     beforeEnter(_, __, next) {
       // Asynchronously request and receive requirements from the middleware
-      store.dispatch("requirementsStore/fetchRequirements", store.state.projectsStore?.projectsSelected);
+      store.dispatch("requirementsStore/fetchRequirements");
       next();
     }
   },
@@ -59,7 +58,11 @@ const routes: Array<RouteConfig> = [
     component: Recommendations,
     beforeEnter(_, __, next) {
       // Asynchronously request and receive recommendations from the middleware
-      store.dispatch("recommendationsStore/fetchRecommendations");// , store.state.projectsStore?.projectsSelected);
+      store.dispatch("recommendationsStore/fetchRecommendations");
+      next();
+
+      // Start status watchers
+      store.dispatch("recommendationsStore/startCentralStatusWatcher");
       next();
     }
   }, 
@@ -115,9 +118,7 @@ const routes: Array<RouteConfig> = [
     beforeEnter(_, __, next) {
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
-      store.dispatch("recommendationsStore/fetchRecommendations");
-      // Start status watchers
-      store.dispatch("recommendationsStore/startCentralStatusWatcher");
+      store.dispatch("recommendationsStore/fetchProjects");
 
       next({ name: "Home" });
     }

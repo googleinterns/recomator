@@ -128,7 +128,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // First, select the projects (temporarily hard-coded)
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
-        projects: ["rightsizer-test", "recomator", "recomator-282910"]
+        projects: context.getters("projectsStore/selectedProjects", { root: true }),
       }),
       method: "POST"
     });
