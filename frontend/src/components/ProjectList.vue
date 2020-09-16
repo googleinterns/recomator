@@ -138,7 +138,7 @@ export default class ProjectList extends Vue {
 }
 
   getRecommendations() {
-    this.$store.dispatch("projectsStore/proceedToRecommendations", this.selectedRows);
-  }
+    router.push("recommendations");
+}
 }
 </script>

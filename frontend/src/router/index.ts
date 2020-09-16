@@ -59,7 +59,6 @@ const routes: Array<RouteConfig> = [
     beforeEnter(_, __, next) {
       // Asynchronously request and receive recommendations from the middleware
       store.dispatch("recommendationsStore/fetchRecommendations");
-      next();
 
       // Start status watchers
       store.dispatch("recommendationsStore/startCentralStatusWatcher");
@@ -118,7 +117,7 @@ const routes: Array<RouteConfig> = [
     beforeEnter(_, __, next) {
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
-      store.dispatch("recommendationsStore/fetchProjects");
+      store.dispatch("projectsStore/fetchProjects");
 
       next({ name: "Home" });
     }

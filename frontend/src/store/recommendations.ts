@@ -125,10 +125,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
-    // First, select the projects (temporarily hard-coded)
+    // First, select the projects
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
-        projects: context.getters("projectsStore/selectedProjects", { root: true }),
+        projects: context.rootGetters["selectedProjects"],
       }),
       method: "POST"
     });

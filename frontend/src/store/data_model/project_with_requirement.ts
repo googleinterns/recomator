@@ -14,6 +14,26 @@ export class ProjectRequirement {
   name: string;
   requirements: Requirement[];
 
+  satisfiesRequirement(requirementName :string): boolean {
+    for (const requirement of this.requirements) {
+      if (requirement.name === requirementName) {
+        return requirement.satisfied;
+      }
+    }
+
+    return false;
+  }
+
+  hasRequirement(requirementName :string): boolean {
+    for (const requirement of this.requirements) {
+      if (requirement.name === requirementName) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   getErrorMessage (requirementName :string): string {
     for (const requirement of this.requirements) {
       if (requirement.name === requirementName) {

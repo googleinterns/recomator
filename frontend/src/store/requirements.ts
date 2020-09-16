@@ -24,7 +24,6 @@ import router from '@/router';
 
 const BACKEND_ADDRESS: string = getBackendAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
-const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
 
 export interface IRequirementsStoreState {
@@ -96,12 +95,11 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     // First, select the projects (temporarily hard-coded)
     const response = await authFetch(`${BACKEND_ADDRESS}/requirements`, {
       body: JSON.stringify({
-        projects: context.getters("projectsStore/selectedProjects", {
-          root: true,
-        }),
+        projects: context.rootGetters["selectedProjects"],
       }),
       method: "POST",
     });
+
     const responseCode = response.status;
     // 201 = Created (Success)
     if (responseCode !== 201) {
@@ -122,6 +120,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       const response = await authFetch(
         `${BACKEND_ADDRESS}/requirements?request_id=${context.state.requestId}`
       );
+
       const responseCode = response.status;
 
       if (responseCode !== HTTP_OK_CODE) {
@@ -130,13 +129,13 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
           errorMessage: `progress check failed: ${response.statusText}`,
         });
 
-        context.commit("endFetching");
+        context.commit("endFetch");
         return;
       }
 
       responseJson = await response.json();
 
-      if (responseJson.requirements !== undefined) {
+      if (responseJson.projectsRequirements !== undefined) {
         break;
       }
 
@@ -150,12 +149,12 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
 
-    const requirementList = responseJson.map((elt :any) => new ProjectRequirement(elt.project, elt.requiements));
+    const requirementList = responseJson.projectsRequirements.map((elt :any) => new ProjectRequirement(elt.project, elt.requirements.map((elt: any) => new Requirement(elt.name, elt.satisfied, elt.errorMessage))));
     for (const requirement of requirementList) {
       context.commit("addRequirement", requirement);
     }
 
-    context.commit("endFetching");
+    context.commit("endFetch");
   },
 
   proceedToRecommendations(context) {

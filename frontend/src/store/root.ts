@@ -57,8 +57,8 @@ const getters: GetterTree<IRootStoreState, IRootStoreState> = {
     );
   },
 
-  projects(state): Project[] {
-    return state.projectsStore!.projects;
+  selectedProjects(state): string[] {
+    return state.projectsStore!.projectsSelected.map(elt => elt.name);
   }
 };
 

@@ -40,18 +40,18 @@ limitations under the License. -->
             <th colspan="4" class="text-center">APIs</th>
             <th colspan="8" class="text-center">VM permissions</th>
             <th colspan="4" class="text-center">Disks permissions</th>
-            <th colspan="3" class="text-center">Other permission</th>
+            <th colspan="2" class="text-center">Other permissions</th>
           </tr>
         </thead>
       </template>
 
       <template
         v-for="requirement in requirementList"
-        v-slot:[`item.${requirement}`] = "item"
+        v-slot:[`item.${requirement}`]="item"
       >
         <v-tooltip
           :key="requirement"
-          v-if="Math.random() < 4 / 5"
+          v-if="item.item.satisfiesRequirement(requirement)"
           top
           transition="none"
         >
@@ -64,15 +64,15 @@ limitations under the License. -->
         </v-tooltip>
         <v-tooltip
           :key="requirement"
-          v-else-if="Math.random() < 1 / 2"
+          v-else-if="!item.item.hasRequirement(requirement)"
           top
           transition="none"
         >
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs" color="grey">mdi-help</v-icon>
           </template>
-          One of the requirements needed for checking this requirement is not
-          satisfied.
+          One of the requirements needed for checking the
+          {{ requirement }} requirement is not satisfied.
         </v-tooltip>
         <v-tooltip :key="requirement" v-else top transition="none">
           <template v-slot:activator="{ on, attrs }">
@@ -124,7 +124,7 @@ import router from "../router";
 })
 export default class ProjectList extends Vue {
   requirementList = [
-    "Service Usage API",
+    "Service Usage API and services.get permission",
     "Compute Engine API",
     "Cloud Resource Manager API",
     "Recommender API",
@@ -144,7 +144,6 @@ export default class ProjectList extends Vue {
     "recommender.computeDiskIdleResourceRecommendations.list",
     "recommender.computeDiskIdleResourceRecommendations.update",
 
-    "services.get",
     "compute.regions.list",
     "compute.zones.list",
   ];
@@ -152,7 +151,7 @@ export default class ProjectList extends Vue {
   headers = [
     { value: "name" },
 
-    { value: "Service Usage API" },
+    { value: "Service Usage API and services.get permission" },
     { value: "Compute Engine API" },
     { value: "Cloud Resource Manager API" },
     { value: "Recommender API" },
@@ -171,7 +170,6 @@ export default class ProjectList extends Vue {
     { value: "recommender.computeDiskIdleResourceRecommendations.list" },
     { value: "recommender.computeDiskIdleResourceRecommendations.update" },
 
-    { value: "services.get" },
     { value: "compute.regions.list" },
     { value: "compute.zones.list" },
   ].map((elt) => {

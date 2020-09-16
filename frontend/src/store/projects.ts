@@ -40,20 +40,14 @@ export function projectsStoreStateFactory(): IProjectsStoreState {
   };
 }
 
-const getters: GetterTree<IProjectsStoreState, IRootStoreState> = {
-  selectedProjects(state): string[] {
-    return state.projectsSelected.map(elt => elt.name);
-  },
-};
-
 const mutations: MutationTree<IProjectsStoreState> = {
   // only entry point for projects
-  addProject(state, project: Project): void {
-    if (state.projects.filter(elt => elt.name === project.name).length !== 0) {
-      throw "Duplicate project name";
+  addProject(state, project: string): void {
+    if (state.projects.filter(elt => elt.name === project).length !== 0) {
+      throw "Duplicate recommendation name";
     }
 
-    state.projects.push(project);
+    state.projects.push(new Project(project));
   },
 
   startFetch(state): void {
@@ -100,12 +94,11 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     
   const responseJSON = await response.json();
 
-
     for (const project of responseJSON.projects) {
       context.commit("addProject", project);
     }
 
-  context.commit("endFetching");
+  context.commit("endFetch");
 },
 };
 
