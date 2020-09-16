@@ -63,7 +63,14 @@ limitations under the License. -->
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" dark v-on:click="applyRecommendation()">
+          <v-btn
+            color="primary"
+            dark
+            v-on:click="
+              errorDialogOpened = false;
+              applyRecommendation();
+            "
+          >
             Retry
           </v-btn>
           <v-btn color="primary" dark v-on:click="errorDialogOpened = false">
