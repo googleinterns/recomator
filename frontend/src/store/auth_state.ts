@@ -12,19 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import Vue from "vue";
-import App from "./App.vue";
-import router from "./router";
-import store from "./store/root_store";
-import vuetify from "./plugins/vuetify";
+export interface IAuthStoreState {
+  idToken?: string;
+}
 
-Vue.config.productionTip = false;
-
-store.state.router = router;
-
-new Vue({
-  router,
-  store,
-  vuetify,
-  render: h => h(App)
-}).$mount("#app");
+export function authStoreStateFactory(): IAuthStoreState {
+  return {
+    idToken: undefined
+  };
+}

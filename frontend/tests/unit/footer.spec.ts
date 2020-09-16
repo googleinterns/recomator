@@ -1,7 +1,8 @@
 import { mount } from "@vue/test-utils";
 import "@testing-library/jest-dom";
 import Footer from "@/components/Footer.vue";
-import { rootStoreFactory, IRootStoreState } from "@/store/root";
+import { rootStoreFactory } from "@/store/root_store";
+import { IRootStoreState } from "@/store/root_state";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import {
   freshSampleRawRecommendation,

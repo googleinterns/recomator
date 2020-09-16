@@ -17,38 +17,20 @@ import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { delay } from "./utils/misc";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
-import { IRootStoreState } from "./root";
+import { IRootStoreState } from "./root_state";
 import { getBackendAddress } from "../config";
-import { authFetch } from "./auth";
+import { getAuthFetch } from "./auth/auth_fetch";
 import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
+import {
+  IRecommendationsStoreState,
+  recommendationsStoreStateFactory
+} from "./recommendations_state";
 
 // TODO: move all of this to config in some next PR
 const BACKEND_ADDRESS: string = getBackendAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
 const APPLY_PROGRESS_WAIT_TIME = 10000; // 10s
 const HTTP_OK_CODE = 200;
-
-export interface IRecommendationsStoreState {
-  recommendations: RecommendationExtra[];
-  recommendationsByName: Map<string, RecommendationExtra>;
-  requestId: string;
-  errorCode: number | undefined;
-  errorMessage: string | undefined;
-  progress: number | null; // % recommendations loaded, null if no fetching is happening
-  centralStatusWatcherRunning: boolean;
-}
-
-export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
-  return {
-    recommendations: [],
-    recommendationsByName: new Map<string, RecommendationExtra>(),
-    requestId: "null",
-    progress: null,
-    errorCode: undefined,
-    errorMessage: undefined,
-    centralStatusWatcherRunning: false
-  };
-}
 
 const mutations: MutationTree<IRecommendationsStoreState> = {
   // only entry point for recommendations
@@ -125,6 +107,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("setProgress", 0);
 
     // First, select the projects (temporarily hard-coded)
+    const authFetch = getAuthFetch(context.rootState);
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
         projects: ["rightsizer-test", "recomator", "recomator-282910"]
@@ -148,6 +131,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
+      const authFetch = getAuthFetch(context.rootState);
       const response = await authFetch(
         `${BACKEND_ADDRESS}/recommendations?request_id=${context.state.requestId}`
       );
@@ -218,7 +202,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
   // should return nearly immediately
   async applySingleRecommendation(
-    { commit },
+    { commit, rootState },
     rec: RecommendationExtra
   ): Promise<void> {
     commit("setRecommendationStatus", {
@@ -226,6 +210,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       newStatus: "CLAIMED"
     });
 
+    const authFetch = getAuthFetch(rootState);
     const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/apply?name=${rec.name}`,
       { method: "POST" }
@@ -287,10 +272,11 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   // Assumes the recommendation has been applied already (by us/Pantheon/something else).
   // Returns: do we want to continue watching this recommendation?
   async checkStatusOnce(
-    { commit },
+    { commit, rootState },
     rec: RecommendationExtra
   ): Promise<boolean> {
     // send the request
+    const authFetch = getAuthFetch(rootState);
     const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );

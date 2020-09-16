@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-jest.mock("@/store/utils/core_table_filter_utils");
+jest.mock("@/store/core_table_filters/filters");
 
 import {
   descriptionFilterAccepted,
@@ -21,12 +21,10 @@ import {
   typeFilterAccepted,
   resourceFilterAccepted,
   costFilterAccepted
-} from "@/store/utils/core_table_filter_utils";
+} from "@/store/core_table_filters/filters";
 
-import {
-  coreTableStoreStateFactory,
-  isRecommendationInResults
-} from "@/store/core_table";
+import { coreTableStoreStateFactory } from "@/store/core_table_state";
+import { isRecommendationInResults } from "@/store/core_table_filters/aggregate";
 
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";

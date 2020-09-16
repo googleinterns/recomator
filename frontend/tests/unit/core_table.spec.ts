@@ -12,13 +12,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { rootStoreFactory } from "@/store/root";
+import { rootStoreFactory } from "@/store/root_store";
+import { isRecommendationInResults } from "@/store/core_table_filters/aggregate";
 import {
-  isRecommendationInResults,
   coreTableStoreStateFactory,
-  ICoreTableStoreState,
-  costCategoriesNames
-} from "@/store/core_table";
+  ICoreTableStoreState
+} from "@/store/core_table_state";
+import { costCategoriesNames } from "@/store/core_table_filters/cost_categories";
 import {
   projectFilterAccepted,
   typeFilterAccepted,
@@ -26,7 +26,7 @@ import {
   resourceFilterAccepted,
   descriptionFilterAccepted,
   costFilterAccepted
-} from "@/store/utils/core_table_filter_utils";
+} from "@/store/core_table_filters/filters";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { RecommendationRaw } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";

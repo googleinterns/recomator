@@ -24,7 +24,7 @@ import {
   getRecommendationCostPerWeek
 } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
-import { rootStoreFactory } from "@/store/root";
+import { rootStoreFactory } from "@/store/root_store";
 import {
   freshSampleRawRecommendation,
   freshSampleSnapshotRawRecommendation,
