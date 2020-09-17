@@ -18,14 +18,29 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
-      <v-progress-linear
-        :value="$store.state.recommendationsStore.progress"
-        data-name="main_progress_bar"
-        :indeterminate="$store.state.recommendationsStore.progress === 0"
-        height="10"
-        color="info"
-        v-if="$store.state.recommendationsStore.progress !== null"
-      />
+      <div class="text-center">
+        <v-card
+          color="primary"
+          dark
+          style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);"
+          v-if="$store.state.recommendationsStore.progress !== null"
+          hide-overlay
+          persistent
+          width="300"
+        >
+          <v-card-title class="justify-center">
+            Loading recommendations...
+          </v-card-title>
+          <v-card-text>
+            <v-progress-linear
+              color="white"
+              :indeterminate="$store.state.recommendationsStore.progress === 0"
+              :value="$store.state.recommendationsStore.progress"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </div>
       <v-container
         fluid
         data-name="main_container"
