@@ -88,7 +88,7 @@ limitations under the License. -->
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { IRootStoreState } from "../store/root";
+import { IRootStoreState } from "../store/root_state";
 import { Project } from "../store/data_model/project";
 import router from "../router";
 

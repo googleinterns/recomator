@@ -18,7 +18,7 @@ import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
 import { IRootStoreState } from "./root_state";
 
 import { recommendationStoreFactory } from "./recommendations_store";
-import { requirementStoreFactory} from ./requirements_store;
+import { requirementStoreFactory} from "./requirements_store";
 import { coreTableStoreFactory } from "./core_table_store";
 import { authStoreFactory } from "./auth_store";
 

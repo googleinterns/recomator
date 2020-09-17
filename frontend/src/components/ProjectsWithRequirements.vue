@@ -103,7 +103,7 @@ import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
 import { getInternalStatusMapping } from "../store/data_model/status_map";
-import { IRootStoreState } from "../store/root";
+import { IRootStoreState } from "../store/root_state";
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 import {
   ProjectRequirement,
