@@ -17,14 +17,15 @@ limitations under the License. -->
     <v-toolbar color="primary" dark>
       <v-toolbar-title> Project requirements </v-toolbar-title>
       <v-spacer />
-      <v-btn icon @click="getRecommendations">
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs">mdi-checkbox-marked-circle</v-icon>
+            <v-btn @click="getRecommendations" style="font-weight: bold" rounded depressed small v-on="on" v-bind="attrs" color="secondary" class="white--text">
+              Recommendations
+              <v-icon color="white">mdi-checkbox-marked-circle</v-icon>
+            </v-btn>
           </template>
           Proceed to fetching recommendations from the selected projects.
         </v-tooltip>
-      </v-btn>
     </v-toolbar>
     <v-data-table
       :items="this.allRows"

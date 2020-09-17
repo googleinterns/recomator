@@ -66,23 +66,26 @@ limitations under the License. -->
 
     <v-toolbar color="primary" dark>
       <v-spacer />
-      <v-btn icon @click="getRequirements">
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs">mdi-equal-box</v-icon>
+                  <v-btn v-on="on" v-bind="attrs" color="secondary"
+              style="font-weight: bold" class="ma-2" rounded depressed small @click="getRequirements">
+            requirements <v-icon >mdi-equal-box</v-icon>
+                  </v-btn>
           </template>
           Proceed to testing requirements for the selected projects.
         </v-tooltip>
-      </v-btn>
-
-      <v-btn icon @click="getRecommendations">
+<v-spacer />
         <v-tooltip top transition="none">
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs">mdi-checkbox-marked-circle</v-icon>
+            <v-btn @click="getRecommendations" style="font-weight: bold" rounded depressed small v-on="on" v-bind="attrs" color="secondary" class="white--text">
+              Recommendations
+              <v-icon color="white">mdi-checkbox-marked-circle</v-icon>
+            </v-btn>
           </template>
           Proceed to fetching recommendations from the selected projects.
         </v-tooltip>
-      </v-btn>
+        <v-spacer />
     </v-toolbar>
   </v-card>
 </template>
@@ -95,8 +98,8 @@ import { Project } from "../store/data_model/project";
 export default class ProjectList extends Vue {
   headers = [
     {
-      value: "name"
-    }
+      value: "name",
+    },
   ];
 
   searchEnabled = false;
