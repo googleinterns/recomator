@@ -107,7 +107,7 @@ table th + th {
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root_state";
-import { ProjectRequirement } from "../store/data_model/project_with_requirement";
+import { ProjectRequirement } from "../store/data_model/project_with_requirements";
 
 @Component({})
 export default class ProjectList extends Vue {
