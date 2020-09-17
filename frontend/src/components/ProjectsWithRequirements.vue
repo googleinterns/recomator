@@ -72,8 +72,7 @@ limitations under the License. -->
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs" color="grey">mdi-help</v-icon>
           </template>
-          One of the requirements needed for checking the
-          {{ requirement }} requirement is not satisfied.
+          {{ getUnknownTooltip(item.item, requirement) }}
         </v-tooltip>
         <v-tooltip :key="requirement" v-else top transition="none">
           <template v-slot:activator="{ on, attrs }">
@@ -123,7 +122,7 @@ export default class ProjectList extends Vue {
     "recommender.computeDiskIdleResourceRecommendations.update",
 
     "compute.regions.list",
-    "compute.zones.list"
+    "compute.zones.list",
   ];
 
   headers = [
@@ -143,14 +142,15 @@ export default class ProjectList extends Vue {
     { value: "recommender.computeInstanceIdleResourceRecommendations.list" },
     { value: "recommender.computeInstanceMachineTypeRecommendations.list" },
 
+    { value: "compute.disks.createSnapshot" },
     { value: "compute.snapshots.create" },
     { value: "compute.disks.delete" },
     { value: "recommender.computeDiskIdleResourceRecommendations.list" },
     { value: "recommender.computeDiskIdleResourceRecommendations.update" },
 
     { value: "compute.regions.list" },
-    { value: "compute.zones.list" }
-  ].map(elt => {
+    { value: "compute.zones.list" },
+  ].map((elt) => {
     if (elt.value === "name") {
       return elt;
     } else {
@@ -161,6 +161,30 @@ export default class ProjectList extends Vue {
   // Sync selected with the store
   get allRows(): ProjectRequirement[] {
     return (this.$store.state as IRootStoreState).requirementsStore!.projects;
+  }
+
+  getUknownText(
+    projectRequirement: ProjectRequirement,
+    requirement: string
+  ): string {
+    if (requirement === "compute.disks.createSnapshot") {
+      if (projectRequirement.satisfiesRequirement("compute.snapshots.create")) {
+        return `Requirement ${requirement} is not needed, as requirement compute.snapshots.create is satisfied`;
+      }
+    } else {
+      if (requirement === "compute.snapshots.create") {
+        if (
+          projectRequirement.satisfiesRequirement(
+            "compute.disks.createSnapshot"
+          )
+        ) {
+          return `Requirement ${requirement} is not needed, as requirement compute.disks.createSnapshot is satisfied`;
+        }
+      } else {
+        return `One of the requirements needed for checking the
+          ${requirement} requirement is not satisfied.`;
+      }
+    }
   }
 
   getRecommendations() {
