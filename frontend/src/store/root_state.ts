@@ -24,7 +24,8 @@ export interface IRootStoreState {
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
+  requirementsStore?: IRequirementsStoreState;
+  projectsStore?: IProjectsStoreState;
   coreTableStore?: ICoreTableStoreState;
   authStore?: IAuthStoreState;
-  router?: VueRouter;
 }
