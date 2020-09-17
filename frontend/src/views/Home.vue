@@ -18,30 +18,28 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
-      <div class="text-center">
-        <v-card
-          color="primary"
-          dark
-          style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);"
-          v-if="$store.state.recommendationsStore.progress !== null"
-          data-name="main_progress_bar"
-          hide-overlay
-          persistent
-          width="300"
-        >
-          <v-card-title class="justify-center">
-            Loading recommendations...
-          </v-card-title>
-          <v-card-text>
-            <v-progress-linear
-              color="white"
-              :indeterminate="$store.state.recommendationsStore.progress === 0"
-              :value="$store.state.recommendationsStore.progress"
-              class="mb-0"
-            ></v-progress-linear>
-          </v-card-text>
-        </v-card>
-      </div>
+      <v-card
+        color="primary"
+        dark
+        id="progressBar"
+        v-if="$store.state.recommendationsStore.progress !== null"
+        data-name="main_progress_bar"
+        hide-overlay
+        persistent
+        width="300"
+      >
+        <v-card-title class="justify-center">
+          Loading recommendations...
+        </v-card-title>
+        <v-card-text>
+          <v-progress-linear
+            color="white"
+            :indeterminate="$store.state.recommendationsStore.progress === 0"
+            :value="$store.state.recommendationsStore.progress"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
       <v-container
         fluid
         data-name="main_container"
@@ -68,3 +66,12 @@ import Footer from "@/components/Footer.vue";
 })
 export default class Home extends Vue {}
 </script>
+
+<style lang="scss">
+#progressBar {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+</style>
