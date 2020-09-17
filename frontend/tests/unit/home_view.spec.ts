@@ -14,7 +14,7 @@ limitations under the License. */
 
 import Vue from "vue";
 import { mount } from "@vue/test-utils";
-import { rootStoreFactory } from "@/store/root";
+import { rootStoreFactory } from "@/store/root_store";
 import Home from "@/views/Home.vue";
 import vuetify from "@/plugins/vuetify";
 

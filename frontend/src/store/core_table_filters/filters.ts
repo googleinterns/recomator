@@ -12,12 +12,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-// The primary motivation for having these in a separate file is so that
-//  they can be mocked by Jest:
-//  https://stackoverflow.com/questions/51269431/jest-mock-inner-function
-
-import { RecommendationExtra } from "../data_model/recommendation_extra";
-import { ICoreTableStoreState, costCategoriesNames } from "../core_table";
+import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
+import { costCategoriesNames } from "./cost_categories";
+import { ICoreTableStoreState } from "@/store/core_table_state";
 
 // case-insensitive search (searching for 'myvm' should match 'MyVm')
 export function isSearchTextInCell(

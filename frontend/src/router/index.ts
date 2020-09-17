@@ -17,8 +17,8 @@ import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Requirements from "../views/Requirements.vue";
 import Recommendations from "../views/Recommendations.vue";
-import store from "../store/root";
-import { IRootStoreState } from "../store/root";
+import store from "../store/root_store";
+import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
 
 Vue.use(VueRouter);

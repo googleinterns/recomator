@@ -14,40 +14,18 @@ limitations under the License. */
 
 import Vue from "vue";
 import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
-import {
-  IRecommendationsStoreState,
-  recommendationStoreFactory
-} from "./recommendations";
 
-import { IProjectsStoreState, projectStoreFactory } from "./projects";
+import { IRootStoreState } from "./root_state";
 
-import {
-  ICoreTableStoreState,
-  isRecommendationInResults,
-  coreTableStoreFactory
-} from "./core_table";
+import { recommendationStoreFactory } from "./recommendations_store";
+import { requirementStoreFactory} from ./requirements_store;
+import { coreTableStoreFactory } from "./core_table_store";
+import { authStoreFactory } from "./auth_store";
+
+import { isRecommendationInResults } from "./core_table_filters/aggregate";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
-import { Project } from "./data_model/project";
-import {
-  requirementStoreFactory,
-  IRequirementsStoreState
-} from "./requirements";
-import { authStoreFactory, IAuthStoreState } from "./auth";
 
 Vue.use(Vuex);
-
-export interface IRootStoreState {
-  // Static type checking needs to know of these properties (added dynamically)
-  //  so they are added as optional as a workaround:
-  //  related issue: https://forum.vuejs.org/t/vuex-submodules-with-typescript/40903
-  // Therefore, the ! operator needs to be used whenever the state of any module
-  //  is accessed from outside.
-  recommendationsStore?: IRecommendationsStoreState;
-  requirementsStore?: IRequirementsStoreState;
-  projectsStore?: IProjectsStoreState;
-  coreTableStore?: ICoreTableStoreState;
-  authStore?: IAuthStoreState;
-}
 
 const getters: GetterTree<IRootStoreState, IRootStoreState> = {
   filteredRecommendationsWithExtras(state): RecommendationExtra[] {
