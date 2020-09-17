@@ -12,11 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { ProjectRequirement } from "@/store/data_model/project_with_requirement";
+import { ProjectRequirement } from "@/store/data_model/project_with_requirements";
 import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root_state";
-import { Requirement } from "./data_model/project_with_requirement";
+import { Requirement } from "./data_model/project_with_requirements";
 import { getBackendAddress } from "@/config";
 import { getAuthFetch } from "./auth/auth_fetch";
 import router from "@/router";
@@ -68,7 +68,7 @@ const mutations: MutationTree<IRequirementsStoreState> = {
 };
 
 const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
-  // Makes requests to the middleware and adds obtained projects to the store
+  // Makes requests to the middleware and adds obtained requirements to the store
   async fetchRequirements(context): Promise<void> {
     // one fetch at a time only
     if (context.state.progress !== null) {
@@ -101,7 +101,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     // that we need to refer to in future requests
     context.commit("setRequestId", await response.text());
 
-    // send /recommendations requests until data received
+    // send /requirements requests until data received
     let responseJson: any;
     for (;;) {
       const response = await authFetch(

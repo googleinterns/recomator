@@ -26,7 +26,6 @@ const BACKEND_ADDRESS: string = getBackendAddress();
 const HTTP_OK_CODE = 200;
 
 const mutations: MutationTree<IProjectsStoreState> = {
-  // only entry point for projects
   addProject(state, project: string): void {
     if (state.projects.filter(elt => elt.name === project).length !== 0) {
       throw "Duplicate recommendation name";

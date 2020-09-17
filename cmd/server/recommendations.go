@@ -27,7 +27,7 @@ import (
 	"google.golang.org/api/recommender/v1"
 )
 
-const defaultNumConcurrentCalls = 10
+const defaultNumConcurrentCalls = 100
 
 // ListRecommendationsResponse is response to list/recommendations method
 type ListRecommendationsResponse struct {

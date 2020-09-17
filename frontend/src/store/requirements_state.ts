@@ -1,4 +1,4 @@
-import { ProjectRequirement } from "./data_model/project_with_requirement";
+import { ProjectRequirement } from "./data_model/project_with_requirements";
 
 export interface IRequirementsStoreState {
   projects: ProjectRequirement[];
