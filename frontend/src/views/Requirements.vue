@@ -30,8 +30,7 @@ limitations under the License. -->
       >
         <v-row>
           <v-col>
-            <ProjectsWithRequirements
-            />
+            <ProjectsWithRequirements />
           </v-col>
         </v-row>
       </v-container>
@@ -41,13 +40,10 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import CoreTable from "@/components/CoreTable.vue";
-import ProjectList from "@/components/ProjectList.vue";
 import ProjectsWithRequirements from "@/components/ProjectsWithRequirements.vue";
-import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { ProjectsWithRequirements },
+  components: { ProjectsWithRequirements }
 })
 export default class Requirements extends Vue {}
 </script>

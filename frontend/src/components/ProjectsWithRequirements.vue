@@ -95,33 +95,10 @@ table th + th {
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import FiltersRow from "@/components/FiltersRow.vue";
-import ResourceCell from "@/components/ResourceCell.vue";
-import ProjectCell from "@/components/ProjectCell.vue";
-import DescriptionCell from "@/components/DescriptionCell.vue";
-import TypeCell from "@/components/TypeCell.vue";
-import SavingsCostCell from "@/components/SavingsCostCell.vue";
-import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
-import { getInternalStatusMapping } from "../store/data_model/status_map";
 import { IRootStoreState } from "../store/root_state";
-import { RecommendationExtra } from "../store/data_model/recommendation_extra";
-import {
-  ProjectRequirement,
-  Requirement,
-} from "../store/data_model/project_with_requirement";
-import router from "../router";
+import { ProjectRequirement } from "../store/data_model/project_with_requirement";
 
-@Component({
-  components: {
-    FiltersRow,
-    ResourceCell,
-    ProjectCell,
-    TypeCell,
-    DescriptionCell,
-    SavingsCostCell,
-    ApplyAndStatusCell,
-  },
-})
+@Component({})
 export default class ProjectList extends Vue {
   requirementList = [
     "Service Usage API and services.get permission",
@@ -145,7 +122,7 @@ export default class ProjectList extends Vue {
     "recommender.computeDiskIdleResourceRecommendations.update",
 
     "compute.regions.list",
-    "compute.zones.list",
+    "compute.zones.list"
   ];
 
   headers = [
@@ -171,8 +148,8 @@ export default class ProjectList extends Vue {
     { value: "recommender.computeDiskIdleResourceRecommendations.update" },
 
     { value: "compute.regions.list" },
-    { value: "compute.zones.list" },
-  ].map((elt) => {
+    { value: "compute.zones.list" }
+  ].map(elt => {
     if (elt.value === "name") {
       return elt;
     } else {
@@ -186,7 +163,7 @@ export default class ProjectList extends Vue {
   }
 
   getRecommendations() {
-    router.push("recommendations");
+    this.$router.push("recommendations");
   }
 }
 </script>

@@ -43,12 +43,10 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
-import ProjectList from "@/components/ProjectList.vue";
-import ProjectWithRequirements from "@/components/ProjectsWithRequirements.vue";
 import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { CoreTable, Footer, ProjectList },
+  components: { CoreTable, Footer }
 })
 export default class Recommendation extends Vue {}
 </script>

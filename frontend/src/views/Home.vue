@@ -18,20 +18,17 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
-
       <v-progress-linear
         v-if="!$store.state.projectsStore.loaded"
         indeterminate
       />
 
-      <v-container
-        fluid
-        v-if="$store.state.projectsStore.loaded">
-      <v-row>
-        <v-col>
-          <ProjectList />
-        </v-col>
-      </v-row>
+      <v-container fluid v-if="$store.state.projectsStore.loaded">
+        <v-row>
+          <v-col>
+            <ProjectList />
+          </v-col>
+        </v-row>
       </v-container>
     </v-main>
   </v-app>
@@ -39,13 +36,10 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import CoreTable from "@/components/CoreTable.vue";
 import ProjectList from "@/components/ProjectList.vue";
-import ProjectWithRequirements from "@/components/ProjectsWithRequirements.vue";
-import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { CoreTable, Footer, ProjectList },
+  components: { ProjectList }
 })
 export default class Home extends Vue {}
 </script>

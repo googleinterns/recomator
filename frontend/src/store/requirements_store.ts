@@ -17,10 +17,13 @@ import { delay } from "./utils/misc";
 import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root_state";
 import { Requirement } from "./data_model/project_with_requirement";
-import { Project } from "./data_model/project";
 import { getBackendAddress } from "@/config";
 import { getAuthFetch } from "./auth/auth_fetch";
-import router from '@/router';
+import router from "@/router";
+import {
+  IRequirementsStoreState,
+  requirementsStoreStateFactory
+} from "./requirements_state";
 
 const BACKEND_ADDRESS: string = getBackendAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
@@ -33,7 +36,9 @@ const mutations: MutationTree<IRequirementsStoreState> = {
   },
 
   addRequirement(state, requirement): void {
-    if (state.projects.filter(elt => elt.name === requirement.name).length !== 0) {
+    if (
+      state.projects.filter(elt => elt.name === requirement.name).length !== 0
+    ) {
       throw "Duplicate requirement name";
     }
 
@@ -59,7 +64,7 @@ const mutations: MutationTree<IRequirementsStoreState> = {
   setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
     state.errorCode = errorInfo.errorCode;
     state.errorMessage = errorInfo.errorMessage;
-  },
+  }
 };
 
 const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
@@ -77,9 +82,9 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     // First, select the projects
     const response = await authFetch(`${BACKEND_ADDRESS}/requirements`, {
       body: JSON.stringify({
-        projects: context.rootGetters["selectedProjects"],
+        projects: context.rootGetters["selectedProjects"]
       }),
-      method: "POST",
+      method: "POST"
     });
 
     const responseCode = response.status;
@@ -87,7 +92,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     if (responseCode !== 201) {
       context.commit("setError", {
         errorCode: responseCode,
-        errorMessage: `selecting projects failed: ${response.statusText}`,
+        errorMessage: `selecting projects failed: ${response.statusText}`
       });
       return;
     }
@@ -108,7 +113,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       if (responseCode !== HTTP_OK_CODE) {
         context.commit("setError", {
           errorCode: responseCode,
-          errorMessage: `progress check failed: ${response.statusText}`,
+          errorMessage: `progress check failed: ${response.statusText}`
         });
 
         context.commit("endFetch");
@@ -131,7 +136,16 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
 
-    const requirementList = responseJson.projectsRequirements.map((elt :any) => new ProjectRequirement(elt.project, elt.requirements.map((elt: any) => new Requirement(elt.name, elt.satisfied, elt.errorMessage))));
+    const requirementList = responseJson.projectsRequirements.map(
+      (elt: any) =>
+        new ProjectRequirement(
+          elt.project,
+          elt.requirements.map(
+            (elt: any) =>
+              new Requirement(elt.name, elt.satisfied, elt.errorMessage)
+          )
+        )
+    );
     for (const requirement of requirementList) {
       context.commit("addRequirement", requirement);
     }
@@ -139,9 +153,9 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     context.commit("endFetch");
   },
 
-  proceedToRecommendations(context) {
+  proceedToRecommendations() {
     router.push("recommendations");
-  },
+  }
 };
 
 export function requirementStoreFactory(): Module<
@@ -152,6 +166,6 @@ export function requirementStoreFactory(): Module<
     namespaced: true,
     state: requirementsStoreStateFactory(),
     mutations: mutations,
-    actions: actions,
+    actions: actions
   };
 }

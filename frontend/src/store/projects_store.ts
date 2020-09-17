@@ -13,13 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { Project } from "@/store/data_model/project";
-import { delay } from "./utils/misc";
-import { Module, MutationTree, ActionTree, GetterTree } from "vuex";
-import { IRootStoreState } from "./root";
-import router from '../router/index';
-import { getAuthFetch } from './auth/auth_fetch';
-import { getBackendAddress } from '@/config';
-import { start } from 'repl';
+import { Module, MutationTree, ActionTree } from "vuex";
+import { IRootStoreState } from "./root_state";
+import { getAuthFetch } from "./auth/auth_fetch";
+import { getBackendAddress } from "@/config";
+import {
+  IProjectsStoreState,
+  projectsStoreStateFactory
+} from "./projects_state";
 
 const BACKEND_ADDRESS: string = getBackendAddress();
 const HTTP_OK_CODE = 200;
@@ -55,37 +56,36 @@ const mutations: MutationTree<IProjectsStoreState> = {
 };
 
 const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
-
   async fetchProjects(context) {
-  // one fetch at a time only
-  if (context.state.loading === true) {
-    return;
-  }
-  context.commit("resetProjects");
-  context.commit("startFetch");
+    // one fetch at a time only
+    if (context.state.loading === true) {
+      return;
+    }
+    context.commit("resetProjects");
+    context.commit("startFetch");
 
-  const authFetch = getAuthFetch(context.rootState);
+    const authFetch = getAuthFetch(context.rootState);
 
-  // First, select the projects
-  const response = await authFetch(`${BACKEND_ADDRESS}/projects`);
-  const responseCode = response.status;
+    // First, select the projects
+    const response = await authFetch(`${BACKEND_ADDRESS}/projects`);
+    const responseCode = response.status;
 
-  if (responseCode !== HTTP_OK_CODE) {
-    context.commit("setError", {
-      errorCode: responseCode,
-      errorMessage: `getting projects failed: ${response.statusText}`
-    });
-    return;
-  }
-    
-  const responseJSON = await response.json();
+    if (responseCode !== HTTP_OK_CODE) {
+      context.commit("setError", {
+        errorCode: responseCode,
+        errorMessage: `getting projects failed: ${response.statusText}`
+      });
+      return;
+    }
+
+    const responseJSON = await response.json();
 
     for (const project of responseJSON.projects) {
       context.commit("addProject", project);
     }
 
-  context.commit("endFetch");
-},
+    context.commit("endFetch");
+  }
 };
 
 export function projectStoreFactory(): Module<

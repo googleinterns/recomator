@@ -64,7 +64,7 @@ const routes: Array<RouteConfig> = [
       store.dispatch("recommendationsStore/startCentralStatusWatcher");
       next();
     }
-  }, 
+  },
   {
     // internal endpoint to redirect to Google sign-in
     // shuts the app down

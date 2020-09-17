@@ -18,12 +18,13 @@ import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
 import { IRootStoreState } from "./root_state";
 
 import { recommendationStoreFactory } from "./recommendations_store";
-import { requirementStoreFactory} from "./requirements_store";
+import { requirementStoreFactory } from "./requirements_store";
 import { coreTableStoreFactory } from "./core_table_store";
 import { authStoreFactory } from "./auth_store";
 
 import { isRecommendationInResults } from "./core_table_filters/aggregate";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
+import { projectStoreFactory } from "./projects_store";
 
 Vue.use(Vuex);
 
