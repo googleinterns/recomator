@@ -24,6 +24,7 @@ limitations under the License. -->
           dark
           style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);"
           v-if="$store.state.recommendationsStore.progress !== null"
+          data-name="main_progress_bar"
           hide-overlay
           persistent
           width="300"
