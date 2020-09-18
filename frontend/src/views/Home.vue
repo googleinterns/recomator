@@ -18,28 +18,12 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
-      <v-card
-        color="primary"
-        dark
-        id="progressBar"
+      <ProgressWithHeader
         v-if="$store.state.recommendationsStore.progress !== null"
+        :progress="$store.state.recommendationsStore.progress"
+        header="Loading recommendations..."
         data-name="main_progress_bar"
-        hide-overlay
-        persistent
-        width="300"
-      >
-        <v-card-title class="justify-center">
-          Loading recommendations...
-        </v-card-title>
-        <v-card-text>
-          <v-progress-linear
-            color="white"
-            :indeterminate="$store.state.recommendationsStore.progress === 0"
-            :value="$store.state.recommendationsStore.progress"
-            class="mb-0"
-          ></v-progress-linear>
-        </v-card-text>
-      </v-card>
+      />
       <v-container
         fluid
         data-name="main_container"
@@ -60,18 +44,10 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
+import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { CoreTable, Footer }
+  components: { CoreTable, Footer, ProgressWithHeader }
 })
 export default class Home extends Vue {}
 </script>
-
-<style lang="scss">
-#progressBar {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-</style>
