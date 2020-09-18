@@ -19,27 +19,34 @@ limitations under the License. -->
     </v-app-bar>
     <v-main>
       <v-progress-linear
-        v-if="!$store.state.projectsStore.loaded"
-        indeterminate
+        :value="$store.state.recommendationsStore.progress"
+        data-name="main_progress_bar"
+        v-if="$store.state.recommendationsStore.progress !== null"
       />
 
-      <v-container fluid v-if="$store.state.projectsStore.loaded">
+      <v-container
+        fluid
+        data-name="main_container"
+        v-if="$store.state.recommendationsStore.progress === null"
+      >
         <v-row>
           <v-col>
-            <ProjectList />
+            <CoreTable />
           </v-col>
         </v-row>
       </v-container>
     </v-main>
+    <Footer data-name="main-footer" />
   </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import ProjectList from "@/components/ProjectList.vue";
+import CoreTable from "@/components/CoreTable.vue";
+import Footer from "@/components/Footer.vue";
 
 @Component({
-  components: { ProjectList }
+  components: { CoreTable, Footer }
 })
 export default class Home extends Vue {}
 </script>

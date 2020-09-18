@@ -172,7 +172,7 @@ export default class ProjectList extends Vue {
   }
 
   getRecommendations() {
-    this.$router.push("recommendations");
+    this.$router.push("");
   }
 }
 </script>

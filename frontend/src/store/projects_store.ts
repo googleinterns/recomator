@@ -51,6 +51,11 @@ const mutations: MutationTree<IProjectsStoreState> = {
     state.projectsSelected = [];
     state.loaded = false;
     state.loading = false;
+  },
+
+  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
+    state.errorCode = errorInfo.errorCode;
+    state.errorMessage = errorInfo.errorMessage;
   }
 };
 
@@ -85,6 +90,14 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
       }
     }
     context.commit("endFetch");
+  },
+
+  saveSelectedProjects(context) {
+    window.localStorage.setItem("project_list", JSON.stringify(context.state.projectsSelected));
+  },
+
+  clearSavedSelection() {
+    window.localStorage.removeItem("project_list");
   }
 };
 

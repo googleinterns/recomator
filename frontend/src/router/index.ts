@@ -16,7 +16,7 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Requirements from "../views/Requirements.vue";
-import Recommendations from "../views/Recommendations.vue";
+import Projects from "../views/Projects.vue";
 import store from "../store/root_store";
 import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
@@ -36,35 +36,18 @@ const routes: Array<RouteConfig> = [
         return;
       }
 
-      store.dispatch("projectsStore/fetchProjects");
+      const projectString = window.localStorage.getItem("project_list");
+      if (projectString === null) {
+        next("projects");
+        return;
+      } 
+
+      store.dispatch("projectsStore/setSelected", JSON.parse(projectString));
+
       next();
     }
   },
 
-  {
-    path: "/requirements",
-    name: "Requirements",
-    component: Requirements,
-    beforeEnter(_, __, next) {
-      // Asynchronously request and receive requirements from the middleware
-      store.dispatch("requirementsStore/fetchRequirements");
-      next();
-    }
-  },
-
-  {
-    path: "/recommendations",
-    name: "Recommendations",
-    component: Recommendations,
-    beforeEnter(_, __, next) {
-      // Asynchronously request and receive recommendations from the middleware
-      store.dispatch("recommendationsStore/fetchRecommendations");
-
-      // Start status watchers
-      store.dispatch("recommendationsStore/startCentralStatusWatcher");
-      next();
-    }
-  },
   {
     // internal endpoint to redirect to Google sign-in
     // shuts the app down
@@ -74,6 +57,7 @@ const routes: Array<RouteConfig> = [
       window.location.href = `${getBackendAddress()}/redirect`;
     }
   },
+
   {
     // receive the authCode, exchange it for a token and finally
     // fetch recommendations and go to "/" with a saved token
@@ -117,9 +101,34 @@ const routes: Array<RouteConfig> = [
     beforeEnter(_, __, next) {
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
-      store.dispatch("projectsStore/fetchProjects");
+      store.dispatch("recommendationsStore/fetchRecommendations");
+      // Start status watchers
+      store.dispatch("recommendationsStore/startCentralStatusWatcher");
 
       next({ name: "Home" });
+    }
+  },
+
+  {
+    path: "/requirements",
+    name: "Requirements",
+    component: Requirements,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive requirements from the middleware
+      store.dispatch("requirementsStore/fetchRequirements");
+      next();
+    }
+  },
+
+  {
+    path: "/projects",
+    name: "Projects",
+    component: Projects,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive projects from the middleware
+      store.dispatch("projectsStore/fetchProjects");
+      
+      next();
     }
   }
 ];
