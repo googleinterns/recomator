@@ -19,7 +19,6 @@ import { IRootStoreState } from "./root_state";
 import { Requirement } from "./data_model/project_with_requirements";
 import { getBackendAddress } from "@/config";
 import { getAuthFetch } from "./auth/auth_fetch";
-import router from "@/router";
 import {
   IRequirementsStoreState,
   requirementsStoreStateFactory
@@ -153,10 +152,6 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     }
 
     context.commit("endFetch");
-  },
-
-  proceedToRecommendations() {
-    router.push("recommendations");
   }
 };
 
