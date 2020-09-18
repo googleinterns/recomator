@@ -136,6 +136,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
 
+    if (responseJson.projectsRequirements !== null) {
     const requirementList = responseJson.projectsRequirements.map(
       (elt: any) =>
         new ProjectRequirement(
@@ -149,6 +150,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     for (const requirement of requirementList) {
       context.commit("addRequirement", requirement);
     }
+  }
 
     context.commit("endFetch");
   },
