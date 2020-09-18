@@ -80,10 +80,10 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     const responseJSON = await response.json();
 
     if (responseJSON !== null) {
-    for (const project of responseJSON.projects) {
-      context.commit("addProject", project);
+      for (const project of responseJSON.projects) {
+        context.commit("addProject", project);
+      }
     }
-  }
     context.commit("endFetch");
   }
 };

@@ -137,20 +137,20 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     }
 
     if (responseJson.projectsRequirements !== null) {
-    const requirementList = responseJson.projectsRequirements.map(
-      (elt: any) =>
-        new ProjectRequirement(
-          elt.project,
-          elt.requirements.map(
-            (elt: any) =>
-              new Requirement(elt.name, elt.satisfied, elt.errorMessage)
+      const requirementList = responseJson.projectsRequirements.map(
+        (elt: any) =>
+          new ProjectRequirement(
+            elt.project,
+            elt.requirements.map(
+              (elt: any) =>
+                new Requirement(elt.name, elt.satisfied, elt.errorMessage)
+            )
           )
-        )
-    );
-    for (const requirement of requirementList) {
-      context.commit("addRequirement", requirement);
+      );
+      for (const requirement of requirementList) {
+        context.commit("addRequirement", requirement);
+      }
     }
-  }
 
     context.commit("endFetch");
   },

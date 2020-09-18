@@ -23,7 +23,7 @@ import { getAuthFetch } from "./auth/auth_fetch";
 import { similaritySort, trainingDataHandler } from "./smart_sort/similarity";
 import {
   IRecommendationsStoreState,
-  recommendationsStoreStateFactory,
+  recommendationsStoreStateFactory
 } from "./recommendations_state";
 
 // TODO: move all of this to config in some next PR
@@ -94,7 +94,7 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     if (state.centralStatusWatcherRunning)
       throw `More than once central status watcher`;
     state.centralStatusWatcherRunning = true;
-  },
+  }
 };
 
 const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
@@ -111,16 +111,16 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     const authFetch = getAuthFetch(context.rootState);
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
-        projects: context.rootGetters["selectedProjects"],
+        projects: context.rootGetters["selectedProjects"]
       }),
-      method: "POST",
+      method: "POST"
     });
     const responseCode = response.status;
     // 201 = Created (Success)
     if (responseCode !== 201) {
       context.commit("setError", {
         errorCode: responseCode,
-        errorMessage: `selecting projects failed: ${response.statusText}`,
+        errorMessage: `selecting projects failed: ${response.statusText}`
       });
       return;
     }
@@ -141,7 +141,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       if (responseCode !== HTTP_OK_CODE) {
         context.commit("setError", {
           errorCode: responseCode,
-          errorMessage: `progress check failed: ${response.statusText}`,
+          errorMessage: `progress check failed: ${response.statusText}`
         });
 
         context.commit("endFetching");
@@ -184,7 +184,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (new Set(selectedNames).size !== selectedNames.length)
       throw "Duplicates found among given recommendation names";
 
-    const selectedRecs = selectedNames.map((name) =>
+    const selectedRecs = selectedNames.map(name =>
       state.recommendationsByName.get(name)
     );
 
@@ -211,7 +211,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   ): Promise<void> {
     commit("setRecommendationStatus", {
       recName: rec.name,
-      newStatus: "CLAIMED",
+      newStatus: "CLAIMED"
     });
 
     const authFetch = getAuthFetch(rootState);
@@ -224,21 +224,21 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (response.status === 201)
       commit("setRecommendationNeedsStatusWatcher", {
         recName: rec.name,
-        needs: true,
+        needs: true
       });
     else {
       commit("setRecommendationNeedsStatusWatcher", {
         recName: rec.name,
-        needs: false,
+        needs: false
       });
       commit("setRecommendationStatus", {
         recName: rec.name,
-        newStatus: "FAILED",
+        newStatus: "FAILED"
       });
       commit("setRecommendationError", {
         recName: rec.name,
         header: `HTTP ERROR(${response.status})`,
-        desc: `Couldn't reach the Recomator API:\n${response.statusText}`,
+        desc: `Couldn't reach the Recomator API:\n${response.statusText}`
       });
     }
   },
@@ -258,7 +258,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   },
   async checkStatusOnceForAll({ state, commit, dispatch }): Promise<void> {
     // make a copy first to make the array constant inside the for loop
-    const recsCopy = state.recommendations.map((rec) => rec);
+    const recsCopy = state.recommendations.map(rec => rec);
 
     // check status of all recommendations that need to be watched
     // (waits for a response before starting a new request)
@@ -268,7 +268,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       const shouldContinue = await dispatch("checkStatusOnce", rec);
       commit("setRecommendationNeedsStatusWatcher", {
         recName: rec.name,
-        needs: shouldContinue,
+        needs: shouldContinue
       });
     }
   },
@@ -294,7 +294,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         case "IN PROGRESS": // applied by us
           commit("setRecommendationStatus", {
             recName: rec.name,
-            newStatus: "CLAIMED",
+            newStatus: "CLAIMED"
           });
           // continue following the progress
           return true;
@@ -302,7 +302,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         case "SUCCEEDED":
           commit("setRecommendationStatus", {
             recName: rec.name,
-            newStatus: "SUCCEEDED",
+            newStatus: "SUCCEEDED"
           });
           return false;
 
@@ -311,38 +311,38 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         case "ACTIVE": // shouldn't be ACTIVE if it has been applied
           commit("setRecommendationStatus", {
             recName: rec.name,
-            newStatus: "FAILED",
+            newStatus: "FAILED"
           });
           commit("setRecommendationError", {
             recName: rec.name,
             header: "Server hasn't acknowledged the request",
             desc:
-              "The recommendation is still active, so the Recomator API has not received the request to apply this recommendation. You can try applying it again.",
+              "The recommendation is still active, so the Recomator API has not received the request to apply this recommendation. You can try applying it again."
           });
           return false;
 
         case "FAILED":
           commit("setRecommendationStatus", {
             recName: rec.name,
-            newStatus: "FAILED",
+            newStatus: "FAILED"
           });
           commit("setRecommendationError", {
             recName: rec.name,
             header:
               "Applying recommendation failed server-side. You can try applying it again.",
-            desc: `${responseJson.errorMessage}`,
+            desc: `${responseJson.errorMessage}`
           });
           return false;
 
         default:
           commit("setRecommendationStatus", {
             recName: rec.name,
-            newStatus: "FAILED",
+            newStatus: "FAILED"
           });
           commit("setRecommendationError", {
             recName: rec.name,
             header: `Bad status(${responseJson.status})`,
-            desc: "Recomator API status not recognized.",
+            desc: "Recomator API status not recognized."
           });
           return false;
       }
@@ -350,17 +350,17 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       // Non-200 HTTP code
       commit("setRecommendationStatus", {
         recName: rec.name,
-        newStatus: "FAILED",
+        newStatus: "FAILED"
       });
       commit("setRecommendationError", {
         recName: rec.name,
         header: `Status query failed (HTTP:${response.status})`,
         desc:
-          "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment.",
+          "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment."
       });
     }
     return true; // Continue watching the status, maybe this is a temporary connection error
-  },
+  }
 };
 
 interface ICheckStatusResponse {
@@ -374,17 +374,17 @@ const getters: GetterTree<IRecommendationsStoreState, IRootStoreState> = {
   // (for example. the first type found might change very frequently)
 
   allProjects(state): string[] {
-    const projects = state.recommendations.map((r) => r.projectCol).sort();
+    const projects = state.recommendations.map(r => r.projectCol).sort();
     return Array.from(new Set(projects));
   },
   allTypes(state): string[] {
-    const types = state.recommendations.map((r) => r.typeCol).sort();
+    const types = state.recommendations.map(r => r.typeCol).sort();
     return Array.from(new Set(types));
   },
   allStatuses(state): string[] {
-    const statuses = state.recommendations.map((r) => r.statusCol).sort();
+    const statuses = state.recommendations.map(r => r.statusCol).sort();
     return Array.from(new Set(statuses));
-  },
+  }
 };
 
 export function recommendationStoreFactory(): Module<
@@ -396,6 +396,6 @@ export function recommendationStoreFactory(): Module<
     state: recommendationsStoreStateFactory(),
     mutations: mutations,
     actions: actions,
-    getters: getters,
+    getters: getters
   };
 }
