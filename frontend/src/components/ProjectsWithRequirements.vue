@@ -36,6 +36,21 @@ limitations under the License. -->
         </template>
         Proceed to fetching recommendations from the selected projects.
       </v-tooltip>
+
+      <v-tooltip top transition="none">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            @click="getProjects"
+            icon
+            v-on="on"
+            v-bind="attrs"
+            color="white"
+          >
+            mdi-arrow-left-thick
+          </v-btn>
+        </template>
+        Return to project selection
+      </v-tooltip>
     </v-toolbar>
     <v-data-table
       :items="this.allRows"
@@ -172,7 +187,7 @@ export default class ProjectList extends Vue {
   }
 
   getRecommendations() {
-    this.$router.push({name: "Home"});
+    this.$router.push("homeWithInit");
   }
 }
 </script>

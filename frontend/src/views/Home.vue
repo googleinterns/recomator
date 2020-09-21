@@ -16,6 +16,15 @@ limitations under the License. -->
   <v-app>
     <v-app-bar app color="primary" dark>
       <h1>Recomator</h1>
+      <v-spacer />
+      <v-btn icon @click="getProjectSelection">
+        <v-tooltip top transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
+          </template>
+          Change selected projects
+        </v-tooltip>
+      </v-btn>
     </v-app-bar>
     <v-main>
       <v-progress-linear
@@ -48,5 +57,9 @@ import Footer from "@/components/Footer.vue";
 @Component({
   components: { CoreTable, Footer }
 })
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  getProjectSelection() {
+    this.$router.push("projects");
+  }
+}
 </script>

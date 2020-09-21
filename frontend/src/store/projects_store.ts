@@ -93,7 +93,10 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
   },
 
   saveSelectedProjects(context) {
-    window.localStorage.setItem("project_list", JSON.stringify(context.state.projectsSelected));
+    window.localStorage.setItem(
+      "project_list",
+      JSON.stringify(context.state.projectsSelected)
+    );
   },
 
   clearSavedSelection() {
