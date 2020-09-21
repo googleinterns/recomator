@@ -36,14 +36,6 @@ const routes: Array<RouteConfig> = [
         return;
       }
 
-      const projectString = window.localStorage.getItem("project_list");
-      if (projectString === null) {
-        next("projects");
-        return;
-      } 
-
-      store.dispatch("projectsStore/setSelected", JSON.parse(projectString));
-
       next();
     }
   },
@@ -99,6 +91,14 @@ const routes: Array<RouteConfig> = [
     path: "/homeWithInit",
     name: "HomeWithInit",
     beforeEnter(_, __, next) {
+      const projectString = window.localStorage.getItem("project_list");
+      if (projectString === null) {
+        next("projects");
+        return;
+      } 
+
+      store.commit("projectsStore/setSelected", JSON.parse(projectString));
+      
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
       store.dispatch("recommendationsStore/fetchRecommendations");

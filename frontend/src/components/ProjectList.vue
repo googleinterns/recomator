@@ -155,11 +155,13 @@ export default class ProjectList extends Vue {
   }
 
   getRequirements() {
+            this.$store.dispatch("projectsStore/saveSelectedProjects");
     this.$router.push("requirements");
   }
 
   getRecommendations() {
-    this.$router.push("");
+        this.$store.dispatch("projectsStore/saveSelectedProjects");
+    this.$router.push("homeWithInit");
   }
 }
 </script>
