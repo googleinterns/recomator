@@ -15,7 +15,7 @@ limitations under the License. */
 import Vue from "vue";
 import { mount } from "@vue/test-utils";
 import { rootStoreFactory } from "@/store/root_store";
-import Recommendation from "@/views/Recommendations.vue";
+import Recommendation from "@/views/Home.vue";
 import vuetify from "@/plugins/vuetify";
 
 // Helpful for debugs: console.log(wrapper.html())
