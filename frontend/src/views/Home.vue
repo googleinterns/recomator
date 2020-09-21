@@ -18,7 +18,7 @@ limitations under the License. -->
       <h1>Recomator</h1>
       <v-spacer />
       <v-btn icon @click="getProjectSelection">
-        <v-tooltip top transition="none">
+        <v-tooltip left transition="none">
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
           </template>
@@ -59,7 +59,8 @@ import Footer from "@/components/Footer.vue";
 })
 export default class Home extends Vue {
   getProjectSelection() {
-    this.$router.push("projects");
+    this.$store.commit("projectsStore/setSelected", [], {root: true});
+    this.$router.push("projectsWithInit");
   }
 }
 </script>

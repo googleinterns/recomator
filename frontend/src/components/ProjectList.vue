@@ -44,7 +44,7 @@ limitations under the License. -->
       </v-text-field>
 
       <v-btn v-else icon @click="searchEnabled = true">
-        <v-tooltip top transition="none">
+        <v-tooltip left transition="none">
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs">mdi-magnify</v-icon>
           </template>

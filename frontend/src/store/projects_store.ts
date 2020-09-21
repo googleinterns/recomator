@@ -43,6 +43,7 @@ const mutations: MutationTree<IProjectsStoreState> = {
   },
 
   setSelected(state, projects: Project[]): void {
+    console.log(projects);
     state.projectsSelected = projects;
   },
 

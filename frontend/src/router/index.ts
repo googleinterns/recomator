@@ -38,7 +38,7 @@ const routes: Array<RouteConfig> = [
 
       const projectString = window.localStorage.getItem("project_list");
       if (projectString === null) {
-        next("projects");
+        next({name: "ProjectsWithInit"});
         return;
       }
 
@@ -99,11 +99,21 @@ const routes: Array<RouteConfig> = [
     path: "/homeWithInit",
     name: "HomeWithInit",
     beforeEnter(_, __, next) {
+      const projectString = window.localStorage.getItem("project_list");
+      if (projectString === null) {
+        next({name: "ProjectsWithInit"});
+        return;
+      }
+
+      store.commit("projectsStore/setSelected", JSON.parse(projectString));
+
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
       store.dispatch("recommendationsStore/fetchRecommendations");
-      // Start status watchers
+      // Start status watcher if it is not started already
+      if (!store.state.recommendationsStore?.centralStatusWatcherRunning) {
       store.dispatch("recommendationsStore/startCentralStatusWatcher");
+      }
 
       next({ name: "Home" });
     }
@@ -121,15 +131,20 @@ const routes: Array<RouteConfig> = [
   },
 
   {
-    path: "/projects",
-    name: "Projects",
+    path: "/projectsWithInit",
+    name: "ProjectsWithInit",
     component: Projects,
     beforeEnter(_, __, next) {
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
 
-      next();
+      next({name: "Projects"});
     }
+  },
+  {
+    path: "/projects",
+    name: "Projects",
+    component: Projects,
   }
 ];
 

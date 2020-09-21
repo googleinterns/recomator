@@ -17,6 +17,16 @@ limitations under the License. -->
     <v-toolbar color="primary" dark>
       <v-toolbar-title> Project requirements </v-toolbar-title>
       <v-spacer />
+      <v-btn @click="getProjects" icon>
+        <v-tooltip left transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs" color="white">
+              mdi-arrow-left-thick
+            </v-icon>
+          </template>
+          Return to project selection.
+        </v-tooltip>
+      </v-btn>
       <v-tooltip top transition="none">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -35,21 +45,6 @@ limitations under the License. -->
           </v-btn>
         </template>
         Proceed to fetching recommendations from the selected projects.
-      </v-tooltip>
-
-      <v-tooltip top transition="none">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            @click="getProjects"
-            icon
-            v-on="on"
-            v-bind="attrs"
-            color="white"
-          >
-            mdi-arrow-left-thick
-          </v-btn>
-        </template>
-        Return to project selection
       </v-tooltip>
     </v-toolbar>
     <v-data-table
@@ -147,7 +142,7 @@ export default class ProjectList extends Vue {
     "recommender.computeDiskIdleResourceRecommendations.update",
 
     "compute.regions.list",
-    "compute.zones.list"
+    "compute.zones.list",
   ];
 
   headers = [
@@ -173,8 +168,8 @@ export default class ProjectList extends Vue {
     { value: "recommender.computeDiskIdleResourceRecommendations.update" },
 
     { value: "compute.regions.list" },
-    { value: "compute.zones.list" }
-  ].map(elt => {
+    { value: "compute.zones.list" },
+  ].map((elt) => {
     if (elt.value === "name") {
       return elt;
     } else {
@@ -187,7 +182,12 @@ export default class ProjectList extends Vue {
   }
 
   getRecommendations() {
+    this.$store.dispatch("projectsStore/saveSelectedProjects");
     this.$router.push("homeWithInit");
+  }
+
+  getProjects() {
+    this.$router.push("projects");
   }
 }
 </script>
