@@ -73,7 +73,7 @@ limitations under the License. -->
             v-bind="attrs"
             color="secondary"
             style="font-weight: bold"
-            class="ma-2"
+            class="white--text ma-2"
             rounded
             depressed
             small

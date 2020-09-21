@@ -43,7 +43,6 @@ const mutations: MutationTree<IProjectsStoreState> = {
   },
 
   setSelected(state, projects: Project[]): void {
-    console.log(projects);
     state.projectsSelected = projects;
   },
 
@@ -98,10 +97,6 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
       "project_list",
       JSON.stringify(context.state.projectsSelected)
     );
-  },
-
-  clearSavedSelection() {
-    window.localStorage.removeItem("project_list");
   }
 };
 

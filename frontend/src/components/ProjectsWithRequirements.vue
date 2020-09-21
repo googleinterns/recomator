@@ -17,16 +17,27 @@ limitations under the License. -->
     <v-toolbar color="primary" dark>
       <v-toolbar-title> Project requirements </v-toolbar-title>
       <v-spacer />
-      <v-btn @click="getProjects" icon>
-        <v-tooltip left transition="none">
-          <template v-slot:activator="{ on, attrs }">
+      <v-tooltip left transition="none">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            @click="getProjects"
+            style="font-weight: bold"
+            rounded
+            depressed
+            small
+            v-on="on"
+            v-bind="attrs"
+            color="secondary"
+            class="white--text ma-2"
+          >
+            Projects
             <v-icon v-on="on" v-bind="attrs" color="white">
-              mdi-arrow-left-thick
+              mdi-cog
             </v-icon>
-          </template>
-          Return to project selection.
-        </v-tooltip>
-      </v-btn>
+          </v-btn>
+        </template>
+        Return to project selection.
+      </v-tooltip>
       <v-tooltip top transition="none">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -142,40 +153,23 @@ export default class ProjectList extends Vue {
     "recommender.computeDiskIdleResourceRecommendations.update",
 
     "compute.regions.list",
-    "compute.zones.list",
+    "compute.zones.list"
   ];
 
-  headers = [
-    { value: "name" },
-
-    { value: "Service Usage API and services.get permission" },
-    { value: "Compute Engine API" },
-    { value: "Cloud Resource Manager API" },
-    { value: "Recommender API" },
-
-    { value: "compute.instances.setMachineType" },
-    { value: "compute.instances.start" },
-    { value: "compute.instances.stop" },
-    { value: "compute.instances.get" },
-    { value: "recommender.computeInstanceIdleResourceRecommendations.update" },
-    { value: "recommender.computeInstanceMachineTypeRecommendations.update" },
-    { value: "recommender.computeInstanceIdleResourceRecommendations.list" },
-    { value: "recommender.computeInstanceMachineTypeRecommendations.list" },
-
-    { value: "compute.disks.createSnapshot, compute.snapshots.create" },
-    { value: "compute.disks.delete" },
-    { value: "recommender.computeDiskIdleResourceRecommendations.list" },
-    { value: "recommender.computeDiskIdleResourceRecommendations.update" },
-
-    { value: "compute.regions.list" },
-    { value: "compute.zones.list" },
-  ].map((elt) => {
-    if (elt.value === "name") {
-      return elt;
-    } else {
-      return Object.assign(elt, { align: "center" });
-    }
-  });
+  headers = ([] as {value: string}[])
+    .concat(
+      [{ value: "name" }],
+      this.requirementList.map(elt => {
+        return { value: elt };
+      })
+    )
+    .map(elt => {
+      if (elt.value === "name") {
+        return elt;
+      } else {
+        return Object.assign(elt, { align: "center" });
+      }
+    });
 
   get allRows(): ProjectRequirement[] {
     return (this.$store.state as IRootStoreState).requirementsStore!.projects;

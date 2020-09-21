@@ -20,6 +20,7 @@ import Projects from "../views/Projects.vue";
 import store from "../store/root_store";
 import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
+import { readProjectList } from "./utility";
 
 Vue.use(VueRouter);
 
@@ -36,9 +37,9 @@ const routes: Array<RouteConfig> = [
         return;
       }
 
-      const projectString = window.localStorage.getItem("project_list");
+      const projectString = readProjectList();
       if (projectString === null) {
-        next({name: "ProjectsWithInit"});
+        next({ name: "ProjectsWithInit" });
         return;
       }
 
@@ -99,9 +100,9 @@ const routes: Array<RouteConfig> = [
     path: "/homeWithInit",
     name: "HomeWithInit",
     beforeEnter(_, __, next) {
-      const projectString = window.localStorage.getItem("project_list");
+      const projectString = readProjectList();
       if (projectString === null) {
-        next({name: "ProjectsWithInit"});
+        next({ name: "ProjectsWithInit" });
         return;
       }
 
@@ -112,7 +113,7 @@ const routes: Array<RouteConfig> = [
       store.dispatch("recommendationsStore/fetchRecommendations");
       // Start status watcher if it is not started already
       if (!store.state.recommendationsStore?.centralStatusWatcherRunning) {
-      store.dispatch("recommendationsStore/startCentralStatusWatcher");
+        store.dispatch("recommendationsStore/startCentralStatusWatcher");
       }
 
       next({ name: "Home" });
@@ -138,13 +139,13 @@ const routes: Array<RouteConfig> = [
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
 
-      next({name: "Projects"});
+      next({ name: "Projects" });
     }
   },
   {
     path: "/projects",
     name: "Projects",
-    component: Projects,
+    component: Projects
   }
 ];
 

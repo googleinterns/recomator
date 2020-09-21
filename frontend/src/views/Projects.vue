@@ -18,11 +18,12 @@ limitations under the License. -->
       <h1>Recomator</h1>
     </v-app-bar>
     <v-main>
-      <v-progress-linear
+      <ProgressWithHeader
         v-if="!$store.state.projectsStore.loaded"
-        indeterminate
+        :progress="0"
+        header="Loading projects..."
+        data-name="project_progress_bar"
       />
-
       <v-container fluid v-if="$store.state.projectsStore.loaded">
         <v-row>
           <v-col>
@@ -37,9 +38,10 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import ProjectList from "@/components/ProjectList.vue";
+import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { ProjectList }
+  components: { ProjectList, ProgressWithHeader }
 })
 export default class Project extends Vue {}
 </script>
