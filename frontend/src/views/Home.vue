@@ -27,10 +27,11 @@ limitations under the License. -->
       </v-btn>
     </v-app-bar>
     <v-main>
-      <v-progress-linear
-        :value="$store.state.recommendationsStore.progress"
-        data-name="main_progress_bar"
+      <ProgressWithHeader
         v-if="$store.state.recommendationsStore.progress !== null"
+        :progress="$store.state.recommendationsStore.progress"
+        header="Loading recommendations..."
+        data-name="main_progress_bar"
       />
 
       <v-container
@@ -53,9 +54,10 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
+import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { CoreTable, Footer }
+  components: { CoreTable, Footer, ProgressWithHeader }
 })
 export default class Home extends Vue {
   getProjectSelection() {
