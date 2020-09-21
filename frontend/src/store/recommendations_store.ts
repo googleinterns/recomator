@@ -51,10 +51,6 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     state.recommendations = [];
     state.recommendationsByName.clear();
   },
-  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
-    state.errorCode = errorInfo.errorCode;
-    state.errorMessage = errorInfo.errorMessage;
-  },
   setRequestId(state, requestId: string) {
     state.requestId = requestId;
   },
@@ -103,27 +99,18 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     if (context.state.progress !== null) {
       return;
     }
+
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
     // First, select the projects (temporarily hard-coded)
-    const authFetch = getAuthFetch(context.rootState);
+    const authFetch = getAuthFetch(context.rootState, 3);
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
         projects: ["rightsizer-test", "recomator", "recomator-282910"]
       }),
       method: "POST"
     });
-    const responseCode = response.status;
-    // 201 = Created (Success)
-    if (responseCode !== 201) {
-      context.commit("setError", {
-        errorCode: responseCode,
-        errorMessage: `selecting projects failed: ${response.statusText}`
-      });
-      return;
-    }
-
     // An id has just been assigned for our us/project selection combination
     // that we need to refer to in future requests
     context.commit("setRequestId", await response.text());
@@ -131,21 +118,9 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     // send /recommendations requests until data received
     let responseJson: any;
     for (;;) {
-      const authFetch = getAuthFetch(context.rootState);
       const response = await authFetch(
         `${BACKEND_ADDRESS}/recommendations?request_id=${context.state.requestId}`
       );
-      const responseCode = response.status;
-
-      if (responseCode !== HTTP_OK_CODE) {
-        context.commit("setError", {
-          errorCode: responseCode,
-          errorMessage: `progress check failed: ${response.statusText}`
-        });
-
-        context.commit("endFetching");
-        return;
-      }
 
       responseJson = await response.json();
 
@@ -210,33 +185,17 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       newStatus: "CLAIMED"
     });
 
-    const authFetch = getAuthFetch(rootState);
+    const authFetch = getAuthFetch(rootState, 0);
     const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/apply?name=${rec.name}`,
       { method: "POST" }
     );
 
     // If server accepted the request, watch the status. Otherwise, save the error.
-    if (response.status === 201)
-      commit("setRecommendationNeedsStatusWatcher", {
-        recName: rec.name,
-        needs: true
-      });
-    else {
-      commit("setRecommendationNeedsStatusWatcher", {
-        recName: rec.name,
-        needs: false
-      });
-      commit("setRecommendationStatus", {
-        recName: rec.name,
-        newStatus: "FAILED"
-      });
-      commit("setRecommendationError", {
-        recName: rec.name,
-        header: `HTTP ERROR(${response.status})`,
-        desc: `Couldn't reach the Recomator API:\n${response.statusText}`
-      });
-    }
+    commit("setRecommendationNeedsStatusWatcher", {
+      recName: rec.name,
+      needs: true
+    });
   },
   // If there is a "CLAIMED" recommendation, its status will change once it
   // has finished being applied. Therefore, we want to follow it and update the store
@@ -276,86 +235,69 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     rec: RecommendationExtra
   ): Promise<boolean> {
     // send the request
-    const authFetch = getAuthFetch(rootState);
+    const authFetch = getAuthFetch(rootState, 3);
     const response = await authFetch(
       `${BACKEND_ADDRESS}/recommendations/checkStatus?name=${rec.name}`
     );
+    const responseJson = (await response.json()) as ICheckStatusResponse;
 
-    // handle all possible types of responses
-    if (response.status === HTTP_OK_CODE) {
-      const responseJson = (await response.json()) as ICheckStatusResponse;
+    switch (responseJson.status) {
+      case "CLAIMED": // applied somewhere else (e.g. Pantheon, us earlier
+      case "IN PROGRESS": // applied by us
+        commit("setRecommendationStatus", {
+          recName: rec.name,
+          newStatus: "CLAIMED"
+        });
+        // continue following the progress
+        return true;
 
-      switch (responseJson.status) {
-        case "CLAIMED": // applied somewhere else (e.g. Pantheon, us earlier
-        case "IN PROGRESS": // applied by us
-          commit("setRecommendationStatus", {
-            recName: rec.name,
-            newStatus: "CLAIMED"
-          });
-          // continue following the progress
-          return true;
+      case "SUCCEEDED":
+        commit("setRecommendationStatus", {
+          recName: rec.name,
+          newStatus: "SUCCEEDED"
+        });
+        return false;
 
-        case "SUCCEEDED":
-          commit("setRecommendationStatus", {
-            recName: rec.name,
-            newStatus: "SUCCEEDED"
-          });
-          return false;
+      // Now we know it failed, save the error message telling the user why
 
-        // Now we know it failed, save the error message telling the user why
+      case "ACTIVE": // shouldn't be ACTIVE if it has been applied
+        commit("setRecommendationStatus", {
+          recName: rec.name,
+          newStatus: "FAILED"
+        });
+        commit("setRecommendationError", {
+          recName: rec.name,
+          header: "Server hasn't acknowledged the request",
+          desc:
+            "The recommendation is still active, so the Recomator API has not received the request to apply this recommendation. You can try applying it again."
+        });
+        return false;
 
-        case "ACTIVE": // shouldn't be ACTIVE if it has been applied
-          commit("setRecommendationStatus", {
-            recName: rec.name,
-            newStatus: "FAILED"
-          });
-          commit("setRecommendationError", {
-            recName: rec.name,
-            header: "Server hasn't acknowledged the request",
-            desc:
-              "The recommendation is still active, so the Recomator API has not received the request to apply this recommendation. You can try applying it again."
-          });
-          return false;
+      case "FAILED":
+        commit("setRecommendationStatus", {
+          recName: rec.name,
+          newStatus: "FAILED"
+        });
+        commit("setRecommendationError", {
+          recName: rec.name,
+          header:
+            "Applying recommendation failed server-side. You can try applying it again.",
+          desc: `${responseJson.errorMessage}`
+        });
+        return false;
 
-        case "FAILED":
-          commit("setRecommendationStatus", {
-            recName: rec.name,
-            newStatus: "FAILED"
-          });
-          commit("setRecommendationError", {
-            recName: rec.name,
-            header:
-              "Applying recommendation failed server-side. You can try applying it again.",
-            desc: `${responseJson.errorMessage}`
-          });
-          return false;
-
-        default:
-          commit("setRecommendationStatus", {
-            recName: rec.name,
-            newStatus: "FAILED"
-          });
-          commit("setRecommendationError", {
-            recName: rec.name,
-            header: `Bad status(${responseJson.status})`,
-            desc: "Recomator API status not recognized."
-          });
-          return false;
-      }
-    } else {
-      // Non-200 HTTP code
-      commit("setRecommendationStatus", {
-        recName: rec.name,
-        newStatus: "FAILED"
-      });
-      commit("setRecommendationError", {
-        recName: rec.name,
-        header: `Status query failed (HTTP:${response.status})`,
-        desc:
-          "Failed to reach the Recomator API, recommendation status is unknown. We will try again in a moment."
-      });
+      default:
+        commit("setRecommendationStatus", {
+          recName: rec.name,
+          newStatus: "FAILED"
+        });
+        commit("setRecommendationError", {
+          recName: rec.name,
+          header: `Bad status(${responseJson.status})`,
+          desc: "Recomator API status not recognized."
+        });
+        return false;
     }
-    return true; // Continue watching the status, maybe this is a temporary connection error
   }
 };
 

@@ -1,30 +1,86 @@
 import { IRootStoreState } from "./../root_state";
-// captures the authStore and router, so that authFetch can be used like a normal fetch
-export function getAuthFetch(rootState: IRootStoreState) {
-  // adds the idToken to the request, redirects to google sign-in if auth failed
-  // assumes init, inits.headers are in Record<string, *> format
+import { showError } from "@/router/show_error";
+import { delay, infiniteDurationMs } from "../utils/misc";
+
+function addAuth(
+  init: RequestInit | undefined,
+  rootState: IRootStoreState
+): RequestInit {
+  // first, make sure that init, init.headers exist
+  if (init == undefined) init = {};
+  if (init.headers == undefined) init.headers = {};
+
+  init.headers = Object.assign({}, init.headers as Record<string, string>, {
+    Authorization: `Bearer ${rootState.authStore!.idToken}`
+  });
+  return init;
+}
+
+// captures the authStore and router, so that authFetch can be used like a normal window.fetch
+export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
+  // - mimics window.fetch, but also adds the idToken to the request
+  // - redirects to google sign-in if auth failed
+  // - assumes init, inits.headers are in Record<string, *> format
+  // - if the request fails (but not because of auth) and no retries left,
+  // it will kill the app and redirect to an error page
   return async function authFetch(
     input: string,
     init?: RequestInit
   ): Promise<Response> {
-    // first, make sure that init, init.headers exist
-    if (init == undefined) init = {};
-    if (init.headers == undefined) init.headers = {};
+    const initWithAuth = addAuth(init, rootState);
 
-    init.headers = Object.assign({}, init.headers as Record<string, string>, {
-      Authorization: `Bearer ${rootState.authStore!.idToken}`
-    });
+    let response: Response;
+    let requestsLeft = maxRetries + 1;
+    while (requestsLeft > 0) {
+      requestsLeft--;
+      // wait before the second and later iterations
+      if (requestsLeft < maxRetries) {
+        // wait two seconds between retries
+        // -> gives us 6s for temporary internet problems
+        await delay(8000);
+      }
 
-    const response = await fetch(input, init);
-    const responseCode = response.status;
+      try {
+        response = await fetch(input, initWithAuth);
+      } catch (error) {
+        // server unreachable or another serious problem with connection
+        const isCriticalError = requestsLeft === 0;
+        await showError(
+          `Failed to reach the Recomator backend`,
+          {
+            Message: error.Message,
+            URL: input,
+            Init: JSON.stringify(init),
+            StackTrace: error.stack
+          },
+          isCriticalError
+        );
+        continue;
+      }
 
-    // access denied
-    if (responseCode === 401) {
-      // redirect to GoogleSignIn: this will shut down everyting,
-      // including fetching recommendations and check status
-      rootState.router!.push({ name: "GoogleSignIn" });
+      if (response.ok) break;
+
+      // not successful (outside of 200-299) but server is responsive
+
+      const responseCode = response!.status;
+
+      // access denied
+      if (responseCode === 401 || responseCode === 403) {
+        // redirect to GoogleSignIn: this will shut down everyting,
+        // including fetching recommendations and check status
+        await rootState.router!.push({ name: "GoogleSignIn" });
+        // make sure we don't ever return from here
+        await delay(infiniteDurationMs);
+      }
+
+      // server responsive, failed not because of auth
+      const isCriticalError = requestsLeft === 0;
+      await showError(
+        `Network request failed: ${response!.status}(${response!.statusText})`,
+        { URL: input, Init: JSON.stringify(init) },
+        isCriticalError
+      );
     }
-
-    return response;
+    return response!;
   };
 }

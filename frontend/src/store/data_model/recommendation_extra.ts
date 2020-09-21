@@ -1,3 +1,4 @@
+import { showError } from "@/router/show_error";
 /* Copyright 2020 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the License);
@@ -71,7 +72,10 @@ export class RecommendationExtra implements RecommendationRaw {
       this.needsStatusWatcher =
         this.statusCol === getInternalStatusMapping("CLAIMED");
     } catch (err) {
-      console.log([`Failed to parse recommendation: Continuing.`, err, rec]);
+      showError(`Failed to parse recommendation: Continuing.`, {
+        error: JSON.stringify(err),
+        recommendation: JSON.stringify(rec)
+      });
     }
   }
 }
