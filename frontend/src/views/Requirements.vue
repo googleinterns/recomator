@@ -29,10 +29,11 @@ limitations under the License. -->
       </v-btn>
     </AppBar>
     <v-main>
-      <v-progress-linear
-        :value="$store.state.requirementsStore.progress"
-        data-name="main_progress_bar"
+      <ProgressWithHeader
         v-if="$store.state.requirementsStore.progress !== null"
+        :progress="$store.state.requirementsStore.progress"
+        header="Loading requirements..."
+        data-name="requirement_progress_bar"
       />
 
       <v-container
@@ -52,10 +53,11 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import ProjectsWithRequirements from "@/components/ProjectsWithRequirements.vue";
-import AppBar from "../components/AppBar.vue";
+import AppBar from "@/components/AppBar.vue";
+import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { ProjectsWithRequirements, AppBar }
+  components: { ProjectsWithRequirements, ProgressWithHeader, AppBar }
 })
 export default class Requirements extends Vue {
   getProjectSelection() {

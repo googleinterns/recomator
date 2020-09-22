@@ -14,50 +14,6 @@ limitations under the License. -->
 
 <template>
   <div>
-    <v-toolbar color="primary" dark>
-      <v-toolbar-title> Project requirements </v-toolbar-title>
-      <v-spacer />
-      <v-tooltip left transition="none">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            @click="getProjects"
-            style="font-weight: bold"
-            rounded
-            depressed
-            small
-            v-on="on"
-            v-bind="attrs"
-            color="secondary"
-            class="white--text ma-2"
-          >
-            Projects
-            <v-icon v-on="on" v-bind="attrs" color="white">
-              mdi-cog
-            </v-icon>
-          </v-btn>
-        </template>
-        Return to project selection.
-      </v-tooltip>
-      <v-tooltip top transition="none">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            @click="getRecommendations"
-            style="font-weight: bold"
-            rounded
-            depressed
-            small
-            v-on="on"
-            v-bind="attrs"
-            color="secondary"
-            class="white--text"
-          >
-            Recommendations
-            <v-icon color="white">mdi-checkbox-marked-circle</v-icon>
-          </v-btn>
-        </template>
-        Proceed to fetching recommendations from the selected projects.
-      </v-tooltip>
-    </v-toolbar>
     <v-data-table
       :items="this.allRows"
       :hide-default-header="true"

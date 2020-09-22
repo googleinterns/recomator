@@ -16,9 +16,11 @@ limitations under the License. -->
   <v-app>
     <AppBar />
     <v-main>
-      <v-progress-linear
+      <ProgressWithHeader
         v-if="!$store.state.projectsStore.loaded"
-        indeterminate
+        :progress="0"
+        header="Loading projects..."
+        data-name="project_progress_bar"
       />
 
       <v-container fluid v-if="$store.state.projectsStore.loaded">
@@ -36,9 +38,10 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import ProjectList from "@/components/ProjectList.vue";
 import AppBar from "../components/AppBar.vue";
+import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { ProjectList, AppBar }
+  components: { ProjectList, AppBar, ProgressWithHeader }
 })
 export default class Project extends Vue {}
 </script>

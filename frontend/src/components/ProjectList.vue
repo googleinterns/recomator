@@ -79,7 +79,7 @@ limitations under the License. -->
             small
             @click="getRequirements"
           >
-            requirements <v-icon>mdi-equal-box</v-icon>
+            Check <v-icon>mdi-equal-box</v-icon>
           </v-btn>
         </template>
         Proceed to testing requirements for the selected projects.
@@ -98,7 +98,7 @@ limitations under the License. -->
             color="secondary"
             class="white--text"
           >
-            Recommendations
+            Accept
             <v-icon color="white">mdi-checkbox-marked-circle</v-icon>
           </v-btn>
         </template>
@@ -155,6 +155,7 @@ export default class ProjectList extends Vue {
   }
 
   getRequirements() {
+    this.$store.dispatch("projectsStore/saveSelectedProjects");
     this.$router.push("requirements");
   }
 

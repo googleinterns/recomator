@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <v-app-bar app color="primary" dark>
-    <v-btn text color="white" @click="getHomePage()">
+    <v-btn text color="white" class="text-capitalize" @click="getHomePage()">
       <h1>Recomator</h1>
     </v-btn>
     <v-spacer />
@@ -22,8 +22,9 @@ limitations under the License. -->
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import { Component, Vue } from "vue-property-decorator";
 
+@Component({})
 export default class AppBar extends Vue {
   getHomePage() {
     this.$router.push({ name: "Home" });
