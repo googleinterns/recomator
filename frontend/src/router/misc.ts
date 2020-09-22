@@ -15,9 +15,9 @@ limitations under the License. */
 import { getBackendAddress } from "@/config";
 
 export async function isBackendResponsive(): Promise<boolean> {
-  // Let's first use the /redirect endpoint to make sure that the backend exists
+  // Let's first use the /auth endpoint to make sure that the backend exists
   try {
-    await fetch(`${getBackendAddress()}/redirect`);
+    await fetch(`${getBackendAddress()}/auth?code=123`);
   } catch (error) {
     return false;
   }
