@@ -14,10 +14,12 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <h1>Recomator</h1>
-      <v-spacer />
-      <v-btn icon @click="getProjectSelection">
+    <AppBar>
+      <v-btn
+        v-if="$store.state.recommendationsStore.progress === null"
+        icon
+        @click="getProjectSelection"
+      >
         <v-tooltip left transition="none">
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
@@ -25,7 +27,7 @@ limitations under the License. -->
           Change selected projects
         </v-tooltip>
       </v-btn>
-    </v-app-bar>
+    </AppBar>
     <v-main>
       <ProgressWithHeader
         v-if="$store.state.recommendationsStore.progress !== null"
@@ -52,16 +54,17 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import AppBar from "@/components/AppBar.vue";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { CoreTable, Footer, ProgressWithHeader }
+  components: { CoreTable, Footer, ProgressWithHeader, AppBar }
 })
 export default class Home extends Vue {
   getProjectSelection() {
-    this.$store.commit("projectsStore/setSelected", []);
+    this.$store.commit("setSelected", []);
     this.$router.push("projectsWithInit");
   }
 }

@@ -14,15 +14,25 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <h1>Recomator</h1>
-    </v-app-bar>
+    <AppBar>
+      <v-btn
+        v-if="$store.state.requirementsStore.progress === null"
+        icon
+        @click="getProjectSelection"
+      >
+        <v-tooltip left transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
+          </template>
+          Change selected projects
+        </v-tooltip>
+      </v-btn>
+    </AppBar>
     <v-main>
-      <ProgressWithHeader
+      <v-progress-linear
+        :value="$store.state.requirementsStore.progress"
+        data-name="main_progress_bar"
         v-if="$store.state.requirementsStore.progress !== null"
-        :progress="$store.state.requirementsStore.progress"
-        header="Loading requirements..."
-        data-name="requirement_progress_bar"
       />
 
       <v-container
@@ -42,10 +52,15 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import ProjectsWithRequirements from "@/components/ProjectsWithRequirements.vue";
-import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
+import AppBar from "../components/AppBar.vue";
 
 @Component({
-  components: { ProjectsWithRequirements, ProgressWithHeader }
+  components: { ProjectsWithRequirements, AppBar }
 })
-export default class Requirements extends Vue {}
+export default class Requirements extends Vue {
+  getProjectSelection() {
+    this.$store.commit("setSelected", []);
+    this.$router.push("projects");
+  }
+}
 </script>

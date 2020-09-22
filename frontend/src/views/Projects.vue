@@ -14,16 +14,13 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <h1>Recomator</h1>
-    </v-app-bar>
+    <AppBar />
     <v-main>
-      <ProgressWithHeader
+      <v-progress-linear
         v-if="!$store.state.projectsStore.loaded"
-        :progress="0"
-        header="Loading projects..."
-        data-name="project_progress_bar"
+        indeterminate
       />
+
       <v-container fluid v-if="$store.state.projectsStore.loaded">
         <v-row>
           <v-col>
@@ -38,10 +35,10 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import ProjectList from "@/components/ProjectList.vue";
-import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
+import AppBar from "../components/AppBar.vue";
 
 @Component({
-  components: { ProjectList, ProgressWithHeader }
+  components: { ProjectList, AppBar }
 })
 export default class Project extends Vue {}
 </script>
