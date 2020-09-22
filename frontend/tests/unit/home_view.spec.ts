@@ -15,7 +15,7 @@ limitations under the License. */
 import Vue from "vue";
 import { mount } from "@vue/test-utils";
 import { rootStoreFactory } from "@/store/root_store";
-import Recommendation from "@/views/Home.vue";
+import Home from "@/views/Home.vue";
 import vuetify from "@/plugins/vuetify";
 
 // Helpful for debugs: console.log(wrapper.html())
@@ -31,7 +31,7 @@ import vuetify from "@/plugins/vuetify";
 describe("Home", () => {
   test("Progress bar and main container visibility", async () => {
     const fakeStore = rootStoreFactory();
-    const wrapper = mount(Recommendation, {
+    const wrapper = mount(Home, {
       store: fakeStore,
       vuetify: vuetify
     });

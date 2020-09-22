@@ -156,20 +156,11 @@ export default class ProjectList extends Vue {
     "compute.zones.list"
   ];
 
-  headers = ([] as { value: string }[])
-    .concat(
-      [{ value: "name" }],
-      this.requirementList.map(elt => {
-        return { value: elt };
-      })
-    )
-    .map(elt => {
-      if (elt.value === "name") {
-        return elt;
-      } else {
-        return Object.assign(elt, { align: "center" });
-      }
-    });
+  headers = [].concat(
+    [{ value: "name" }],
+    this.requirementList.map(reqName => {
+      return { value: reqName, align: "center" };
+    }));
 
   get allRows(): ProjectRequirement[] {
     return (this.$store.state as IRootStoreState).requirementsStore!.projects;
