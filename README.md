@@ -6,9 +6,17 @@ Google Cloud Platform shows recommendations for underutilized/overutilized resou
 allowing to also apply recommendations with one click and by giving an overview of recommendations for all projects. 
 Customers will be able to deploy a premade package on one of the serverless solutions and run it in AppEngine in their own GCP account.
 
-Cloud Functions/AppEngine/Cloud Run based project that can enable GCP customers to 
-automate their recommendations. Customers will be able to deploy a premade package 
-on one of the serverless solutions and run it in their own GCP account.
+<!-- This table of contents is auto-generated using Markdown All in One (VS Code extension). If you have it installed, it updates on saves. -->
+- [Recomator](#recomator)
+  - [Frontend commands](#frontend-commands)
+    - [Install dependencies](#install-dependencies)
+    - [Compile and hot-reload for development](#compile-and-hot-reload-for-development)
+    - [Compile and minify for production](#compile-and-minify-for-production)
+    - [Run your unit tests](#run-your-unit-tests)
+    - [Lint and fix files](#lint-and-fix-files)
+    - [Customize Vue configuration](#customize-vue-configuration)
+  - [Source Code Headers](#source-code-headers)
+
 ## Frontend commands
 Note: The following commands need to be run in the `./frontend/` directory:
 
@@ -63,3 +71,4 @@ Apache header:
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
