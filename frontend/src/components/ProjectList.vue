@@ -35,7 +35,7 @@ limitations under the License. -->
             icon
             @click="
               searchEnabled = false;
-              search = true;
+              search = '';
             "
           >
             <v-icon> mdi-magnify </v-icon>
