@@ -2,9 +2,44 @@
 
 **This is not an officially supported Google product.**
 
+Google Cloud Platform shows recommendations for underutilized/overutilized resources. Recomator extends these functionalities by
+allowing to also apply recommendations with one click and by giving an overview of recommendations for all projects. 
+Customers will be able to deploy a premade package on one of the serverless solutions and run it in AppEngine in their own GCP account.
+
 Cloud Functions/AppEngine/Cloud Run based project that can enable GCP customers to 
 automate their recommendations. Customers will be able to deploy a premade package 
 on one of the serverless solutions and run it in their own GCP account.
+## Frontend commands
+Note: The following commands need to be run in the `./frontend/` directory:
+
+### Install dependencies
+
+```
+npm install
+```
+
+### Compile and hot-reload for development
+```
+npm run serve
+```
+
+### Compile and minify for production
+```
+npm run build
+```
+
+### Run your unit tests
+```
+npm run test:unit
+```
+
+### Lint and fix files
+```
+npm run lint
+```
+
+### Customize Vue configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ## Source Code Headers
 
