@@ -156,7 +156,7 @@ export default class ProjectList extends Vue {
     "compute.zones.list"
   ];
 
-  headers = [].concat(
+  headers = ([] as {value: string, align?: string}[]).concat(
     [{ value: "name" }],
     this.requirementList.map(reqName => {
       return { value: reqName, align: "center" };
