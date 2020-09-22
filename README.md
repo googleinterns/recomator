@@ -8,6 +8,7 @@ Customers will be able to deploy a premade package on one of the serverless solu
 
 <!-- This table of contents is auto-generated using Markdown All in One (VS Code extension). If you have it installed, it updates on saves. -->
 - [Recomator](#recomator)
+  - [Frontend config](#frontend-config)
   - [Frontend commands](#frontend-commands)
     - [Install dependencies](#install-dependencies)
     - [Compile and hot-reload for development](#compile-and-hot-reload-for-development)
@@ -16,6 +17,16 @@ Customers will be able to deploy a premade package on one of the serverless solu
     - [Lint and fix files](#lint-and-fix-files)
     - [Customize Vue configuration](#customize-vue-configuration)
   - [Source Code Headers](#source-code-headers)
+
+## Frontend config
+
+`src/config.ts` contains two web addresses that you should provide:
+For testing purposes (using `npm run serve`), use the first one. 
+For production (`npm run build`), use the second one. 
+```typescript
+  public static DEVELOPMENT_BACKEND_ADDRESS = "http://dev.yourbackend.com";
+  public static PRODUCTION_BACKEND_ADDRESS = "http://yourbackend.com";
+```
 
 ## Frontend commands
 Note: The following commands need to be run in the `./frontend/` directory:
