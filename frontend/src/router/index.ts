@@ -114,8 +114,8 @@ const routes: Array<RouteConfig> = [
       else next();
     },
     props: route => ({
-      header: route.query.header,
-      body: JSON.parse(route.query.body as string)
+      header: decodeURIComponent(route.query.header as string),
+      body: decodeURIComponent(JSON.parse(route.query.body as string))
     })
   }
 ];

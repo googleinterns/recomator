@@ -26,8 +26,10 @@ export async function showError(
     return;
   }
 
-  const headerParam = header ? header : "No name";
-  const bodyParam = body ? JSON.stringify(body) : JSON.stringify({});
+  const headerParam = encodeURIComponent(header ? header : "No name");
+  const bodyParam = encodeURIComponent(
+    body ? JSON.stringify(body) : JSON.stringify({})
+  );
 
   window.location.assign(`/errorMsg?header=${headerParam}&body=${bodyParam}`);
 
