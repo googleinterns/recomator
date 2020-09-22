@@ -31,12 +31,14 @@ export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
 
     let response: Response;
     let requestsLeft = maxRetries + 1;
+    let retryWaitMs = 2000; // 2s
     while (requestsLeft > 0) {
       requestsLeft--;
-      // wait fist if second or later attempt
+      // wait before the second or later attempt
       if (requestsLeft < maxRetries) {
-        // typically gives us 3*2s for temporary internet problems
-        await delay(2000);
+        // typically gives us 2+4+8=14s for temporary internet problems
+        await delay(retryWaitMs);
+        retryWaitMs *= 2;
       }
 
       try {
