@@ -115,7 +115,7 @@ const routes: Array<RouteConfig> = [
     },
     props: route => ({
       header: decodeURIComponent(route.query.header as string),
-      body: decodeURIComponent(JSON.parse(route.query.body as string))
+      body: JSON.parse(decodeURIComponent(route.query.body as string))
     })
   }
 ];
