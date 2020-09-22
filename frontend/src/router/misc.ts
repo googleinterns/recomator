@@ -15,9 +15,9 @@ limitations under the License. */
 import { getBackendAddress } from "@/config";
 
 export async function isBackendResponsive(): Promise<boolean> {
-  // Let's first use the /auth endpoint to make sure that the backend exists
+  // Let's ping /recommendations without an auth header to make sure that the backend exists
   try {
-    await fetch(`${getBackendAddress()}/auth?code=123`);
+    await fetch(`${getBackendAddress()}/recommendations`);
   } catch (error) {
     return false;
   }
