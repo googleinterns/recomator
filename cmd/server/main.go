@@ -19,6 +19,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/googleapi"
@@ -61,6 +62,10 @@ func main() {
 	}
 	router := setUpRouter(service)
 
-	router.Run(":8000")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+	router.Run(":" + port)
 
 }
