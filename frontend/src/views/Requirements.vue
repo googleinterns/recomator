@@ -16,7 +16,7 @@ limitations under the License. -->
   <v-app>
     <AppBar>
       <v-btn
-        v-if="$store.state.recommendationsStore.progress === null"
+        v-if="$store.state.requirementsStore.progress === null"
         icon
         @click="getProjectSelection"
       >
@@ -30,42 +30,39 @@ limitations under the License. -->
     </AppBar>
     <v-main>
       <ProgressWithHeader
-        v-if="$store.state.recommendationsStore.progress !== null"
-        :progress="$store.state.recommendationsStore.progress"
-        header="Loading recommendations..."
-        data-name="main_progress_bar"
+        v-if="$store.state.requirementsStore.progress !== null"
+        :progress="$store.state.requirementsStore.progress"
+        header="Loading requirements..."
+        data-name="requirement_progress_bar"
       />
 
       <v-container
         fluid
-        data-name="main_container"
-        v-if="$store.state.recommendationsStore.progress === null"
+        v-if="$store.state.requirementsStore.progress === null"
       >
         <v-row>
           <v-col>
-            <CoreTable />
+            <ProjectsWithRequirements />
           </v-col>
         </v-row>
       </v-container>
     </v-main>
-    <Footer data-name="main-footer" />
   </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import ProjectsWithRequirements from "@/components/ProjectsWithRequirements.vue";
 import AppBar from "@/components/AppBar.vue";
-import CoreTable from "@/components/CoreTable.vue";
-import Footer from "@/components/Footer.vue";
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { CoreTable, Footer, ProgressWithHeader, AppBar }
+  components: { ProjectsWithRequirements, ProgressWithHeader, AppBar }
 })
-export default class Home extends Vue {
+export default class Requirements extends Vue {
   getProjectSelection() {
-    this.$store.commit("projectsStore/setSelected", []);
-    this.$router.push("projectsWithInit");
+    this.$store.commit("setSelected", []);
+    this.$router.push("projects");
   }
 }
 </script>

@@ -1,4 +1,4 @@
-/* Copyright 2020 Google LLC
+<!-- Copyright 2020 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -10,15 +10,24 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. */
+limitations under the License. -->
+<template>
+  <v-app-bar app color="primary" dark>
+    <v-btn text color="white" class="text-capitalize" @click="getHomePage()">
+      <h1>Recomator</h1>
+    </v-btn>
+    <v-spacer />
+    <slot />
+  </v-app-bar>
+</template>
 
-export class ProjectConfig {
-  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
-  public static PRODUCTION_BACKEND_ADDRESS = "";
-}
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
 
-export function getBackendAddress(): string {
-  return process.env.NODE_ENV === "development"
-    ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
-    : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;
+@Component({})
+export default class AppBar extends Vue {
+  getHomePage() {
+    this.$router.push({ name: "Home" });
+  }
 }
+</script>

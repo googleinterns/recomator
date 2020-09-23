@@ -23,3 +23,8 @@ export async function isBackendResponsive(): Promise<boolean> {
   }
   return true;
 }
+
+// Remember last selected project list in localStorage
+export function readProjectList() {
+  return window.localStorage.getItem("project_list");
+}

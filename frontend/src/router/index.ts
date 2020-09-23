@@ -14,13 +14,15 @@ limitations under the License. */
 
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
-import ErrorMsg from "../components/ErrorMsg.vue";
 import store from "../store/root_store";
 import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
-import { isBackendResponsive } from "./misc";
+import { isBackendResponsive, readProjectList } from "./misc";
 import { showError } from "./show_error";
+import Home from "../views/Home.vue";
+import ErrorMsg from "../components/ErrorMsg.vue";
+import Requirements from "../views/Requirements.vue";
+import Projects from "../views/Projects.vue";
 
 Vue.use(VueRouter);
 
@@ -41,9 +43,19 @@ const routes: Array<RouteConfig> = [
         next({ name: "GoogleSignIn" });
         return;
       }
+
+      const projectString = readProjectList();
+      if (projectString === null) {
+        next({ name: "ProjectsWithInit" });
+        return;
+      }
+
+      store.commit("projectsStore/setSelected", JSON.parse(projectString));
+
       next();
     }
   },
+
   {
     // internal endpoint to redirect to Google sign-in
     // shuts the app down
@@ -53,6 +65,7 @@ const routes: Array<RouteConfig> = [
       window.location.href = `${getBackendAddress()}/redirect`;
     }
   },
+
   {
     // receive the authCode, exchange it for a token and finally
     // fetch recommendations and go to "/" with a saved token
@@ -94,11 +107,21 @@ const routes: Array<RouteConfig> = [
     path: "/homeWithInit",
     name: "HomeWithInit",
     beforeEnter(_, __, next) {
+      const projectString = readProjectList();
+      if (projectString === null) {
+        next({ name: "ProjectsWithInit" });
+        return;
+      }
+
+      store.commit("projectsStore/setSelected", JSON.parse(projectString));
+
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
       store.dispatch("recommendationsStore/fetchRecommendations");
-      // Start status watchers
-      store.dispatch("recommendationsStore/startCentralStatusWatcher");
+      // Start status watcher if it is not started already
+      if (!store.state.recommendationsStore?.centralStatusWatcherRunning) {
+        store.dispatch("recommendationsStore/startCentralStatusWatcher");
+      }
 
       next({ name: "Home" });
     }
@@ -117,6 +140,33 @@ const routes: Array<RouteConfig> = [
       header: decodeURIComponent(route.query.header as string),
       body: JSON.parse(decodeURIComponent(route.query.body as string))
     })
+  },
+  {
+    path: "/requirements",
+    name: "Requirements",
+    component: Requirements,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive requirements from the middleware
+      store.dispatch("requirementsStore/fetchRequirements");
+      next();
+    }
+  },
+
+  {
+    path: "/projectsWithInit",
+    name: "ProjectsWithInit",
+    component: Projects,
+    beforeEnter(_, __, next) {
+      // Asynchronously request and receive projects from the middleware
+      store.dispatch("projectsStore/fetchProjects");
+
+      next({ name: "Projects" });
+    }
+  },
+  {
+    path: "/projects",
+    name: "Projects",
+    component: Projects
   }
 ];
 
