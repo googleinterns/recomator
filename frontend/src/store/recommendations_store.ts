@@ -41,6 +41,7 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     state.recommendations.push(extended);
     state.recommendationsByName.set(extended.name, extended);
   },
+
   endFetching(state) {
     state.progress = null;
   },
@@ -106,11 +107,11 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
 
-    // First, select the projects (temporarily hard-coded)
+    // First, select the projects
     const authFetch = getAuthFetch(context.rootState);
     const response = await authFetch(`${BACKEND_ADDRESS}/recommendations`, {
       body: JSON.stringify({
-        projects: ["rightsizer-test", "recomator", "recomator-282910"]
+        projects: context.rootGetters["selectedProjects"]
       }),
       method: "POST"
     });
@@ -163,12 +164,15 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
       await delay(FETCH_PROGRESS_WAIT_TIME);
     }
 
-    for (const recommendation of responseJson.recommendations)
-      context.commit("addRecommendation", recommendation);
-    for (const recommendation of context.state.recommendations)
-      trainingDataHandler.addRecommendation(recommendation);
+    if (responseJson.recommendations !== null) {
+      for (const recommendation of responseJson.recommendations)
+        context.commit("addRecommendation", recommendation);
+      for (const recommendation of context.state.recommendations)
+        trainingDataHandler.addRecommendation(recommendation);
 
-    context.commit("doSimilaritySort");
+      context.commit("doSimilaritySort");
+    }
+
     context.commit("endFetching");
   },
 

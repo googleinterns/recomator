@@ -31,7 +31,10 @@ import vuetify from "@/plugins/vuetify";
 describe("Home", () => {
   test("Progress bar and main container visibility", async () => {
     const fakeStore = rootStoreFactory();
-    const wrapper = mount(Home, { store: fakeStore, vuetify: vuetify });
+    const wrapper = mount(Home, {
+      store: fakeStore,
+      vuetify: vuetify
+    });
 
     function progressBarExists(): boolean {
       return wrapper.find("[data-name=main_progress_bar]").exists();
