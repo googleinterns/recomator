@@ -1,0 +1,7 @@
+runtime: go114
+
+main: ./cmd/server
+
+manual_scaling:
+  instances: 1
+

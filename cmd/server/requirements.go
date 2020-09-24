@@ -20,9 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
@@ -94,17 +92,7 @@ func getStartCheckingHandler(service *SharedService) func(c *gin.Context) {
 		}
 
 		handler := NewCheckRequestHandler(user.service, checkRequest.Projects)
-		lengthOfID := 20
-		requestID := randomString(lengthOfID, rand.New(rand.NewSource(time.Now().UnixNano())))
-
-		for {
-			err := service.requests.StartProcessing(RequestInfo{user.email, requestID}, handler)
-			if err != nil {
-				requestID = randomString(lengthOfID, rand.New(rand.NewSource(time.Now().UnixNano())))
-			} else {
-				break
-			}
-		}
+		requestID := StartProcessingWithNewRequestID(&service.requests, user.email, handler)
 		c.String(http.StatusCreated, requestID)
 	}
 }

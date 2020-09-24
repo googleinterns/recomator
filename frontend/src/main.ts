@@ -15,10 +15,12 @@ limitations under the License. */
 import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
-import store from "./store/root";
+import store from "./store/root_store";
 import vuetify from "./plugins/vuetify";
 
 Vue.config.productionTip = false;
+
+store.state.router = router;
 
 new Vue({
   router,

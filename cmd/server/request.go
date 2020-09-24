@@ -17,8 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"math/rand"
 	"net/http"
 	"sync"
+	"time"
 
 	"google.golang.org/api/googleapi"
 )
@@ -82,7 +84,7 @@ func (m *RequestsMap) StartProcessing(info RequestInfo, handler RequestHandler) 
 		go handler.Start()
 		return nil
 	}
-	return &googleapi.Error{Message: "Recommendation is already being applied", Code: http.StatusMethodNotAllowed}
+	return &googleapi.Error{Message: "The request was already added", Code: http.StatusMethodNotAllowed}
 }
 
 // GetResponse returns response if request is in process or finished.
@@ -100,4 +102,23 @@ func (m *RequestsMap) GetResponse(info RequestInfo) (Response, bool) {
 		return response, true
 	}
 	return Response{}, false
+}
+
+// StartProcessingWithNewRequestID finds unused request ID and calls StartProcessing method of RequestsMap
+func StartProcessingWithNewRequestID(requests *RequestsMap, email string, handler RequestHandler) string {
+	lengthOfID := 20
+	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	requestID := randomString(lengthOfID, generator)
+
+	for {
+		err := requests.StartProcessing(RequestInfo{email, requestID}, handler)
+		// StartProcessing will only fail if we had a collision
+		if err != nil {
+			// create new requestID to avoid collision (most likely this code will never be reached as collisions are almost impossible)
+			requestID = randomString(lengthOfID, generator)
+		} else {
+			break
+		}
+	}
+	return requestID
 }

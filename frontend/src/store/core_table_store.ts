@@ -13,40 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 import { Module, MutationTree } from "vuex";
-import { IRootStoreState } from "./root";
+import { IRootStoreState } from "./root_state";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
 import {
-  descriptionFilterAccepted,
-  projectFilterAccepted,
-  resourceFilterAccepted,
-  typeFilterAccepted,
-  statusFilterAccepted,
-  costFilterAccepted
-} from "./utils/core_table_filter_utils";
-
-export interface ICoreTableStoreState {
-  resourceNameSearchText: string;
-  descriptionSearchText: string;
-  projectsSelected: string[];
-  typesSelected: string[];
-  statusesSelected: string[];
-  costCategoriesSelected: string[];
-  selected: RecommendationExtra[];
-  currentlySelectable: RecommendationExtra[];
-}
-
-export function coreTableStoreStateFactory(): ICoreTableStoreState {
-  return {
-    resourceNameSearchText: "",
-    descriptionSearchText: "",
-    projectsSelected: [],
-    typesSelected: [],
-    statusesSelected: [],
-    costCategoriesSelected: [],
-    selected: [],
-    currentlySelectable: []
-  };
-}
+  ICoreTableStoreState,
+  coreTableStoreStateFactory
+} from "./core_table_state";
 
 const mutations: MutationTree<ICoreTableStoreState> = {
   setResourceNameSearchText(state, text: string): void {
@@ -105,19 +77,3 @@ export function coreTableStoreFactory(): Module<
     mutations: mutations
   };
 }
-
-export function isRecommendationInResults(
-  tableState: ICoreTableStoreState,
-  recExtra: RecommendationExtra
-): boolean {
-  return (
-    projectFilterAccepted(tableState, recExtra) &&
-    typeFilterAccepted(tableState, recExtra) &&
-    statusFilterAccepted(tableState, recExtra) &&
-    costFilterAccepted(tableState, recExtra) &&
-    resourceFilterAccepted(tableState, recExtra) &&
-    descriptionFilterAccepted(tableState, recExtra)
-  );
-}
-
-export const costCategoriesNames = { costs: "Costs", gains: "Savings" };

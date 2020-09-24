@@ -12,13 +12,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-export class ProjectConfig {
-  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
-  public static PRODUCTION_BACKEND_ADDRESS = "";
-}
+import { Module, MutationTree } from "vuex";
+import { IRootStoreState } from "./root_state";
+import { IAuthStoreState, authStoreStateFactory } from "./auth_state";
 
-export function getBackendAddress(): string {
-  return process.env.NODE_ENV === "development"
-    ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
-    : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;
+const mutations: MutationTree<IAuthStoreState> = {
+  setIDToken(state, token: string) {
+    state.idToken = token;
+  }
+};
+
+export function authStoreFactory(): Module<IAuthStoreState, IRootStoreState> {
+  return {
+    namespaced: true,
+    state: authStoreStateFactory(),
+    mutations: mutations
+  };
 }

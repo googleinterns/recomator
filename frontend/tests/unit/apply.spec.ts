@@ -16,8 +16,8 @@ import { enableFetchMocks } from "jest-fetch-mock";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
-import { rootStoreFactory } from "@/store/root";
-import { recommendationStoreFactory } from "@/store/recommendations";
+import { rootStoreFactory } from "@/store/root_store";
+import { recommendationStoreFactory } from "@/store/recommendations_store";
 
 let store: any, context: any, commit: any;
 let dispatch: jest.Mock;
@@ -42,10 +42,14 @@ beforeEach(() => {
     store.commit("recommendationsStore/" + name, payload);
   };
 
+  // make sure that authFetch will not get an undefined token
+  store.state.authStore.idToken = "idToken123";
+
   context = {
     dispatch: dispatch,
     commit: commit,
-    state: modState
+    state: modState,
+    rootState: store.state
   };
 
   const recsRaw = [
@@ -103,7 +107,9 @@ describe("applySingleRecommendation action", () => {
   });
 
   test("success", async () => {
-    fetchMock.mockResponseOnce("");
+    fetchMock.mockResponseOnce(async () => {
+      return { status: 201, body: "All good" };
+    });
     await applier(context, firstRec);
 
     expect((fetch as any).mock.calls.length).toEqual(1);

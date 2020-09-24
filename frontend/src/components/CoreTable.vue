@@ -83,7 +83,7 @@ import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
 import { getInternalStatusMapping } from "../store/data_model/status_map";
-import { IRootStoreState } from "../store/root";
+import { IRootStoreState } from "../store/root_state";
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
 
 @Component({
@@ -160,7 +160,10 @@ export default class CoreTable extends Vue {
 
   // Checks if everything is selected on the current page
   areAllSelected(): boolean {
-    return this.selectableRows.every(item => this.isSelected(item));
+    return (
+      this.selectableRows.every(item => this.isSelected(item)) &&
+      this.selectableRows.length !== 0
+    );
   }
 
   // Checks if anything is selected on the current page
