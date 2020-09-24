@@ -61,7 +61,6 @@ import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 })
 export default class Requirements extends Vue {
   getProjectSelection() {
-    this.$store.commit("setSelected", []);
     this.$router.push("projects");
   }
 }

@@ -123,11 +123,6 @@ export default class ProjectList extends Vue {
     return (this.$store.state as IRootStoreState).requirementsStore!.projects;
   }
 
-  getRecommendations() {
-    this.$store.dispatch("projectsStore/saveSelectedProjects");
-    this.$router.push("homeWithInit");
-  }
-
   getProjects() {
     this.$router.push("projects");
   }
