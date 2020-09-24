@@ -41,29 +41,30 @@ type Requirement struct {
 // ListAPIRequirements returns the list of APIs and their statuses for the specified project.
 // services.get permission is required for this method.
 // First requirement in returned list will be related to Service Usage API.
-// If it is not enabled or user doesn't have services.get permission other APIs won't be checked.
+// If it is not enabled other APIs won't be checked.
 func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
 	servicesService := serviceusage.NewServicesService(s.serviceUsageService)
-	serviceUsageAPI := "serviceusage.googleapis.com"
-	serviceUsageName := "Service Usage API and services.get permission"
-	_, err := servicesService.Get("projects/" + project + "/services/" + serviceUsageAPI).Do()
-	if err != nil {
-		googleErr, ok := err.(*googleapi.Error)
-		if ok && googleErr.Code == http.StatusForbidden {
-			return []*Requirement{&Requirement{
-				Name:         serviceUsageName,
-				Satisfied:    false,
-				ErrorMessage: googleErr.Message,
-			}}, nil
-		}
-		return nil, err
-	}
-	result := []*Requirement{&Requirement{
-		Name:      serviceUsageName,
-		Satisfied: true,
-	}}
+	serviceUsageName := "Service Usage API"
+	result := []*Requirement{}
 	for _, api := range apis {
 		response, err := servicesService.Get("projects/" + project + "/services/" + api).Do()
+		if len(result) == 0 {
+			if err != nil {
+				googleErr, ok := err.(*googleapi.Error)
+				if ok && googleErr.Code == http.StatusForbidden {
+					return []*Requirement{&Requirement{
+						Name:         serviceUsageName,
+						Satisfied:    false,
+						ErrorMessage: googleErr.Message,
+					}}, nil
+				}
+			} else {
+				result = []*Requirement{&Requirement{
+					Name:      serviceUsageName,
+					Satisfied: true,
+				}}
+			}
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -105,10 +106,12 @@ var requiredPermissions = [][]string{
 	[]string{"compute.zones.list"},                                            // ListZonesNames
 	[]string{"compute.instances.start"},                                       // StartInstance
 	[]string{"compute.instances.stop"},                                        // StopInstance
+	[]string{"serviceusage.services.get"},                                     // ListAPIRequirements
 }
 
 // ListPermissionRequirements returns the list of permissions and their statuses for the project.
 // No permissions required for this method.
+// If cloud resource manager api is not enabled, will return not satisfied requirement for this API.
 func (s *googleService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
 	var result []*Requirement
 	var allPermissions []string
@@ -121,6 +124,14 @@ func (s *googleService) ListPermissionRequirements(project string, permissions [
 	projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
 	response, err := projectsService.TestIamPermissions(project, &request).Do()
 	if err != nil {
+		googleErr, ok := err.(*googleapi.Error)
+		if ok && googleErr.Code == http.StatusForbidden {
+			return []*Requirement{&Requirement{
+				Name:         "Cloud Resource Manager API",
+				Satisfied:    false,
+				ErrorMessage: googleErr.Message,
+			}}, nil
+		}
 		return nil, err
 	}
 
@@ -158,21 +169,22 @@ type ProjectRequirements struct {
 // ListProjectRequirements is a function that lists all permissions and APIs and their statuses for a project.
 // If all statuses are equal to RequirementCompleted, user has all required permissions.
 func ListProjectRequirements(s GoogleService, project string) ([]*Requirement, error) {
-	requirements, err := s.ListAPIRequirements(project, requiredAPIs)
+	requirements, err := s.ListPermissionRequirements(project, requiredPermissions)
 	if err != nil {
 		return nil, err
 	}
+
 	for _, req := range requirements {
 		if !req.Satisfied {
 			return requirements, nil
 		}
 	}
 
-	permissions, err := s.ListPermissionRequirements(project, requiredPermissions)
+	apiRequirements, err := s.ListAPIRequirements(project, requiredAPIs)
 	if err != nil {
 		return nil, err
 	}
-	requirements = append(requirements, permissions...)
+	requirements = append(requirements, apiRequirements...)
 	return requirements, nil
 }
 

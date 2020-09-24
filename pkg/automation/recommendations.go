@@ -203,33 +203,36 @@ type ListResult struct {
 	FailedProjects  []*ProjectRequirements
 }
 
-func listRecommendationsIfRequirementsSatisfied(service GoogleService, projectsRequirements []*ProjectRequirements, numConcurrentCalls int, task *Task) (*ListResult, error) {
-	task.SetNumberOfSubtasks(len(projectsRequirements))
+// Lists requirements for the project, if all satisfied - lists recommendations.
+// Adds results to listResult.
+// Otherwise, adds project's requirements in FailedProjects field.
+func listRecommendationsIfRequirementsSatisfied(service GoogleService, project string, numConcurrentCalls int, listResult *ListResult, task *Task) error {
+	task.SetNumberOfSubtasks(2) // CheckRequirements and ListRecommendations
 
-	var listResult ListResult
-	for _, projectRequirements := range projectsRequirements {
-		ok := true
-		for _, req := range projectRequirements.Requirements {
-			if !req.Satisfied {
-				ok = false
-				break
-			}
-		}
-		if ok {
-			newRecs, err := ListRecommendations(service, projectRequirements.Project, numConcurrentCalls, task.GetNextSubtask())
-			if err != nil {
-				return nil, err
-			}
-			listResult.Recommendations = append(listResult.Recommendations, newRecs...)
-		} else {
-			listResult.FailedProjects = append(listResult.FailedProjects, projectRequirements)
-		}
+	task.GetNextSubtask()
+	projectRequirements, err := ListProjectRequirements(service, project)
 
-		task.IncrementDone()
+	if err != nil {
+		return err
 	}
 
-	task.SetAllDone()
-	return &listResult, nil
+	task.IncrementDone()
+
+	for _, req := range projectRequirements {
+		if !req.Satisfied {
+			listResult.FailedProjects = append(listResult.FailedProjects,
+				&ProjectRequirements{Project: project, Requirements: projectRequirements})
+			task.SetAllDone()
+			return nil
+		}
+	}
+	newRecs, err := ListRecommendations(service, project, numConcurrentCalls, task.GetNextSubtask())
+	if err != nil {
+		return err
+	}
+	task.IncrementDone()
+	listResult.Recommendations = append(listResult.Recommendations, newRecs...)
+	return nil
 }
 
 // ListProjectsRecommendations gets recommendations for the specified projects.
@@ -237,22 +240,16 @@ func listRecommendationsIfRequirementsSatisfied(service GoogleService, projectsR
 // Otherwise, projects requirements, including failed ones, are added to `failedProjects` to help show warnings to the user.
 // task structure tracks how many subtasks have been done already.
 func ListProjectsRecommendations(service GoogleService, projects []string, numConcurrentCalls int, task *Task) (*ListResult, error) {
-	task.SetNumberOfSubtasks(2) // 2 subtasks are calls to ListRequirements and listRecommendationsIfRequirementsSatisfied
+	task.SetNumberOfSubtasks(len(projects)) // subtasks are calls to listRecommendationsIfRequirementsSatisfied for each project
 
-	projectsRequirements, err := ListRequirements(service, projects, task.GetNextSubtask())
-	if err != nil {
-		return nil, err
+	var listResult ListResult
+	for _, project := range projects {
+		err := listRecommendationsIfRequirementsSatisfied(service, project, numConcurrentCalls, &listResult, task.GetNextSubtask())
+		if err != nil {
+			return nil, err
+		}
+		task.IncrementDone()
 	}
-
-	task.IncrementDone()
-
-	listResult, err := listRecommendationsIfRequirementsSatisfied(service, projectsRequirements, numConcurrentCalls, task.GetNextSubtask())
-
-	if err != nil {
-		return nil, err
-	}
-	task.IncrementDone()
-
 	task.SetAllDone()
-	return listResult, nil
+	return &listResult, nil
 }
