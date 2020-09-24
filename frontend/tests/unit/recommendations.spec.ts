@@ -20,14 +20,17 @@ import {
   getRecommendationProject,
   getRecommendationResourceShortName,
   getRecommendationZone,
-  getResourceConsoleLink
+  getResourceConsoleLink,
+  getRecommendationCostPerWeek
 } from "@/store/data_model/recommendation_raw";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
-import { rootStoreFactory } from "@/store/root";
+import { rootStoreFactory } from "@/store/root_store";
 import {
   freshSampleRawRecommendation,
   freshSampleSnapshotRawRecommendation,
-  freshSampleStopVMRawRecommendation
+  freshSampleStopVMRawRecommendation,
+  freshSampleDeleteDiskRawRecommendation,
+  freshPerformanceRawRecommendation
 } from "./sample_recommendation";
 
 describe("Store", () => {
@@ -58,10 +61,23 @@ test("Getting the instance that the recommendation references", () => {
   ).toEqual("alicja-test");
 });
 
-test("Getting the zone of the resource", () => {
+// zones are already tested by the tests for links, so they don't need to be as thorough
+test("Getting the zone of the resource for CHANGE_MACHINE_TYPE", () => {
   expect(getRecommendationZone(freshSampleRawRecommendation())).toEqual(
     "us-east1-b"
   );
+});
+
+test("Getting the cost of the recommendation from primaryImpact", () => {
+  expect(
+    getRecommendationCostPerWeek(freshSampleRawRecommendation())
+  ).toBeCloseTo(-17.0961);
+});
+
+test("Getting the cost of the recommendation from additionalImpact", () => {
+  expect(
+    getRecommendationCostPerWeek(freshPerformanceRawRecommendation())
+  ).toBeCloseTo(16.9);
 });
 
 describe("Getting a Console link for the resource", () => {
@@ -79,6 +95,14 @@ describe("Getting a Console link for the resource", () => {
     );
   });
 
+  test("type: DELETE_DISK", () => {
+    expect(
+      getResourceConsoleLink(freshSampleDeleteDiskRawRecommendation())
+    ).toEqual(
+      "https://console.cloud.google.com/compute/disksDetail/zones/us-central1-a/disks/stanislawm-test-1?project=rightsizer-test"
+    );
+  });
+
   test("type: STOP_VM", () => {
     expect(
       getResourceConsoleLink(freshSampleStopVMRawRecommendation())
@@ -89,11 +113,23 @@ describe("Getting a Console link for the resource", () => {
 });
 
 describe("Fetching recommendations", () => {
+  const responsesPrefix = [
+    async () => {
+      return {
+        status: 201,
+        body: "someRequestId123"
+      };
+    },
+    JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 }),
+    JSON.stringify({ batchesProcessed: 40, numberOfBatches: 100 }),
+    JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
+  ];
   test("Fetching works correctly when given response without errors", async () => {
     jest.setTimeout(30000);
     fetchMock.doMock();
 
-    const responses = [];
+    const responses = responsesPrefix.map(r => r);
+
     responses.push(
       JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 })
     );
@@ -106,12 +142,8 @@ describe("Fetching recommendations", () => {
 
     const sampleRecommendation = freshSampleRawRecommendation();
     responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
-    // use the just defined responses followed by 404s
-    fetchMock
-      .mockResponses(...responses)
-      .mockImplementation(async () =>
-        Promise.resolve(new Response("", { status: 404 }))
-      );
+
+    fetchMock.mockResponses(...responses);
 
     const store = rootStoreFactory();
     store.commit("recommendationsStore/resetRecommendations");
@@ -128,16 +160,7 @@ describe("Fetching recommendations", () => {
     jest.setTimeout(30000);
     fetchMock.doMock();
 
-    const responses = [];
-    responses.push(
-      JSON.stringify({ batchesProcessed: 12, numberOfBatches: 100 })
-    );
-    responses.push(
-      JSON.stringify({ batchesProcessed: 40, numberOfBatches: 100 })
-    );
-    responses.push(
-      JSON.stringify({ batchesProcessed: 98, numberOfBatches: 100 })
-    );
+    const responses = responsesPrefix.map(r => r);
     responses.push(async () => {
       return {
         status: 302,
@@ -147,18 +170,14 @@ describe("Fetching recommendations", () => {
     responses.push(
       JSON.stringify({ recommendations: [freshSampleRawRecommendation()] })
     );
-    fetchMock
-      .mockResponses(...responses)
-      .mockImplementation(async () =>
-        Promise.resolve(new Response("", { status: 404 }))
-      );
+    fetchMock.mockResponses(...responses);
     const store = rootStoreFactory();
     store.commit("recommendationsStore/resetRecommendations");
     await store.dispatch("recommendationsStore/fetchRecommendations");
 
     expect(store.state.recommendationsStore!.errorCode).toEqual(302);
     expect(store.state.recommendationsStore!.errorMessage).toEqual(
-      "Something failed"
+      "progress check failed: Found"
     );
     expect(store.state.recommendationsStore!.recommendations).toEqual([]);
     fetchMock.dontMock();

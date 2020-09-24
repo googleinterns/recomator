@@ -1,7 +1,8 @@
 import { mount } from "@vue/test-utils";
 import "@testing-library/jest-dom";
 import Footer from "@/components/Footer.vue";
-import { rootStoreFactory, IRootStoreState } from "@/store/root";
+import { rootStoreFactory } from "@/store/root_store";
+import { IRootStoreState } from "@/store/root_state";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import {
   freshSampleRawRecommendation,
@@ -10,6 +11,11 @@ import {
 } from "./sample_recommendation";
 import vuetify from "@/plugins/vuetify";
 import { Store } from "vuex";
+
+// We want all fetches to be mocked to do nothing here,
+//  so that tests do not depenend on network requests
+import { enableFetchMocks } from "jest-fetch-mock";
+enableFetchMocks();
 
 describe("Footer", () => {
   let recommendation: RecommendationExtra;

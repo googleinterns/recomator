@@ -14,15 +14,28 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <h1>Recomator</h1>
-    </v-app-bar>
+    <AppBar>
+      <v-btn
+        v-if="$store.state.recommendationsStore.progress === null"
+        icon
+        @click="getProjectSelection"
+      >
+        <v-tooltip left transition="none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
+          </template>
+          Change selected projects
+        </v-tooltip>
+      </v-btn>
+    </AppBar>
     <v-main>
-      <v-progress-linear
-        :value="$store.state.recommendationsStore.progress"
-        data-name="main_progress_bar"
+      <ProgressWithHeader
         v-if="$store.state.recommendationsStore.progress !== null"
+        :progress="$store.state.recommendationsStore.progress"
+        header="Loading recommendations..."
+        data-name="main_progress_bar"
       />
+
       <v-container
         fluid
         data-name="main_container"
@@ -41,11 +54,18 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import AppBar from "@/components/AppBar.vue";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
+import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { CoreTable, Footer }
+  components: { CoreTable, Footer, ProgressWithHeader, AppBar }
 })
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  getProjectSelection() {
+    this.$store.commit("projectsStore/setSelected", []);
+    this.$router.push("projectsWithInit");
+  }
+}
 </script>

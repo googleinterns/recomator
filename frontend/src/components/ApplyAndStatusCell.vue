@@ -63,7 +63,14 @@ limitations under the License. -->
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" dark v-on:click="applyRecommendation()">
+          <v-btn
+            color="primary"
+            dark
+            v-on:click="
+              errorDialogOpened = false;
+              applyRecommendation();
+            "
+          >
             Retry
           </v-btn>
           <v-btn color="primary" dark v-on:click="errorDialogOpened = false">
@@ -74,6 +81,14 @@ limitations under the License. -->
     </v-dialog>
   </div>
 </template>
+
+<style>
+.v-card__text,
+.v-card__title {
+  word-break: normal;
+}
+</style>
+
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";

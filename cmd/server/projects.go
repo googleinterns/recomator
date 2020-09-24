@@ -27,7 +27,7 @@ type ProjectsResponse struct {
 	Projects []string `json:"projects"`
 }
 
-func getProjectsHandler(service *sharedService) func(c *gin.Context) {
+func getProjectsHandler(service *SharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		user, err := authorizeRequest(service.auth, c.Request)
 

@@ -14,29 +14,19 @@ limitations under the License. */
 
 import Vue from "vue";
 import Vuex, { StoreOptions, Store, GetterTree } from "vuex";
-import {
-  IRecommendationsStoreState,
-  recommendationStoreFactory
-} from "./recommendations";
 
-import {
-  ICoreTableStoreState,
-  isRecommendationInResults,
-  coreTableStoreFactory
-} from "./core_table";
+import { IRootStoreState } from "./root_state";
+
+import { recommendationStoreFactory } from "./recommendations_store";
+import { requirementStoreFactory } from "./requirements_store";
+import { coreTableStoreFactory } from "./core_table_store";
+import { authStoreFactory } from "./auth_store";
+
+import { isRecommendationInResults } from "./core_table_filters/aggregate";
 import { RecommendationExtra } from "./data_model/recommendation_extra";
+import { projectStoreFactory } from "./projects_store";
 
 Vue.use(Vuex);
-
-export interface IRootStoreState {
-  // Static type checking needs to know of these properties (added dynamically)
-  //  so they are added as optional as a workaround:
-  //  related issue: https://forum.vuejs.org/t/vuex-submodules-with-typescript/40903
-  // Therefore, the ! operator needs to be used whenever the state of any module
-  //  is accessed from outside.
-  recommendationsStore?: IRecommendationsStoreState;
-  coreTableStore?: ICoreTableStoreState;
-}
 
 const getters: GetterTree<IRootStoreState, IRootStoreState> = {
   filteredRecommendationsWithExtras(state): RecommendationExtra[] {
@@ -44,6 +34,10 @@ const getters: GetterTree<IRootStoreState, IRootStoreState> = {
       (recExtra: RecommendationExtra) =>
         isRecommendationInResults(state.coreTableStore!, recExtra)
     );
+  },
+
+  selectedProjects(state): string[] {
+    return state.projectsStore!.projectsSelected.map(elt => elt.name);
   }
 };
 
@@ -53,7 +47,10 @@ export function rootStoreFactory(): Store<IRootStoreState> {
     getters: getters,
     modules: {
       recommendationsStore: recommendationStoreFactory(),
-      coreTableStore: coreTableStoreFactory()
+      requirementsStore: requirementStoreFactory(),
+      projectsStore: projectStoreFactory(),
+      coreTableStore: coreTableStoreFactory(),
+      authStore: authStoreFactory()
     }
   };
   return new Store<IRootStoreState>(storeOptions);

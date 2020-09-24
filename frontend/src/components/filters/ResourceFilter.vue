@@ -23,7 +23,7 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { IRootStoreState } from "../../store/root";
+import { IRootStoreState } from "../../store/root_state";
 
 @Component
 export default class ResourceFilter extends Vue {
