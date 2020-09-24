@@ -23,7 +23,6 @@ import {
 } from "./projects_state";
 
 const BACKEND_ADDRESS: string = getBackendAddress();
-const HTTP_OK_CODE = 200;
 
 const mutations: MutationTree<IProjectsStoreState> = {
   addProject(state, project: string): void {
@@ -51,11 +50,6 @@ const mutations: MutationTree<IProjectsStoreState> = {
     state.projectsSelected = [];
     state.loaded = false;
     state.loading = false;
-  },
-
-  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
-    state.errorCode = errorInfo.errorCode;
-    state.errorMessage = errorInfo.errorMessage;
   }
 };
 
@@ -68,20 +62,10 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     context.commit("resetProjects");
     context.commit("startFetch");
 
-    const authFetch = getAuthFetch(context.rootState);
+    const authFetch = getAuthFetch(context.rootState, 3);
 
     // First, select the projects
     const response = await authFetch(`${BACKEND_ADDRESS}/projects`);
-    const responseCode = response.status;
-
-    if (responseCode !== HTTP_OK_CODE) {
-      context.commit("setError", {
-        errorCode: responseCode,
-        errorMessage: `getting projects failed: ${response.statusText}`
-      });
-      return;
-    }
-
     const responseJSON = await response.json();
 
     if (responseJSON !== null) {

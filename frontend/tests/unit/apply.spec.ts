@@ -12,12 +12,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
+jest.mock("@/store/auth/auth_fetch");
+
 import { enableFetchMocks } from "jest-fetch-mock";
 import { RecommendationExtra } from "@/store/data_model/recommendation_extra";
 import { getInternalStatusMapping } from "@/store/data_model/status_map";
 import { freshSampleRawRecommendation } from "./sample_recommendation";
 import { rootStoreFactory } from "@/store/root_store";
 import { recommendationStoreFactory } from "@/store/recommendations_store";
+import { getAuthFetch } from "@/store/auth/auth_fetch";
+
+// Let's just act as if we were using a normal fetch (which will be mocked as well)
+// that doesn't add the authentication token or redirect if auth failed.
+// There is already a library for mocking fetch, so that is why we are not mocking
+// authFetch as a whole.
+(getAuthFetch as any).mockImplementation((_: any, maxRetries = 0) => {
+  return async function authFetch(
+    input: string,
+    init?: RequestInit
+  ): Promise<Response> {
+    for (let i = 0; i < maxRetries + 1; i++) {
+      const response = await fetch(input, init);
+
+      if (response.ok) return response;
+    }
+    throw Error("redirected to error page");
+  };
+});
 
 let store: any, context: any, commit: any;
 let dispatch: jest.Mock;
@@ -67,7 +88,7 @@ beforeEach(() => {
 afterEach(() => {
   fetchMock.dontMock();
   // clear the spies
-  fetchMock.mockClear();
+  (fetch as any).resetMocks();
   dispatch.mockClear();
 });
 
@@ -76,7 +97,7 @@ test("applyGivenRecommendations action", async () => {
     "applyGivenRecommendations"
   ] as any;
 
-  // Note: rejects/resolves fails (good) if the Promise actually doesn't
+  // Note: rejects/resolves fail if the Promise is resolved/rejected respectively
 
   // duplicates
   await expect(applier(context, ["a/b", "a/b"])).rejects.not.toBeNull();
@@ -122,12 +143,18 @@ describe("applySingleRecommendation action", () => {
     fetchMock.mockResponseOnce(async () => {
       return { status: 404, body: "Endpoint not found" };
     });
-    await applier(context, firstRec);
+    fetchMock.mockResponseOnce(async () => {
+      return { status: 200, body: "Unreachable success" };
+    });
 
+    firstRec.needsStatusWatcher = false;
+
+    // Note: rejects/resolves fail if the Promise is resolved/rejected respectively
+    await expect(applier(context, firstRec)).rejects.not.toBeNull();
+
+    // 1 + 0 retries
     expect((fetch as any).mock.calls.length).toEqual(1);
     expect(firstRec.needsStatusWatcher).toBeFalsy();
-    expect(firstRec.statusCol).toEqual(getInternalStatusMapping("FAILED"));
-    expect(firstRec.errorHeader).not.toBeNull();
   });
 });
 
@@ -257,13 +284,29 @@ describe("checkStatusOnce action", () => {
     expect(shouldContinue).toBeFalsy();
   });
 
-  test("server connection error", async () => {
-    fetchMock.mockResponseOnce(async () => {
-      return { status: 404, body: "Endpoint not found" };
-    });
-    const shouldContinue = await checkStatusOnce(context, firstRec);
-    expect(firstRec.statusCol).toBe(getInternalStatusMapping("FAILED"));
-    expect(firstRec.errorHeader?.indexOf("404")).not.toBe(-1);
-    expect(shouldContinue).toBeTruthy(); // try again in this case
+  // expect(*).resolves/rejects throws if not resolves/rejects
+
+  test("3 405 errors + success (1 + 3 retries)", async () => {
+    for (let i = 0; i < 3; i++) {
+      fetchMock.mockResponseOnce(async () => {
+        return { status: 405, body: "Endpoint not found" };
+      });
+    }
+    fetchMock.mockResponseOnce(JSON.stringify({ status: "SUCCEEDED" }));
+    expect.assertions(2);
+    await expect(checkStatusOnce(context, firstRec))
+      .resolves.toBeFalsy()
+      .then(() => {
+        expect(firstRec.statusCol).toBe(getInternalStatusMapping("SUCCEEDED"));
+      });
+  });
+
+  test("4 405 errors (1 + 3 retries)", async () => {
+    for (let i = 0; i < 3; i++) {
+      fetchMock.mockResponseOnce(async () => {
+        return { status: 405, body: "Endpoint not found" };
+      });
+    }
+    expect(checkStatusOnce(context, firstRec)).rejects.not.toBeNull();
   });
 });

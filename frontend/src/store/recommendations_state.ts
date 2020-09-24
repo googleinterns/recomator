@@ -18,8 +18,6 @@ export interface IRecommendationsStoreState {
   recommendations: RecommendationExtra[];
   recommendationsByName: Map<string, RecommendationExtra>;
   requestId: string;
-  errorCode: number | undefined;
-  errorMessage: string | undefined;
   progress: number | null; // % recommendations loaded, null if no fetching is happening
   centralStatusWatcherRunning: boolean;
 }
@@ -30,8 +28,6 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
     recommendationsByName: new Map<string, RecommendationExtra>(),
     requestId: "null",
     progress: null,
-    errorCode: undefined,
-    errorMessage: undefined,
     centralStatusWatcherRunning: false
   };
 }
