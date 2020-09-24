@@ -351,7 +351,7 @@ func TestListingProjects(t *testing.T) {
 	var resp ProjectsResponse
 	err := newDecoder(w.Body.Bytes()).Decode(&resp)
 	assert.NoError(t, err, "No error expected")
-	assert.EqualValues(t, projects, resp.Projects, "Other projects expected")
+	assert.ElementsMatch(t, projects, resp.Projects, "Other projects expected")
 }
 
 func TestRequirements(t *testing.T) {
