@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 
@@ -63,14 +64,18 @@ func (s *mockAuth) CreateUser(authCode string) (string, error) {
 
 var errorUnauthorized = &googleapi.Error{Code: http.StatusUnauthorized, Message: "your token is invalid"}
 
-func (s *mockAuth) Authorize(token string) (User, error) {
+func (s *mockAuth) Verify(token string) (string, error) {
+	if strings.HasSuffix(token, "-token") {
+		return token[:len(token)-len("-token")], nil
+	}
+	return "", errorUnauthorized
+}
+
+func (s *mockAuth) GetUser(email string) (User, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	user, ok := s.users[token]
-	if ok {
-		return user, nil
-	}
-	return User{}, errorUnauthorized
+	user, ok := s.users[getToken(email)]
+	return user, ok
 }
 
 type mockGoogleService struct {
@@ -86,8 +91,26 @@ var emptyRecommendation = recommender.GoogleCloudRecommenderV1Recommendation{
 	StateInfo: &gcloudStateInfo{State: "Active"},
 }
 
+var projects = []string{"project"}
+
 func (s *mockGoogleService) ListProjects() ([]string, error) {
+	return projects, nil
+}
+
+func (s *mockGoogleService) ListZonesNames(project string) ([]string, error) {
 	return []string{}, nil
+}
+
+func (s *mockGoogleService) ListRegionsNames(project string) ([]string, error) {
+	return []string{}, nil
+}
+
+func (s *mockGoogleService) ListAPIRequirements(project string, apis []string) ([]*automation.Requirement, error) {
+	return []*automation.Requirement{}, nil
+}
+
+func (s *mockGoogleService) ListPermissionRequirements(project string, permissions [][]string) ([]*automation.Requirement, error) {
+	return []*automation.Requirement{}, nil
 }
 
 func (s *mockGoogleService) GetRecommendation(name string) (*recommender.GoogleCloudRecommenderV1Recommendation, error) {
@@ -104,14 +127,13 @@ func (s *mockGoogleService) MarkRecommendationSucceeded(name, etag string) (*rec
 	return s.GetRecommendation(name)
 }
 
-func newMockShared() *sharedService {
-	var service sharedService
+func newMockShared() *SharedService {
+	var service SharedService
 	auth := &mockAuth{}
 	auth.users = make(map[string]User)
 	auth.tokens = make(map[string]string)
 	service.auth = auth
-	service.listRequestsInProcess = listRequestsMap{data: make(map[string]*listRequestHandler)}       // the key is email address of the user
-	service.applyRequestsInProcess = applyRequestsMap{data: make(map[applyInfo]*applyRequestHandler)} // the key is recommendation name & user email
+	service.requests = NewRequestsMap()
 	return &service
 }
 
@@ -155,18 +177,80 @@ func TestErrorAuth(t *testing.T) {
 	assert.NotEmpty(t, resp.ErrorMessage, "ErrorMessage should not be empty")
 }
 
+func TestWrongAuthFormat(t *testing.T) {
+	code := "authcode"
+	router := setUpRouter(newMockShared())
+	createUser(code, router)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req.Header.Add("Authorization", "NotBearer "+getToken(code))
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code, "Status should be BadRequest")
+	var resp ErrorResponse
+	err := newDecoder(w.Body.Bytes()).Decode(&resp)
+	assert.NoError(t, err, "There should be ErrorResponse in body")
+	assert.NotEmpty(t, resp.ErrorMessage, "ErrorMessage should not be empty")
+}
+
+func TestNoSuchUser(t *testing.T) {
+	router := setUpRouter(newMockShared())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req.Header.Add("Authorization", "Bearer "+getToken("code"))
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code, "Status should be NotFound")
+	var resp ErrorResponse
+	err := newDecoder(w.Body.Bytes()).Decode(&resp)
+	assert.NoError(t, err, "There should be ErrorResponse in body")
+	assert.NotEmpty(t, resp.ErrorMessage, "ErrorMessage should not be empty")
+}
+
+func TestInvalidToken(t *testing.T) {
+	router := setUpRouter(newMockShared())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req.Header.Add("Authorization", "Bearer "+"nottoken")
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code, "Status should be Unauthorized")
+	var resp ErrorResponse
+	err := newDecoder(w.Body.Bytes()).Decode(&resp)
+	assert.NoError(t, err, "There should be ErrorResponse in body")
+	assert.NotEmpty(t, resp.ErrorMessage, "ErrorMessage should not be empty")
+}
+
+func TestRedirect(t *testing.T) {
+	router := setUpRouter(newMockShared())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/redirect/", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusMovedPermanently, w.Code, "Status should be MovedPermanently")
+}
+
 func TestList(t *testing.T) {
 	code := "authcode"
 	router := setUpRouter(newMockShared())
 	createUser(code, router)
+	w := httptest.NewRecorder()
+	request := ListRequest{Projects: projects}
+	bytes, err := json.Marshal(request)
+	assert.NoError(t, err, "Should be no error")
+	req, _ := http.NewRequest("POST", "/recommendations", strings.NewReader(string(bytes)))
+	req.Header.Add("Authorization", "Bearer "+getToken(code))
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code, "Wrong response code")
+	requestID := w.Body.String()
 
 	for {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/recommendations", nil)
+		req, _ := http.NewRequest("GET", "/recommendations?request_id="+requestID, nil)
 		req.Header.Add("Authorization", "Bearer "+getToken(code))
 		router.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusOK, w.Code, "Wrong response code")
-		var resp ListRecommendationsProgressResponse
+		var resp Progress
 		err := newDecoder(w.Body.Bytes()).Decode(&resp)
 		if err == nil {
 			assert.True(t, resp.BatchesProcessed < resp.NumberOfBatches, "Should not be done now")
@@ -208,26 +292,10 @@ func TestApply(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+getToken(code))
 	router.ServeHTTP(w, req)
 
-	if !assert.Equal(t, http.StatusOK, w.Code, "Response code should be OK") {
+	if !assert.Equal(t, http.StatusCreated, w.Code, "Response code should be OK") {
 		return
 	}
 	checkApplySuceeded(t, router, getToken(code), "name")
-}
-
-func TestWrongAuthFormat(t *testing.T) {
-	code := "authcode"
-	router := setUpRouter(newMockShared())
-	createUser(code, router)
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
-	req.Header.Add("Authorization", "NotBearer "+getToken(code))
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code, "Status should be BadRequest")
-	var resp ErrorResponse
-	err := newDecoder(w.Body.Bytes()).Decode(&resp)
-	assert.NoError(t, err, "There should be ErrorResponse in body")
-	assert.NotEmpty(t, resp.ErrorMessage, "ErrorMessage should not be empty")
 }
 
 func TestCheckingStatusOnGCP(t *testing.T) {
@@ -262,11 +330,60 @@ func TestMultipleApplies(t *testing.T) {
 			req, _ := http.NewRequest("POST", "/recommendations/apply?name="+name, nil)
 			req.Header.Add("Authorization", "Bearer "+getToken(code))
 			router.ServeHTTP(w, req)
-			if assert.Equal(t, http.StatusOK, w.Code, "Should be okay") {
+			if assert.Equal(t, http.StatusCreated, w.Code, "Should be created") {
 				checkApplySuceeded(t, router, getToken(code), name)
 			}
 		}(name)
 	}
 
 	wg.Wait()
+}
+
+func TestListingProjects(t *testing.T) {
+	code := "authcode"
+	router := setUpRouter(newMockShared())
+	createUser(code, router)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/projects", nil)
+	req.Header.Add("Authorization", "Bearer "+getToken(code))
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code, "Wrong response code")
+	var resp ProjectsResponse
+	err := newDecoder(w.Body.Bytes()).Decode(&resp)
+	assert.NoError(t, err, "No error expected")
+	assert.EqualValues(t, projects, resp.Projects, "Other projects expected")
+}
+
+func TestRequirements(t *testing.T) {
+	code := "authcode"
+	router := setUpRouter(newMockShared())
+	createUser(code, router)
+	w := httptest.NewRecorder()
+	request := ListRequest{Projects: projects}
+	bytes, err := json.Marshal(request)
+	assert.NoError(t, err, "Should be no error")
+	req, _ := http.NewRequest("POST", "/requirements", strings.NewReader(string(bytes)))
+	req.Header.Add("Authorization", "Bearer "+getToken(code))
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code, "Wrong response code")
+	requestID := w.Body.String()
+
+	for {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/requirements?request_id="+requestID, nil)
+		req.Header.Add("Authorization", "Bearer "+getToken(code))
+		router.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code, "Wrong response code")
+		var resp Progress
+		err := newDecoder(w.Body.Bytes()).Decode(&resp)
+		if err == nil {
+			assert.True(t, resp.BatchesProcessed < resp.NumberOfBatches, "Should not be done now")
+			continue
+		}
+		var finalResp CheckRequirementsResponse
+		err = newDecoder(w.Body.Bytes()).Decode(&finalResp)
+		assert.NoError(t, err, "No error expected")
+		assert.Equal(t, len(projects), len(finalResp.ProjectsRequirements), "Requirements for all projects expected")
+		break
+	}
 }
