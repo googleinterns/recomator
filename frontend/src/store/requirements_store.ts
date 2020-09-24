@@ -26,7 +26,6 @@ import {
 
 const BACKEND_ADDRESS: string = getBackendAddress();
 const FETCH_PROGRESS_WAIT_TIME = 100; // (1/10)s
-const HTTP_OK_CODE = 200;
 
 const mutations: MutationTree<IRequirementsStoreState> = {
   // only entry point for projects
@@ -58,11 +57,6 @@ const mutations: MutationTree<IRequirementsStoreState> = {
 
   setRequestId(state, id: string) {
     state.requestId = id;
-  },
-
-  setError(state, errorInfo: { errorCode: number; errorMessage: string }) {
-    state.errorCode = errorInfo.errorCode;
-    state.errorMessage = errorInfo.errorMessage;
   }
 };
 
@@ -76,7 +70,7 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
     context.commit("resetRequirements");
     context.commit("startFetch");
 
-    const authFetch = getAuthFetch(context.rootState);
+    const authFetch = getAuthFetch(context.rootState, 3);
 
     // First, select the projects
     const response = await authFetch(`${BACKEND_ADDRESS}/requirements`, {
@@ -85,16 +79,6 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       }),
       method: "POST"
     });
-
-    const responseCode = response.status;
-    // 201 = Created (Success)
-    if (responseCode !== 201) {
-      context.commit("setError", {
-        errorCode: responseCode,
-        errorMessage: `selecting projects failed: ${response.statusText}`
-      });
-      return;
-    }
 
     // An id has just been assigned for our us/project selection combination
     // that we need to refer to in future requests
@@ -106,18 +90,6 @@ const actions: ActionTree<IRequirementsStoreState, IRootStoreState> = {
       const response = await authFetch(
         `${BACKEND_ADDRESS}/requirements?request_id=${context.state.requestId}`
       );
-
-      const responseCode = response.status;
-
-      if (responseCode !== HTTP_OK_CODE) {
-        context.commit("setError", {
-          errorCode: responseCode,
-          errorMessage: `progress check failed: ${response.statusText}`
-        });
-
-        context.commit("endFetch");
-        return;
-      }
 
       responseJson = await response.json();
 
