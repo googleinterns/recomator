@@ -12,13 +12,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-export class ProjectConfig {
-  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
-  public static PRODUCTION_BACKEND_ADDRESS = "";
+import { getBackendAddress } from "@/config";
+
+export async function isBackendResponsive(): Promise<boolean> {
+  // Let's ping /recommendations without an auth header to make sure that the backend exists
+  try {
+    await fetch(`${getBackendAddress()}/recommendations`);
+  } catch (error) {
+    return false;
+  }
+  return true;
 }
 
-export function getBackendAddress(): string {
-  return process.env.NODE_ENV === "development"
-    ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
-    : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;
+// Remember last selected project list in localStorage
+export function readProjectList() {
+  return window.localStorage.getItem("project_list");
 }

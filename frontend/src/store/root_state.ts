@@ -16,6 +16,8 @@ import { IRecommendationsStoreState } from "./recommendations_state";
 import { ICoreTableStoreState } from "./core_table_state";
 import { IAuthStoreState } from "./auth_state";
 import VueRouter from "vue-router";
+import { IProjectsStoreState } from "./projects_state";
+import { IRequirementsStoreState } from "./requirements_state";
 
 export interface IRootStoreState {
   // Static type checking needs to know of these properties (added dynamically)
@@ -24,6 +26,8 @@ export interface IRootStoreState {
   // Therefore, the ! operator needs to be used whenever the state of any module
   //  is accessed from outside.
   recommendationsStore?: IRecommendationsStoreState;
+  requirementsStore?: IRequirementsStoreState;
+  projectsStore?: IProjectsStoreState;
   coreTableStore?: ICoreTableStoreState;
   authStore?: IAuthStoreState;
   router?: VueRouter;

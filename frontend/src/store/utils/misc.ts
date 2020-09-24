@@ -15,3 +15,5 @@ limitations under the License. */
 export function delay(miliseconds: number) {
   return new Promise(resolve => setTimeout(resolve, miliseconds));
 }
+
+export const infiniteDurationMs: number = 1000 * 1000 * 1000; // million seconds (250+ hours)
