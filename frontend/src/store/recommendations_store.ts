@@ -178,7 +178,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
     }
 
     if (responseJson.failedProjects !== null) {
-      context.commit("setFailedProjects", responseJson.failedProjects.map((elt: any) => elt.project));
+      context.commit(
+        "setFailedProjects",
+        responseJson.failedProjects.map((elt: any) => elt.project)
+      );
     }
 
     context.commit("endFetching");

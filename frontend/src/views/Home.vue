@@ -58,12 +58,18 @@ import { Component, Vue } from "vue-property-decorator";
 import AppBar from "@/components/AppBar.vue";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
-      import PermissionDialog from "@/components/PermissionDialog.vue";
+import PermissionDialog from "@/components/PermissionDialog.vue";
 
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 
 @Component({
-  components: { CoreTable, Footer, ProgressWithHeader, AppBar, PermissionDialog }
+  components: {
+    CoreTable,
+    Footer,
+    ProgressWithHeader,
+    AppBar,
+    PermissionDialog
+  }
 })
 export default class Home extends Vue {
   getProjectSelection() {

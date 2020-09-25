@@ -81,7 +81,6 @@ limitations under the License. -->
     </v-dialog>
   </div>
 </template>
-
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
