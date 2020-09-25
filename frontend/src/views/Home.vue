@@ -41,6 +41,7 @@ limitations under the License. -->
         data-name="main_container"
         v-if="$store.state.recommendationsStore.progress === null"
       >
+        <PermissionDialog />
         <v-row>
           <v-col>
             <CoreTable />
@@ -57,11 +58,19 @@ import { Component, Vue } from "vue-property-decorator";
 import AppBar from "@/components/AppBar.vue";
 import CoreTable from "@/components/CoreTable.vue";
 import Footer from "@/components/Footer.vue";
+import PermissionDialog from "@/components/PermissionDialog.vue";
+
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 import { betterPush } from "./../router/better_push";
 
 @Component({
-  components: { CoreTable, Footer, ProgressWithHeader, AppBar }
+  components: {
+    CoreTable,
+    Footer,
+    ProgressWithHeader,
+    AppBar,
+    PermissionDialog
+  }
 })
 export default class Home extends Vue {
   getProjectSelection() {
