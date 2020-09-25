@@ -16,6 +16,7 @@ import { RecommendationExtra } from "./data_model/recommendation_extra";
 
 export interface IRecommendationsStoreState {
   recommendations: RecommendationExtra[];
+  failedProjects: string[];
   recommendationsByName: Map<string, RecommendationExtra>;
   requestId: string;
   errorCode: number | undefined;
@@ -27,6 +28,7 @@ export interface IRecommendationsStoreState {
 export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
   return {
     recommendations: [],
+    failedProjects: [],
     recommendationsByName: new Map<string, RecommendationExtra>(),
     requestId: "null",
     progress: null,

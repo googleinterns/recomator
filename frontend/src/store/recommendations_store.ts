@@ -42,6 +42,10 @@ const mutations: MutationTree<IRecommendationsStoreState> = {
     state.recommendationsByName.set(extended.name, extended);
   },
 
+  setFailedProjects(state, failedProjects: string[]): void {
+    state.failedProjects = failedProjects;
+  },
+
   endFetching(state) {
     state.progress = null;
   },
@@ -171,6 +175,10 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
         trainingDataHandler.addRecommendation(recommendation);
 
       context.commit("doSimilaritySort");
+    }
+
+    if (responseJson.failedProjects !== null) {
+      context.commit("setFailedProjects", responseJson.failedProjects.map((elt: any) => elt.project));
     }
 
     context.commit("endFetching");
