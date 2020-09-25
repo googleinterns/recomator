@@ -28,7 +28,7 @@ limitations under the License. -->
             <th colspan="4" class="text-center">APIs</th>
             <th colspan="8" class="text-center">VM permissions</th>
             <th colspan="4" class="text-center">Disks permissions</th>
-            <th colspan="2" class="text-center">Other permissions</th>
+            <th colspan="3" class="text-center">Other permissions</th>
           </tr>
         </thead>
       </template>
@@ -89,7 +89,7 @@ import { ProjectRequirement } from "../store/data_model/project_with_requirement
 @Component({})
 export default class ProjectList extends Vue {
   requirementList = [
-    "Service Usage API and services.get permission",
+    "Service Usage API",
     "Compute Engine API",
     "Cloud Resource Manager API",
     "Recommender API",
@@ -103,13 +103,14 @@ export default class ProjectList extends Vue {
     "recommender.computeInstanceIdleResourceRecommendations.update",
     "recommender.computeInstanceMachineTypeRecommendations.update",
 
-    "compute.disks.createSnapshot, compute.snapshots.create",
+    "compute.disks.createSnapshot or compute.snapshots.create",
     "compute.disks.delete",
     "recommender.computeDiskIdleResourceRecommendations.list",
     "recommender.computeDiskIdleResourceRecommendations.update",
 
     "compute.regions.list",
-    "compute.zones.list"
+    "compute.zones.list",
+    "serviceusage.services.get"
   ];
 
   headers = ([] as { value: string; align?: string }[]).concat(
