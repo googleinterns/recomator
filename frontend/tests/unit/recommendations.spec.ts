@@ -141,7 +141,12 @@ describe("Fetching recommendations", () => {
     );
 
     const sampleRecommendation = freshSampleRawRecommendation();
-    responses.push(JSON.stringify({ recommendations: [sampleRecommendation], failedProjects: null }));
+    responses.push(
+      JSON.stringify({
+        recommendations: [sampleRecommendation],
+        failedProjects: null
+      })
+    );
 
     fetchMock.mockResponses(...responses);
 
@@ -172,7 +177,10 @@ describe("Fetching recommendations", () => {
       });
     }
     responses.push(
-      JSON.stringify({ recommendations: [freshSampleRawRecommendation()], failedProjects: null })
+      JSON.stringify({
+        recommendations: [freshSampleRawRecommendation()],
+        failedProjects: null
+      })
     );
     fetchMock.mockResponses(...responses);
     const store = rootStoreFactory();
