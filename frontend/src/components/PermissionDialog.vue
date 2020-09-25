@@ -16,14 +16,11 @@ limitations under the License. -->
     <v-dialog v-model="permissionDialogOpened" max-width="750px">
       <v-card>
         <v-card-title class="headline">
-          <v-spacer />
-
           <v-col>
             <v-row>
-              Loading partially failed
+              Loading recommendations failed for some projects
             </v-row>
           </v-col>
-          <v-spacer />
         </v-card-title>
         <v-card-text>
           We were unable to fetch recommendations for the projects listed below.
