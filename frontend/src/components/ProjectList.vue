@@ -114,6 +114,7 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root_state";
 import { Project } from "../store/data_model/project";
+import { betterPush } from "./../router/better_push";
 
 @Component({})
 export default class ProjectList extends Vue {
@@ -160,12 +161,12 @@ export default class ProjectList extends Vue {
 
   getRequirements() {
     this.$store.dispatch("projectsStore/saveSelectedProjects");
-    this.$router.push("requirements");
+    betterPush(this.$router, "Requirements");
   }
 
   getRecommendations() {
     this.$store.dispatch("projectsStore/saveSelectedProjects");
-    this.$router.push("homeWithInit");
+    betterPush(this.$router, "HomeWithInit");
   }
 
   // we want to make sure we are at the first page once there is a new search

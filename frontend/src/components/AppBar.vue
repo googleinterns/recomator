@@ -23,11 +23,12 @@ limitations under the License. -->
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { betterPush } from "./../router/better_push";
 
 @Component({})
 export default class AppBar extends Vue {
   getHomePage() {
-    this.$router.push({ name: "Home" });
+    betterPush(this.$router, "Home");
   }
 }
 </script>
