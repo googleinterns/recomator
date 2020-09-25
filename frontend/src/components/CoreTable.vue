@@ -82,7 +82,6 @@ import DescriptionCell from "@/components/DescriptionCell.vue";
 import TypeCell from "@/components/TypeCell.vue";
 import SavingsCostCell from "@/components/SavingsCostCell.vue";
 import ApplyAndStatusCell from "@/components/ApplyAndStatusCell.vue";
-import PermissionDialog from "@/components/PermissionDialog.vue";
 import { getInternalStatusMapping } from "../store/data_model/status_map";
 import { IRootStoreState } from "../store/root_state";
 import { RecommendationExtra } from "../store/data_model/recommendation_extra";
@@ -95,8 +94,7 @@ import { RecommendationExtra } from "../store/data_model/recommendation_extra";
     TypeCell,
     DescriptionCell,
     SavingsCostCell,
-    ApplyAndStatusCell,
-    PermissionDialog
+    ApplyAndStatusCell
   }
 })
 export default class CoreTable extends Vue {
