@@ -29,6 +29,7 @@ limitations under the License. -->
         v-model="search"
         single-line
         hide-details
+        v-on:input="resetPage()"
       >
         <template v-slot:append>
           <v-btn
@@ -61,6 +62,7 @@ limitations under the License. -->
       item-key="name"
       show-select
       class="elevation-1"
+      :page.sync="page"
     >
     </v-data-table>
 
@@ -125,6 +127,8 @@ export default class ProjectList extends Vue {
   searchEnabled = false;
   search = "";
 
+  page = 1;
+
   // Sync selected with the store
   get allRows(): Project[] {
     return (this.$store.state as IRootStoreState).projectsStore!.projects;
@@ -163,6 +167,11 @@ export default class ProjectList extends Vue {
   getRecommendations() {
     this.$store.dispatch("projectsStore/saveSelectedProjects");
     betterPush(this.$router, "HomeWithInit");
+  }
+
+  // we want to make sure we are at the first page once there is a new search
+  resetPage() {
+    this.page = 1;
   }
 }
 </script>
