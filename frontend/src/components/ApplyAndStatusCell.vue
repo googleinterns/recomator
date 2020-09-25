@@ -82,13 +82,6 @@ limitations under the License. -->
   </div>
 </template>
 
-<style>
-.v-card__text,
-.v-card__title {
-  word-break: normal;
-}
-</style>
-
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
