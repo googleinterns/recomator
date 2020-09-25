@@ -14,13 +14,15 @@ limitations under the License. */
 
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
-import Requirements from "../views/Requirements.vue";
-import Projects from "../views/Projects.vue";
 import store from "../store/root_store";
 import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
-import { readProjectList } from "./utility";
+import { isBackendResponsive, readProjectList } from "./misc";
+import { showError } from "./show_error";
+import Home from "../views/Home.vue";
+import ErrorMsg from "../components/ErrorMsg.vue";
+import Requirements from "../views/Requirements.vue";
+import Projects from "../views/Projects.vue";
 
 Vue.use(VueRouter);
 
@@ -29,10 +31,15 @@ const routes: Array<RouteConfig> = [
     path: "/",
     name: "Home",
     component: Home,
-    beforeEnter(_, __, next) {
+    async beforeEnter(_, __, next): Promise<void> {
+      if (!(await isBackendResponsive())) {
+        await showError("Recomator backend not responsive.", {}, true);
+        return;
+      }
+
       const token = (store.state as IRootStoreState).authStore!.idToken;
       // redirect to google sign in if we don't have a token
-      if (token == undefined) {
+      if (token === undefined) {
         next({ name: "GoogleSignIn" });
         return;
       }
@@ -119,7 +126,21 @@ const routes: Array<RouteConfig> = [
       next({ name: "Home" });
     }
   },
-
+  {
+    // header and description passed as query parameters
+    path: "/errorMsg",
+    name: "ErrorMsg",
+    component: ErrorMsg,
+    async beforeEnter(to, __, next) {
+      if (to.query.header === undefined || to.query.body === undefined)
+        next(Error("Error header or body not provided."));
+      else next();
+    },
+    props: route => ({
+      header: decodeURIComponent(route.query.header as string),
+      body: JSON.parse(decodeURIComponent(route.query.body as string))
+    })
+  },
   {
     path: "/requirements",
     name: "Requirements",
@@ -136,6 +157,7 @@ const routes: Array<RouteConfig> = [
     name: "ProjectsWithInit",
     component: Projects,
     beforeEnter(_, __, next) {
+      store.commit("projectsStore/setSelected", []);
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
 
@@ -153,6 +175,12 @@ const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
   routes
+});
+
+router.onError(error => {
+  // We don't want to use the ErrorMsg page here,
+  //  because if it breaks we will have an infinite loop
+  console.log(["Navigation failed", error.message, error.stack]);
 });
 
 export default router;
