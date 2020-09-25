@@ -12,8 +12,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-export function delay(miliseconds: number) {
-  return new Promise(resolve => setTimeout(resolve, miliseconds));
+import { getBackendAddress } from "@/config";
+
+export async function isBackendResponsive(): Promise<boolean> {
+  // Let's ping /recommendations without an auth header to make sure that the backend exists
+  try {
+    await fetch(`${getBackendAddress()}/recommendations`);
+  } catch (error) {
+    return false;
+  }
+  return true;
 }
 
-export const infiniteDurationMs: number = 1000 * 1000 * 1000; // million seconds (250+ hours)
+// Remember last selected project list in localStorage
+export function readProjectList() {
+  return window.localStorage.getItem("project_list");
+}
