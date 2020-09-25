@@ -61,6 +61,7 @@ import Footer from "@/components/Footer.vue";
 import PermissionDialog from "@/components/PermissionDialog.vue";
 
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
+import { betterPush } from "./../router/better_push";
 
 @Component({
   components: {
@@ -73,7 +74,7 @@ import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
 })
 export default class Home extends Vue {
   getProjectSelection() {
-    this.$router.push("projectsWithInit");
+    betterPush(this.$router, "ProjectsWithInit");
   }
 }
 </script>
