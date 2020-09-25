@@ -13,9 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div>
-    <v-dialog v-model="permissionDialogOpened" max-width="750px">
+    <v-dialog v-model="permissionDialogOpened" max-width="700px">
       <v-card>
-        <v-card-title class="headline">
+        <v-card-title class="headline justify-center">
           <v-col>
             <v-row>
               Loading recommendations failed for some projects
