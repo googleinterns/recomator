@@ -107,6 +107,10 @@ func (s *authorizationService) Verify(rawToken string) (string, error) {
 	return claims.Email, nil
 }
 
+type idToken struct {
+	Token string `json:"token"`
+}
+
 func getAuthHandler(service *SharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		authCode := c.Query("code")
@@ -115,7 +119,7 @@ func getAuthHandler(service *SharedService) func(c *gin.Context) {
 			sendError(c, err, http.StatusBadRequest)
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"token": token})
+		c.JSON(http.StatusOK, idToken{Token: token})
 	}
 }
 
