@@ -157,6 +157,7 @@ const routes: Array<RouteConfig> = [
     name: "ProjectsWithInit",
     component: Projects,
     beforeEnter(_, __, next) {
+      store.commit("projectsStore/setSelected", []);
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
 
