@@ -141,7 +141,12 @@ describe("Fetching recommendations", () => {
     );
 
     const sampleRecommendation = freshSampleRawRecommendation();
-    responses.push(JSON.stringify({ recommendations: [sampleRecommendation] }));
+    responses.push(
+      JSON.stringify({
+        recommendations: [sampleRecommendation],
+        failedProjects: null
+      })
+    );
 
     fetchMock.mockResponses(...responses);
 
@@ -156,30 +161,37 @@ describe("Fetching recommendations", () => {
     fetchMock.dontMock();
   });
 
-  test("Fetching works correctly when given response with errors", async () => {
+  test("Fetching recommendations, success on the 3rd retry", async () => {
     jest.setTimeout(30000);
     fetchMock.doMock();
 
     const responses = responsesPrefix.map(r => r);
-    responses.push(async () => {
-      return {
-        status: 302,
-        body: JSON.stringify({ errorMessage: "Something failed" })
-      };
-    });
+
+    // we expect first request + 3 retries
+    for (let i = 0; i < 3; i++) {
+      responses.push(async () => {
+        return {
+          status: [302, 404, 503][i],
+          body: JSON.stringify({ errorMessage: "Something failed" })
+        };
+      });
+    }
     responses.push(
-      JSON.stringify({ recommendations: [freshSampleRawRecommendation()] })
+      JSON.stringify({
+        recommendations: [freshSampleRawRecommendation()],
+        failedProjects: null
+      })
     );
     fetchMock.mockResponses(...responses);
     const store = rootStoreFactory();
+
     store.commit("recommendationsStore/resetRecommendations");
     await store.dispatch("recommendationsStore/fetchRecommendations");
 
-    expect(store.state.recommendationsStore!.errorCode).toEqual(302);
-    expect(store.state.recommendationsStore!.errorMessage).toEqual(
-      "progress check failed: Found"
+    expect(store.state.recommendationsStore!.recommendations[0]).toEqual(
+      new RecommendationExtra(freshSampleRawRecommendation())
     );
-    expect(store.state.recommendationsStore!.recommendations).toEqual([]);
+    expect(store.state.recommendationsStore!.recommendations.length).toEqual(1);
     fetchMock.dontMock();
   });
 });

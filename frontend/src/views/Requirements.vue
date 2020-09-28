@@ -55,14 +55,14 @@ import { Component, Vue } from "vue-property-decorator";
 import ProjectsWithRequirements from "@/components/ProjectsWithRequirements.vue";
 import AppBar from "@/components/AppBar.vue";
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
+import { betterPush } from "./../router/better_push";
 
 @Component({
   components: { ProjectsWithRequirements, ProgressWithHeader, AppBar }
 })
 export default class Requirements extends Vue {
   getProjectSelection() {
-    this.$store.commit("setSelected", []);
-    this.$router.push("projects");
+    betterPush(this.$router, "Projects");
   }
 }
 </script>

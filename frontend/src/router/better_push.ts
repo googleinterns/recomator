@@ -12,8 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-export function delay(miliseconds: number) {
-  return new Promise(resolve => setTimeout(resolve, miliseconds));
-}
+import VueRouter from "vue-router";
 
-export const infiniteDurationMs: number = 1000 * 1000 * 1000; // million seconds (250+ hours)
+// VueRouter returns errors during router.push(*) if we redirect (using, let's say next) during
+// the navigation, as apparently (the Vue.js team member claims) it is a potentially buggy case.
+// That is why router-link passes an empty function as onComplete to router.push, as this changes the
+// behaviour of router not to return a Promise
+export function betterPush(router: VueRouter, routeName: string) {
+  router.push({ name: routeName }, undefined, err => {
+    console.log("Navigation warning:", err);
+  });
+}
