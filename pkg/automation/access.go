@@ -48,8 +48,8 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*R
 	result := []*Requirement{}
 	for _, api := range apis {
 		response, err := servicesService.Get("projects/" + project + "/services/" + api).Do()
-		if len(result) == 0 {
-			if err != nil {
+		if len(result) == 0 { // If it's the first request we also check implicitly if Service Usage API is enabled.
+			if err != nil { // If there is an error because Service Usage API is not enabled, we return failed requirement.
 				googleErr, ok := err.(*googleapi.Error)
 				if ok && googleErr.Code == http.StatusForbidden {
 					return []*Requirement{&Requirement{
