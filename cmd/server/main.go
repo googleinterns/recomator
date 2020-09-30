@@ -23,26 +23,28 @@ import (
 	"os"
 
 	"github.com/googleinterns/recomator/pkg/server"
+	"golang.org/x/oauth2"
 )
 
 func main() {
-	byt, err := ioutil.ReadFile(file)
+	byt, err := ioutil.ReadFile("config.json")
 	var clientID, clientSecret, redirectURL string
 	if err == nil {
 		var data map[string]string
 		if err := json.Unmarshal(byt, &data); err != nil {
-			return nil, err
+			log.Fatal(err)
 		}
 		clientID = data["clientID"]
 		clientSecret = data["clientSecret"]
 		redirectURL = data["redirectURL"]
 	} else {
-		clientID := os.Getenv("CLIENT_ID")
-		clientSecret := os.Getenv("CLIENT_SECRET")
-		redirectURL := os.Getenv("REDIRECT_URL")
+		clientID = os.Getenv("CLIENT_ID")
+		clientSecret = os.Getenv("CLIENT_SECRET")
+		redirectURL = os.Getenv("REDIRECT_URL")
 	}
 
-	if conf, err := server.NewConfig(&config, clientID, clientSecret, redirectURL); err != nil {
+	var conf *oauth2.Config
+	if conf, err = server.NewConfig(clientID, clientSecret, redirectURL); err != nil {
 		log.Fatal(err)
 	}
 
