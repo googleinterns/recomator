@@ -1,4 +1,20 @@
-package main
+/*
+Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package server
 
 import (
 	"fmt"
@@ -38,11 +54,12 @@ type authorizationService struct {
 	verifier            *oidc.IDTokenVerifier
 	tokenExpirationTime time.Duration
 	mutex               sync.Mutex
+	config              oauth2.Config
 	services            map[string]automation.GoogleService // key is email of the user
 }
 
 // NewAuthorizationService creates new AuthorizationService to access GoogleAPIs
-func NewAuthorizationService() (AuthorizationService, error) {
+func NewAuthorizationService(config oauth2.Config) (AuthorizationService, error) {
 	provider, err := oidc.NewProvider(oauth2.NoContext, "https://accounts.google.com")
 	if err != nil {
 		return nil, err

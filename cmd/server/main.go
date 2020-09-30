@@ -18,49 +18,21 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gin-gonic/gin"
-	"google.golang.org/api/googleapi"
-	"google.golang.org/api/recommender/v1"
+	"github.com/googleinterns/recomator/pkg/server"
 )
 
-type gcloudRecommendation recommender.GoogleCloudRecommenderV1Recommendation
-
-// ErrorResponse is response with error containing error message.
-type ErrorResponse struct {
-	ErrorMessage string `json:"errorMessage"`
-}
-
-const defaultErrorCode = http.StatusInternalServerError
-
-// sendError sends error message in ErrorResponse.
-// If the code is not specified in err, errorCode will be used.
-// If errorCode is not specified, defaultErrorCode will be used.
-func sendError(c *gin.Context, err error, errorCode ...int) {
-	googleErr, ok := err.(*googleapi.Error)
-	if ok {
-		c.JSON(googleErr.Code, ErrorResponse{googleErr.Message})
-		return
-	}
-	code := defaultErrorCode
-	if len(errorCode) != 0 {
-		code = errorCode[0]
-	}
-	c.JSON(code, ErrorResponse{err.Error()})
-}
-
 func main() {
-	if err := setConfig(&config, "config.json"); err != nil {
+	if err := server.SetConfig(&config, "config.json"); err != nil {
 		log.Fatal(err)
 	}
 
-	service, err := NewSharedService()
+	service, err := server.NewSharedService()
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := setUpRouter(service)
+	router := server.SetUpRouter(service)
 
 	port := os.Getenv("PORT")
 	if port == "" {

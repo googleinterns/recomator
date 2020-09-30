@@ -14,11 +14,43 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package server
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
 
-func setUpRouter(service *SharedService) *gin.Engine {
+	"github.com/gin-gonic/gin"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/recommender/v1"
+)
+
+type gcloudRecommendation recommender.GoogleCloudRecommenderV1Recommendation
+
+// ErrorResponse is response with error containing error message.
+type ErrorResponse struct {
+	ErrorMessage string `json:"errorMessage"`
+}
+
+const defaultErrorCode = http.StatusInternalServerError
+
+// sendError sends error message in ErrorResponse.
+// If the code is not specified in err, errorCode will be used.
+// If errorCode is not specified, defaultErrorCode will be used.
+func sendError(c *gin.Context, err error, errorCode ...int) {
+	googleErr, ok := err.(*googleapi.Error)
+	if ok {
+		c.JSON(googleErr.Code, ErrorResponse{googleErr.Message})
+		return
+	}
+	code := defaultErrorCode
+	if len(errorCode) != 0 {
+		code = errorCode[0]
+	}
+	c.JSON(code, ErrorResponse{err.Error()})
+}
+
+// SetUpRouter creates new router using SharedService.
+func SetUpRouter(service *SharedService) *gin.Engine {
 	router := gin.Default()
 	router.Use(corsMiddleware())
 
