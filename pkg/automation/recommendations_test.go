@@ -328,8 +328,8 @@ func TestListProjectsRecommendations(t *testing.T) {
 					assert.Equal(t, len(queries), mock.numberOfListRecommendationsCalls, "List recommendations called wrong number of times")
 					assert.ElementsMatch(t, queries, mock.queries, "List Recommendations was called with wrong parameters")
 
-					assert.ElementsMatch(t, projects, mock.apiCalls, "List api requirements was called for different projects")
-					assert.ElementsMatch(t, okProjects, mock.permissionCalls, "List permission requirements was called for different projects")
+					assert.ElementsMatch(t, okProjects, mock.apiCalls, "List api requirements was called for different projects")
+					assert.ElementsMatch(t, projects, mock.permissionCalls, "List permission requirements was called for different projects")
 
 					assert.Equal(t, len(queries), len(res.Recommendations), "Wrong number of overall recommendations")
 					var failedProjectsRequirements []*ProjectRequirements

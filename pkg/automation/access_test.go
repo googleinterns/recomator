@@ -70,40 +70,40 @@ func TestAllSatisfied(t *testing.T) {
 
 type mockService struct {
 	GoogleService
-	apiReqs               []*Requirement
-	permissionReqs        []*Requirement
-	listPermissionsCalled bool
+	apiReqs        []*Requirement
+	permissionReqs []*Requirement
+	listAPICalled  bool
 }
 
 func (s *mockService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
+	s.listAPICalled = true
 	return s.apiReqs, nil
 }
 
 func (s *mockService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
-	s.listPermissionsCalled = true
 	return s.permissionReqs, nil
 }
 
 var failedRequirements = []*Requirement{&Requirement{Satisfied: false}}
 
 func TestFailAPIRequirements(t *testing.T) {
-	mock := &mockService{apiReqs: failedRequirements}
+	mock := &mockService{permissionReqs: failedRequirements}
 
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "ListProjectRequirements should not return error") {
-		assert.ElementsMatch(t, mock.apiReqs, reqs, "ListProjectRequirements should return api requirements")
-		assert.False(t, mock.listPermissionsCalled, "ListPermissionRequirements should not be called if api reqs are failed")
+		assert.ElementsMatch(t, mock.permissionReqs, reqs, "ListProjectRequirements should return permissions requirements")
+		assert.False(t, mock.listAPICalled, "ListAPIRequirements should not be called if permissions reqs are failed")
 	}
 }
 
 func TestFailPermissionRequirements(t *testing.T) {
-	mock := &mockService{apiReqs: []*Requirement{&Requirement{Satisfied: true}},
-		permissionReqs: failedRequirements}
+	mock := &mockService{permissionReqs: []*Requirement{&Requirement{Satisfied: true}},
+		apiReqs: failedRequirements}
 
 	reqs, err := ListProjectRequirements(mock, "")
 	if assert.NoError(t, err, "ListProjectRequirements should not return error") {
 		assert.ElementsMatch(t, append(mock.apiReqs, mock.permissionReqs...), reqs,
-			"ListProjectRequirements should return api & permission requirements, if api requirements are satisfied")
+			"ListProjectRequirements should return api & permission requirements, if permission requirements are satisfied")
 	}
 }
 
@@ -116,13 +116,13 @@ func (s *errorAPIService) ListAPIRequirements(project string, apis []string) ([]
 	return nil, s.err
 }
 
+func (s *errorAPIService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
+	return nil, nil
+}
+
 type errorPermissionService struct {
 	GoogleService
 	err error
-}
-
-func (s *errorPermissionService) ListAPIRequirements(project string, apis []string) ([]*Requirement, error) {
-	return nil, nil
 }
 
 func (s *errorPermissionService) ListPermissionRequirements(project string, permissions [][]string) ([]*Requirement, error) {
