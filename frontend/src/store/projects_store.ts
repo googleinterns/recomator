@@ -17,6 +17,7 @@ import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root_state";
 import { getAuthFetch } from "./auth/auth_fetch";
 import { getBackendAddress } from "@/config";
+import { readProjectList } from "../router/misc";
 import {
   IProjectsStoreState,
   projectsStoreStateFactory
@@ -27,7 +28,7 @@ const BACKEND_ADDRESS: string = getBackendAddress();
 const mutations: MutationTree<IProjectsStoreState> = {
   addProject(state, project: string): void {
     if (state.projects.filter(elt => elt.name === project).length !== 0) {
-      throw "Duplicate recommendation name";
+      throw "Duplicate project name";
     }
 
     state.projects.push(new Project(project));
@@ -43,6 +44,11 @@ const mutations: MutationTree<IProjectsStoreState> = {
 
   setSelected(state, projects: Project[]): void {
     state.projectsSelected = projects;
+  },
+
+  sortProjects(state): void {
+    // sort by name
+    state.projects = state.projects.sort((a, b) => (a.name == b.name ? 0 : (a.name > b.name ? 1 : -1)))
   },
 
   resetProjects(state): void {
@@ -73,7 +79,21 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
         context.commit("addProject", project);
       }
     }
+    
+    // If there are selected projects in local storage, load them
+    context.commit("loadSelectedProjects");
+    context.commit("sortProjects")
+    
     context.commit("endFetch");
+  },
+
+  loadSelectedProjects(context) {
+    const projectString = readProjectList();
+    if (projectString === null) {
+      return;
+    }
+
+    context.commit("setSelected", JSON.parse(projectString));
   },
 
   saveSelectedProjects(context) {
