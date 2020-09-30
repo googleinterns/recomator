@@ -48,7 +48,7 @@ const mutations: MutationTree<IProjectsStoreState> = {
 
   sortProjects(state): void {
     // sort by name
-    state.projects = state.projects.sort((a, b) => (a.name == b.name ? 0 : a.name > b.name ? 1 : -1))
+    state.projects = state.projects.sort((a, b) => a.name == b.name ? 0 : a.name > b.name ? 1 : -1)
   },
 
   resetProjects(state): void {
