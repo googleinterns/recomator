@@ -42,6 +42,8 @@ type User struct {
 // AuthorizationService creates the user using authentication code and returns idToken.
 // Returns authorized user for this idToken.
 type AuthorizationService interface {
+	// Returns redirect URL to login page used for authentication
+	AuthCodeURL(options ...oauth2.AuthCodeOption) string
 	// Returns idToken that should be used to authorize
 	CreateUser(authCode string) (string, error)
 	// Verify checks that token is valid, not expired and issued by our app and returns user email
@@ -66,12 +68,18 @@ func NewAuthorizationService(config oauth2.Config) (AuthorizationService, error)
 	}
 	authService := &authorizationService{tokenExpirationTime: tokenExpiry, services: make(map[string]automation.GoogleService)}
 	authService.verifier = provider.Verifier(&oidc.Config{ClientID: config.ClientID, SkipExpiryCheck: true})
+	authService.config = config
 	return authService, nil
+}
+
+// AuthCodeURL returns google login page url.
+func (s *authorizationService) AuthCodeURL(options ...oauth2.AuthCodeOption) string {
+	return s.config.AuthCodeURL("", options...)
 }
 
 // Returns idToken that should be used for authorization later.
 func (s *authorizationService) CreateUser(authCode string) (string, error) {
-	token, err := config.Exchange(oauth2.NoContext, authCode)
+	token, err := s.config.Exchange(oauth2.NoContext, authCode)
 	if err != nil {
 		return "", err
 	}
@@ -80,7 +88,7 @@ func (s *authorizationService) CreateUser(authCode string) (string, error) {
 		return "", fmt.Errorf("No valid id token where given. Casting to string failed")
 	}
 
-	service, err := automation.NewGoogleService(oauth2.NoContext, &config, token)
+	service, err := automation.NewGoogleService(oauth2.NoContext, &s.config, token)
 	if err != nil {
 		return "", err
 	}
@@ -172,15 +180,17 @@ func authorizeRequest(authService AuthorizationService, request *http.Request) (
 }
 
 // redirects to google for login, login_hint query parameter(user's email) might be specified for faster login.
-func redirectHandler(c *gin.Context) {
-	email := c.Query("login_hint")
-	authOptions := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}
+func redirectHandler(service *SharedService) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		email := c.Query("login_hint")
+		authOptions := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}
 
-	if len(email) != 0 {
-		authOptions = append(authOptions, oauth2.SetAuthURLParam("login_hint", email))
+		if len(email) != 0 {
+			authOptions = append(authOptions, oauth2.SetAuthURLParam("login_hint", email))
+		}
+
+		url := service.auth.AuthCodeURL(authOptions...)
+		c.Redirect(http.StatusSeeOther, url)
+		return
 	}
-
-	url := config.AuthCodeURL("", authOptions...)
-	c.Redirect(http.StatusSeeOther, url)
-	return
 }

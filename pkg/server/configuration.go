@@ -17,9 +17,6 @@ limitations under the License.
 package server
 
 import (
-	"encoding/json"
-	"io/ioutil"
-
 	"github.com/coreos/go-oidc"
 
 	"github.com/gin-gonic/gin"
@@ -44,26 +41,18 @@ func corsMiddleware() gin.HandlerFunc {
 
 // NewConfig creates the configuration of oauth2 using given clientID, clientSecret and redirectURL.
 // Scopes and provider are set by default.
-func NewConfig(file string) (*oauth2.Config, error) {
+func NewConfig(clientID, clientSecret, redirectURL string) (*oauth2.Config, error) {
 	config := &oauth2.Config{
 		Scopes: []string{oidc.ScopeOpenID, "https://www.googleapis.com/auth/cloud-platform",
 			"https://www.googleapis.com/auth/userinfo.email"},
-	}
-	byt, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	var data map[string]string
-	if err := json.Unmarshal(byt, &data); err != nil {
-		return nil, err
 	}
 	provider, err := oidc.NewProvider(oauth2.NoContext, "https://accounts.google.com")
 	if err != nil {
 		return nil, err
 	}
 	config.Endpoint = provider.Endpoint()
-	config.ClientID = data["clientID"]
-	config.ClientSecret = data["clientSecret"]
-	config.RedirectURL = data["redirectURL"]
+	config.ClientID = clientID
+	config.ClientSecret = clientSecret
+	config.RedirectURL = redirectURL
 	return config, nil
 }

@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
 )
@@ -54,23 +55,23 @@ func SetUpRouter(service *SharedService) *gin.Engine {
 	router := gin.Default()
 	router.Use(corsMiddleware())
 
-	router.GET("/redirect", redirectHandler)
+	router.GET("/api/redirect", redirectHandler(service))
 
-	router.GET("/auth", getAuthHandler(service))
+	router.GET("/api/auth", getAuthHandler(service))
 
-	router.GET("/projects", getProjectsHandler(service))
+	router.GET("/api/projects", getProjectsHandler(service))
 
-	router.POST("/requirements", getStartCheckingHandler(service))
+	router.POST("/api/requirements", getStartCheckingHandler(service))
 
-	router.GET("/requirements", getCheckRequirementsHandler(service))
+	router.GET("/api/requirements", getCheckRequirementsHandler(service))
 
-	router.POST("/recommendations", getStartListingHandler(service))
+	router.POST("/api/recommendations", getStartListingHandler(service))
 
-	router.GET("/recommendations", getListHandler(service))
+	router.GET("/api/recommendations", getListHandler(service))
 
-	router.POST("/recommendations/apply", getApplyHandler(service))
+	router.POST("/api/recommendations/apply", getApplyHandler(service))
 
-	router.GET("/recommendations/checkStatus", getCheckStatusHandler(service))
+	router.GET("/api/recommendations/checkStatus", getCheckStatusHandler(service))
 	return router
 }
 
@@ -82,9 +83,9 @@ type SharedService struct {
 }
 
 // NewSharedService creates new sharedService to access GoogleAPIs.
-func NewSharedService() (*SharedService, error) {
+func NewSharedService(conf oauth2.Config) (*SharedService, error) {
 	var service SharedService
-	auth, err := NewAuthorizationService()
+	auth, err := NewAuthorizationService(conf)
 	if err != nil {
 		return nil, err
 	}

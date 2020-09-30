@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -24,11 +26,27 @@ import (
 )
 
 func main() {
-	if err := server.SetConfig(&config, "config.json"); err != nil {
+	byt, err := ioutil.ReadFile(file)
+	var clientID, clientSecret, redirectURL string
+	if err == nil {
+		var data map[string]string
+		if err := json.Unmarshal(byt, &data); err != nil {
+			return nil, err
+		}
+		clientID = data["clientID"]
+		clientSecret = data["clientSecret"]
+		redirectURL = data["redirectURL"]
+	} else {
+		clientID := os.Getenv("CLIENT_ID")
+		clientSecret := os.Getenv("CLIENT_SECRET")
+		redirectURL := os.Getenv("REDIRECT_URL")
+	}
+
+	if conf, err := server.NewConfig(&config, clientID, clientSecret, redirectURL); err != nil {
 		log.Fatal(err)
 	}
 
-	service, err := server.NewSharedService()
+	service, err := server.NewSharedService(*conf)
 	if err != nil {
 		log.Fatal(err)
 	}
