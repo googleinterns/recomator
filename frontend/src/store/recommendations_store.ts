@@ -111,7 +111,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
     context.commit("resetRecommendations");
     context.commit("setProgress", 0);
-    context.commit("setCancel", false)
+    context.commit("setCancel", false);
 
     // First, select the projects
     const authFetch = getAuthFetch(context.rootState, 3);
@@ -147,8 +147,8 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
 
       await delay(FETCH_PROGRESS_WAIT_TIME);
       if (context.state.cancel) {
-        context.commit("endFetching")
-        return
+        context.commit("endFetching");
+        return;
       }
     }
 

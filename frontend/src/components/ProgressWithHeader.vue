@@ -14,11 +14,8 @@ limitations under the License. -->
 <template>
   <v-card color="primary" dark id="progressBar" persistent width="375">
     <v-card-title class="d-flex justify-center">
-      <v-row
-        align="center"
-        justify="space-around"
-      >
-      {{ header }} <slot></slot>
+      <v-row align="center" justify="space-around">
+        {{ header }} <slot></slot>
       </v-row>
     </v-card-title>
     <v-card-text>
