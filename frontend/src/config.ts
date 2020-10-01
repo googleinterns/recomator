@@ -19,11 +19,9 @@ export class ProjectConfig {
 }
 
 export function getBackendAddress(): string {
-  if (ProjectConfig.PRODUCTION_BACKEND_ADDRESS === undefined) {
-    throw Error("Backend not specified");
-  }
-  console.log(ProjectConfig.PRODUCTION_BACKEND_ADDRESS);
   return process.env.NODE_ENV === "development"
     ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
+    : ProjectConfig.PRODUCTION_BACKEND_ADDRESS === undefined
+    ? ""
     : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;
 }
