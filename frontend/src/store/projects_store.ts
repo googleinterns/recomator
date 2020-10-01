@@ -25,12 +25,12 @@ import {
 const BACKEND_ADDRESS: string = getBackendAddress();
 
 const mutations: MutationTree<IProjectsStoreState> = {
-  addProject(state, project: string): void {
-    if (state.projects.filter(elt => elt.name === project).length !== 0) {
-      throw "Duplicate recommendation name";
+  setProjects(state, projects: string[]): void {
+    if (new Set(projects).size !== projects.length)
+      throw "Duplicates found among given projects' names";
+    for (const project of projects) {
+      state.projects.push(new Project(project));
     }
-
-    state.projects.push(new Project(project));
   },
 
   startFetch(state): void {
@@ -69,9 +69,7 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     const responseJSON = await response.json();
 
     if (responseJSON !== null) {
-      for (const project of responseJSON.projects) {
-        context.commit("addProject", project);
-      }
+      context.commit("setProjects", responseJSON.projects);
     }
     context.commit("endFetch");
   },
