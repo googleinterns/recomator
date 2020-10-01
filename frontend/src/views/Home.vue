@@ -34,7 +34,18 @@ limitations under the License. -->
         :progress="$store.state.recommendationsStore.progress"
         header="Loading recommendations..."
         data-name="main_progress_bar"
-      />
+      >   
+      <v-btn
+        color="white"
+        icon
+        raised
+        @click="cancelFetching"
+      >
+        <v-icon>
+          mdi-close-circle
+        </v-icon>
+      </v-btn>
+      </ProgressWithHeader>
 
       <v-container
         fluid
@@ -73,8 +84,13 @@ import { betterPush } from "./../router/better_push";
   }
 })
 export default class Home extends Vue {
-  getProjectSelection() {
-    betterPush(this.$router, "ProjectsWithInit");
-  }
+    getProjectSelection () {
+      betterPush(this.$router, "ProjectsWithInit");
+    }
+
+    cancelFetching () {
+      this.$store.commit("recommendationsStore/setCancel", true);
+      betterPush(this.$router, "ProjectsWithInit");
+    }
 }
 </script>
