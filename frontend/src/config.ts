@@ -14,10 +14,15 @@ limitations under the License. */
 
 export class ProjectConfig {
   public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
-  public static PRODUCTION_BACKEND_ADDRESS = "";
+  public static PRODUCTION_BACKEND_ADDRESS =
+    process.env.VUE_APP_BACKEND_ADDRESS;
 }
 
 export function getBackendAddress(): string {
+  if (ProjectConfig.PRODUCTION_BACKEND_ADDRESS === undefined) {
+    throw Error("Backend not specified");
+  }
+  console.log(ProjectConfig.PRODUCTION_BACKEND_ADDRESS);
   return process.env.NODE_ENV === "development"
     ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
     : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;

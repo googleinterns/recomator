@@ -1,0 +1,27 @@
+steps:
+# setting env variable for frontend build and backend config
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: "bash"
+  args:
+  - "-c"
+  - |
+        gcloud secrets versions access 1 --secret=FRONTEND_ENV > frontend/.env
+        gcloud secrets versions access 1 --secret=CONFIG > config.json
+# building frontend
+- name: "gcr.io/cloud-builders/npm"
+  args: ["install"]
+  dir: "frontend"
+- name: "gcr.io/cloud-builders/npm"
+  args: ["run", "build"]
+  dir: "frontend"
+  # updating .gcloudignore for deployment
+- name: "ubuntu"
+  entrypoint: 'bash'
+  args:
+  - "-c"
+  - |
+        cat deploy_gcloudignore.txt >> .gcloudignore
+  # deploying app
+- name: "gcr.io/cloud-builders/gcloud"
+  args: ["app", "deploy"]
+  timeout: '1600s'
