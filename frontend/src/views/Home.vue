@@ -17,15 +17,17 @@ limitations under the License. -->
     <AppBar>
       <v-btn
         v-if="$store.state.recommendationsStore.progress === null"
-        icon
+        tile
         @click="getProjectSelection"
+        color="primary"
       >
         <v-tooltip left transition="none">
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
+            <v-icon v-on="on" v-bind="attrs" left color="white">mdi-pencil</v-icon>
           </template>
           Change selected projects
         </v-tooltip>
+        Edit projects
       </v-btn>
     </AppBar>
     <v-main>
