@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package server
 
 import (
 	"encoding/json"
@@ -24,33 +24,38 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
+	"google.golang.org/api/recommender/v1"
 )
 
-// CheckRequirementsResponse is response to /requirements method
-type CheckRequirementsResponse struct {
-	ProjectsRequirements []*automation.ProjectRequirements `json:"projectsRequirements"`
+const defaultNumConcurrentCalls = 200
+
+// ListRecommendationsResponse is response to list/recommendations method
+type ListRecommendationsResponse struct {
+	Recommendations []*recommender.GoogleCloudRecommenderV1Recommendation `json:"recommendations"`
+	FailedProjects  []*automation.ProjectRequirements                     `json:"failedProjects"`
 }
 
-type checkRequestHandler struct {
-	result   []*automation.ProjectRequirements
-	service  automation.GoogleService
-	task     automation.Task
-	projects []string
-	err      error
+type listRequestHandler struct {
+	result             *automation.ListResult
+	service            automation.GoogleService
+	task               automation.Task
+	projects           []string
+	numConcurrentCalls int
+	err                error
 }
 
-// NewCheckRequestHandler creates new checkRequestHandler
-func NewCheckRequestHandler(service automation.GoogleService, projects []string) RequestHandler {
-	return &checkRequestHandler{service: service, projects: projects}
+// NewListRequestHandler creates new listRequestHandler
+func NewListRequestHandler(service automation.GoogleService, projects []string) RequestHandler {
+	return &listRequestHandler{service: service, projects: projects, numConcurrentCalls: defaultNumConcurrentCalls}
 }
 
-func (h *checkRequestHandler) Start() {
-	h.task.SetNumberOfSubtasks(1) // 1 call to ListRequirements
-	h.result, h.err = automation.ListRequirements(h.service, h.projects, h.task.GetNextSubtask())
+func (h *listRequestHandler) Start() {
+	h.task.SetNumberOfSubtasks(1) // 1 call to ListProjectsRecommendations
+	h.result, h.err = automation.ListProjectsRecommendations(h.service, h.projects, h.numConcurrentCalls, h.task.GetNextSubtask())
 	h.task.SetAllDone()
 }
 
-func (h *checkRequestHandler) GetResponse() (Response, bool) {
+func (h *listRequestHandler) GetResponse() (Response, bool) {
 	done, all := h.task.GetProgress()
 	if done < all {
 		return Response{Content: Progress{int(done), int(all)}}, false
@@ -58,18 +63,19 @@ func (h *checkRequestHandler) GetResponse() (Response, bool) {
 	if h.err != nil {
 		return Response{Error: h.err}, true
 	}
-	return Response{Content: CheckRequirementsResponse{
-		ProjectsRequirements: h.result}}, true
+	return Response{Content: ListRecommendationsResponse{
+		Recommendations: h.result.Recommendations,
+		FailedProjects:  h.result.FailedProjects}}, true
 }
 
-// CheckRequest contains the body of POST /requirements
-type CheckRequest struct {
+// ListRequest contains the body of POST /recommendations request
+type ListRequest struct {
 	Projects []string `json:"projects"`
 }
 
-func getStartCheckingHandler(service *SharedService) func(c *gin.Context) {
+func getStartListingHandler(service *SharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var checkRequest CheckRequest
+		var listRequest ListRequest
 
 		body, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
@@ -77,7 +83,7 @@ func getStartCheckingHandler(service *SharedService) func(c *gin.Context) {
 			return
 		}
 
-		err = json.Unmarshal(body, &checkRequest)
+		err = json.Unmarshal(body, &listRequest)
 
 		if err != nil {
 			sendError(c, fmt.Errorf("Error parsing body: %s", err.Error()), http.StatusBadRequest)
@@ -91,13 +97,13 @@ func getStartCheckingHandler(service *SharedService) func(c *gin.Context) {
 			return
 		}
 
-		handler := NewCheckRequestHandler(user.service, checkRequest.Projects)
+		handler := NewListRequestHandler(user.service, listRequest.Projects)
 		requestID := StartProcessingWithNewRequestID(&service.requests, user.email, handler)
 		c.String(http.StatusCreated, requestID)
 	}
 }
 
-func getCheckRequirementsHandler(service *SharedService) func(c *gin.Context) {
+func getListHandler(service *SharedService) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Query("request_id")
 		user, err := authorizeRequest(service.auth, c.Request)
