@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package server
 
 import (
 	"bytes"
@@ -28,6 +28,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/googleinterns/recomator/pkg/automation"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
 )
@@ -37,15 +38,23 @@ type gcloudContent = recommender.GoogleCloudRecommenderV1RecommendationContent
 type gcloudOperationGroup = recommender.GoogleCloudRecommenderV1OperationGroup
 
 type mockAuth struct {
-	tokens map[string]string
-	users  map[string]User
-	mutex  sync.Mutex
+	tokens        map[string]string
+	users         map[string]User
+	mutex         sync.Mutex
+	redirectCalls int
 }
 
 var errorAuthCodeAlreadyUsed = &googleapi.Error{Code: http.StatusBadRequest, Message: "oauth2: cannot fetch token: 400 Bad Request\nResponse: {\n  \"error\": \"invalid_grant\",\n  \"error_description\": \"Bad Request\"\n}"}
 
 func getToken(code string) string {
 	return code + "-token"
+}
+
+func (s *mockAuth) AuthCodeURL(options ...oauth2.AuthCodeOption) string {
+	s.mutex.Lock()
+	s.redirectCalls++
+	s.mutex.Unlock()
+	return ""
 }
 
 func (s *mockAuth) CreateUser(authCode string) (string, error) {
@@ -138,9 +147,9 @@ func newMockShared() *SharedService {
 }
 
 func TestAuth(t *testing.T) {
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/auth?code=code", nil)
+	req, _ := http.NewRequest("GET", "/api/auth?code=code", nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -153,7 +162,7 @@ func TestAuth(t *testing.T) {
 
 func createUser(code string, router *gin.Engine) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/auth?code="+code, nil)
+	req, _ := http.NewRequest("GET", "/api/auth?code="+code, nil)
 	router.ServeHTTP(w, req)
 }
 
@@ -164,9 +173,9 @@ func newDecoder(data []byte) *json.Decoder {
 }
 
 func TestErrorAuth(t *testing.T) {
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser("code", router)
-	req, _ := http.NewRequest("GET", "/auth?code=code", nil)
+	req, _ := http.NewRequest("GET", "/api/auth?code=code", nil)
 
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -179,10 +188,10 @@ func TestErrorAuth(t *testing.T) {
 
 func TestWrongAuthFormat(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req, _ := http.NewRequest("POST", "/api/recommendations/apply?name=name", nil)
 	req.Header.Add("Authorization", "NotBearer "+getToken(code))
 	router.ServeHTTP(w, req)
 
@@ -194,9 +203,9 @@ func TestWrongAuthFormat(t *testing.T) {
 }
 
 func TestNoSuchUser(t *testing.T) {
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req, _ := http.NewRequest("POST", "/api/recommendations/apply?name=name", nil)
 	req.Header.Add("Authorization", "Bearer "+getToken("code"))
 	router.ServeHTTP(w, req)
 
@@ -208,9 +217,9 @@ func TestNoSuchUser(t *testing.T) {
 }
 
 func TestInvalidToken(t *testing.T) {
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req, _ := http.NewRequest("POST", "/api/recommendations/apply?name=name", nil)
 	req.Header.Add("Authorization", "Bearer "+"nottoken")
 	router.ServeHTTP(w, req)
 
@@ -222,23 +231,27 @@ func TestInvalidToken(t *testing.T) {
 }
 
 func TestRedirect(t *testing.T) {
-	router := setUpRouter(newMockShared())
+	var service SharedService
+	auth := &mockAuth{}
+	service.auth = auth
+	router := SetUpRouter(&service)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/redirect/", nil)
+	req, _ := http.NewRequest("GET", "/api/redirect", nil)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusMovedPermanently, w.Code, "Status should be MovedPermanently")
+	assert.Equal(t, http.StatusSeeOther, w.Code, "Status should be SeeOther")
+	assert.Equal(t, 1, auth.redirectCalls, "AuthCodeURL should be called once")
 }
 
 func TestList(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 	w := httptest.NewRecorder()
 	request := ListRequest{Projects: projects}
 	bytes, err := json.Marshal(request)
 	assert.NoError(t, err, "Should be no error")
-	req, _ := http.NewRequest("POST", "/recommendations", strings.NewReader(string(bytes)))
+	req, _ := http.NewRequest("POST", "/api/recommendations", strings.NewReader(string(bytes)))
 	req.Header.Add("Authorization", "Bearer "+getToken(code))
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code, "Wrong response code")
@@ -246,7 +259,7 @@ func TestList(t *testing.T) {
 
 	for {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/recommendations?request_id="+requestID, nil)
+		req, _ := http.NewRequest("GET", "/api/recommendations?request_id="+requestID, nil)
 		req.Header.Add("Authorization", "Bearer "+getToken(code))
 		router.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusOK, w.Code, "Wrong response code")
@@ -267,7 +280,7 @@ func TestList(t *testing.T) {
 func checkApplySuceeded(t *testing.T, router *gin.Engine, token, recommendationName string) {
 	for {
 		w := httptest.NewRecorder()
-		reqStatus, _ := http.NewRequest("GET", "/recommendations/checkStatus?name="+recommendationName, nil)
+		reqStatus, _ := http.NewRequest("GET", "/api/recommendations/checkStatus?name="+recommendationName, nil)
 		reqStatus.Header.Add("Authorization", "Bearer "+token)
 		router.ServeHTTP(w, reqStatus)
 		if !assert.Equal(t, http.StatusOK, w.Code, "Wrong response code") {
@@ -285,10 +298,10 @@ func checkApplySuceeded(t *testing.T, router *gin.Engine, token, recommendationN
 
 func TestApply(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/recommendations/apply?name=name", nil)
+	req, _ := http.NewRequest("POST", "/api/recommendations/apply?name=name", nil)
 	req.Header.Add("Authorization", "Bearer "+getToken(code))
 	router.ServeHTTP(w, req)
 
@@ -300,11 +313,11 @@ func TestApply(t *testing.T) {
 
 func TestCheckingStatusOnGCP(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 
 	w := httptest.NewRecorder()
-	reqStatus, _ := http.NewRequest("GET", "/recommendations/checkStatus?name=name", nil)
+	reqStatus, _ := http.NewRequest("GET", "/api/recommendations/checkStatus?name=name", nil)
 	reqStatus.Header.Add("Authorization", "Bearer "+getToken(code))
 	router.ServeHTTP(w, reqStatus)
 	if assert.Equal(t, http.StatusOK, w.Code, "Wrong response code") {
@@ -317,7 +330,7 @@ func TestCheckingStatusOnGCP(t *testing.T) {
 
 func TestMultipleApplies(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 
 	names := []string{"name1", "name2", "name3"}
@@ -327,7 +340,7 @@ func TestMultipleApplies(t *testing.T) {
 		go func(name string) {
 			defer wg.Done()
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/recommendations/apply?name="+name, nil)
+			req, _ := http.NewRequest("POST", "/api/recommendations/apply?name="+name, nil)
 			req.Header.Add("Authorization", "Bearer "+getToken(code))
 			router.ServeHTTP(w, req)
 			if assert.Equal(t, http.StatusCreated, w.Code, "Should be created") {
@@ -341,10 +354,10 @@ func TestMultipleApplies(t *testing.T) {
 
 func TestListingProjects(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/projects", nil)
+	req, _ := http.NewRequest("GET", "/api/projects", nil)
 	req.Header.Add("Authorization", "Bearer "+getToken(code))
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code, "Wrong response code")
@@ -356,13 +369,13 @@ func TestListingProjects(t *testing.T) {
 
 func TestRequirements(t *testing.T) {
 	code := "authcode"
-	router := setUpRouter(newMockShared())
+	router := SetUpRouter(newMockShared())
 	createUser(code, router)
 	w := httptest.NewRecorder()
 	request := ListRequest{Projects: projects}
 	bytes, err := json.Marshal(request)
 	assert.NoError(t, err, "Should be no error")
-	req, _ := http.NewRequest("POST", "/requirements", strings.NewReader(string(bytes)))
+	req, _ := http.NewRequest("POST", "/api/requirements", strings.NewReader(string(bytes)))
 	req.Header.Add("Authorization", "Bearer "+getToken(code))
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code, "Wrong response code")
@@ -370,7 +383,7 @@ func TestRequirements(t *testing.T) {
 
 	for {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/requirements?request_id="+requestID, nil)
+		req, _ := http.NewRequest("GET", "/api/requirements?request_id="+requestID, nil)
 		req.Header.Add("Authorization", "Bearer "+getToken(code))
 		router.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusOK, w.Code, "Wrong response code")

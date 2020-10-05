@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 export class ProjectConfig {
-  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
+  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000/api";
   public static PRODUCTION_BACKEND_ADDRESS = "";
 }
 
