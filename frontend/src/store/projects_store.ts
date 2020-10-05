@@ -17,6 +17,7 @@ import { Module, MutationTree, ActionTree } from "vuex";
 import { IRootStoreState } from "./root_state";
 import { getAuthFetch } from "./auth/auth_fetch";
 import { getBackendAddress } from "@/config";
+import { readProjectList } from "../router/misc";
 import {
   IProjectsStoreState,
   projectsStoreStateFactory
@@ -25,12 +26,12 @@ import {
 const BACKEND_ADDRESS: string = getBackendAddress();
 
 const mutations: MutationTree<IProjectsStoreState> = {
-  addProject(state, project: string): void {
-    if (state.projects.filter(elt => elt.name === project).length !== 0) {
-      throw "Duplicate recommendation name";
+  setProjects(state, projects: string[]): void {
+    if (new Set(projects).size !== projects.length)
+      console.log("Duplicates found among given projects' names");
+    for (const project of projects) {
+      state.projects.push(new Project(project));
     }
-
-    state.projects.push(new Project(project));
   },
 
   startFetch(state): void {
@@ -43,6 +44,13 @@ const mutations: MutationTree<IProjectsStoreState> = {
 
   setSelected(state, projects: Project[]): void {
     state.projectsSelected = projects;
+  },
+
+  sortProjects(state): void {
+    // sort by name
+    state.projects = state.projects.sort((a, b) =>
+      a.name == b.name ? 0 : a.name > b.name ? 1 : -1
+    );
   },
 
   resetProjects(state): void {
@@ -69,11 +77,23 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     const responseJSON = await response.json();
 
     if (responseJSON !== null) {
-      for (const project of responseJSON.projects) {
-        context.commit("addProject", project);
-      }
+      context.commit("setProjects", responseJSON.projects);
     }
+
+    // If there are selected projects in local storage, load them
+    context.commit("loadSelectedProjects");
+    context.commit("sortProjects");
+
     context.commit("endFetch");
+  },
+
+  loadSelectedProjects(context) {
+    const projectString = readProjectList();
+    if (projectString === null) {
+      return;
+    }
+
+    context.commit("setSelected", JSON.parse(projectString));
   },
 
   saveSelectedProjects(context) {
