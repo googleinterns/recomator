@@ -21,7 +21,7 @@ limitations under the License. -->
         @click="getProjectSelection"
         color="secondary"
       >
-            <v-icon left color="white">mdi-pencil</v-icon>
+        <v-icon left color="white">mdi-pencil</v-icon>
         Edit projects
       </v-btn>
     </AppBar>

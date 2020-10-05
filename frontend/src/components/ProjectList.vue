@@ -69,20 +69,22 @@ limitations under the License. -->
     <v-toolbar color="primary" dark>
       <v-spacer />
       <v-btn
-            v-on="on"
-            v-bind="attrs"
-            color="secondary"
-            style="font-weight: bold"
-            class="white--text ma-2"
-            rounded
-            depressed
-            small
-            @click="changeShowSelected"
-          >
-          {{showSelected? "Show all" : "Show selected"}} <v-icon>{{!showSelected? "mdi-checkbox-marked" : "mdi-checkbox-intermediate"}}</v-icon>
-           
+        v-on="on"
+        v-bind="attrs"
+        color="secondary"
+        style="font-weight: bold"
+        class="white--text ma-2"
+        rounded
+        depressed
+        small
+        @click="changeShowSelected"
+      >
+        {{ showSelected ? "Show all" : "Show selected" }}
+        <v-icon>{{
+          !showSelected ? "mdi-checkbox-marked" : "mdi-checkbox-intermediate"
+        }}</v-icon>
       </v-btn>
-      <v-spacer />    
+      <v-spacer />
       <v-tooltip top transition="none">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -96,7 +98,7 @@ limitations under the License. -->
             small
             @click="getRequirements"
           >
-             Check <v-icon>mdi-equal-box</v-icon>
+            Check <v-icon>mdi-equal-box</v-icon>
           </v-btn>
         </template>
         Proceed to testing requirements for the selected projects.
