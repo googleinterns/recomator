@@ -19,14 +19,9 @@ limitations under the License. -->
         v-if="$store.state.recommendationsStore.progress === null"
         tile
         @click="getProjectSelection"
-        color="primary"
+        color="secondary"
       >
-        <v-tooltip left transition="none">
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs" left color="white">mdi-pencil</v-icon>
-          </template>
-          Change selected projects
-        </v-tooltip>
+            <v-icon left color="white">mdi-pencil</v-icon>
         Edit projects
       </v-btn>
     </AppBar>

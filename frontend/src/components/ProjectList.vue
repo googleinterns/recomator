@@ -77,7 +77,7 @@ limitations under the License. -->
             rounded
             depressed
             small
-            @click="showSelected=!showSelected"
+            @click="changeShowSelected"
           >
           {{showSelected? "Show all" : "Show selected"}} <v-icon>{{!showSelected? "mdi-checkbox-marked" : "mdi-checkbox-intermediate"}}</v-icon>
            
@@ -184,6 +184,11 @@ export default class ProjectList extends Vue {
   getRecommendations() {
     this.$store.dispatch("projectsStore/saveSelectedProjects");
     betterPush(this.$router, "HomeWithInit");
+  }
+
+  changeShowSelected() {
+    this.showSelected = !this.showSelected;
+    this.resetPage();
   }
 
   // we want to make sure we are at the first page once there is a new search
