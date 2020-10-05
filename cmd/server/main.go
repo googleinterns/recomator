@@ -17,50 +17,42 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gin-gonic/gin"
-	"google.golang.org/api/googleapi"
-	"google.golang.org/api/recommender/v1"
+	"github.com/googleinterns/recomator/pkg/server"
+	"golang.org/x/oauth2"
 )
 
-type gcloudRecommendation recommender.GoogleCloudRecommenderV1Recommendation
-
-// ErrorResponse is response with error containing error message.
-type ErrorResponse struct {
-	ErrorMessage string `json:"errorMessage"`
-}
-
-const defaultErrorCode = http.StatusInternalServerError
-
-// sendError sends error message in ErrorResponse.
-// If the code is not specified in err, errorCode will be used.
-// If errorCode is not specified, defaultErrorCode will be used.
-func sendError(c *gin.Context, err error, errorCode ...int) {
-	googleErr, ok := err.(*googleapi.Error)
-	if ok {
-		c.JSON(googleErr.Code, ErrorResponse{googleErr.Message})
-		return
-	}
-	code := defaultErrorCode
-	if len(errorCode) != 0 {
-		code = errorCode[0]
-	}
-	c.JSON(code, ErrorResponse{err.Error()})
-}
-
 func main() {
-	if err := setConfig(&config, "config.json"); err != nil {
+	byt, err := ioutil.ReadFile("config.json")
+	var clientID, clientSecret, redirectURL string
+	if err == nil {
+		var data map[string]string
+		if err := json.Unmarshal(byt, &data); err != nil {
+			log.Fatal(err)
+		}
+		clientID = data["clientID"]
+		clientSecret = data["clientSecret"]
+		redirectURL = data["redirectURL"]
+	} else {
+		clientID = os.Getenv("CLIENT_ID")
+		clientSecret = os.Getenv("CLIENT_SECRET")
+		redirectURL = os.Getenv("REDIRECT_URL")
+	}
+
+	var conf *oauth2.Config
+	if conf, err = server.NewConfig(clientID, clientSecret, redirectURL); err != nil {
 		log.Fatal(err)
 	}
 
-	service, err := NewSharedService()
+	service, err := server.NewSharedService(*conf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := setUpRouter(service)
+	router := server.SetUpRouter(service)
 
 	port := os.Getenv("PORT")
 	if port == "" {
