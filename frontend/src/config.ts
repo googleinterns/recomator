@@ -13,14 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 export class ProjectConfig {
-<<<<<<< HEAD
   public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
   public static PRODUCTION_BACKEND_ADDRESS =
     process.env.VUE_APP_BACKEND_ADDRESS;
-=======
-  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000/api";
-  public static PRODUCTION_BACKEND_ADDRESS = "";
->>>>>>> origin
 }
 
 export function getBackendAddress(): string {
