@@ -27,7 +27,7 @@ const BACKEND_ADDRESS: string = getBackendAddress();
 const mutations: MutationTree<IProjectsStoreState> = {
   setProjects(state, projects: string[]): void {
     if (new Set(projects).size !== projects.length)
-      throw "Duplicates found among given projects' names";
+      console.log("Duplicates found among given projects' names");
     for (const project of projects) {
       state.projects.push(new Project(project));
     }
