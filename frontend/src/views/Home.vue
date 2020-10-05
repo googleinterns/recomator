@@ -35,11 +35,16 @@ limitations under the License. -->
         header="Loading recommendations..."
         data-name="main_progress_bar"
       >
-        <v-btn color="white" icon raised @click="cancelFetching">
-          <v-icon>
-            mdi-close-circle
-          </v-icon>
-        </v-btn>
+        <v-tooltip top transition="none">
+          <template v-slot:activator="{ on }">
+            <v-btn color="white" icon raised @click="cancelFetching" v-on="on">
+              <v-icon>
+                mdi-close-circle
+              </v-icon>
+            </v-btn>
+          </template>
+          Cancel loading recommendations
+        </v-tooltip>
       </ProgressWithHeader>
 
       <v-container
