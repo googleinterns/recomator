@@ -167,7 +167,7 @@ const actions: ActionTree<IRecommendationsStoreState, IRootStoreState> = {
   ): Promise<void> {
     // if selected has duplicates
     if (new Set(selectedNames).size !== selectedNames.length)
-      console.log("Duplicates found among given recommendation names");
+      throw "Duplicates found among given recommendation names";
 
     const selectedRecs = selectedNames.map(name =>
       state.recommendationsByName.get(name)
