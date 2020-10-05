@@ -12,9 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <v-card color="primary" dark id="progressBar" persistent width="300">
-    <v-card-title class="justify-center">
-      {{ header }}
+  <v-card color="primary" dark id="progressBar" persistent width="375">
+    <v-card-title class="d-flex justify-center">
+      <v-row align="center" justify="space-around">
+        {{ header }} <slot></slot>
+      </v-row>
     </v-card-title>
     <v-card-text>
       <v-progress-linear
