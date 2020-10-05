@@ -69,8 +69,6 @@ limitations under the License. -->
     <v-toolbar color="primary" dark>
       <v-spacer />
       <v-btn
-        v-on="on"
-        v-bind="attrs"
         color="secondary"
         style="font-weight: bold"
         class="white--text ma-2"
