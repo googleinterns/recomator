@@ -157,7 +157,7 @@ type apiCall func() error
 var httpStatusesToRetry = []int{http.StatusTooManyRequests, http.StatusBadGateway, http.StatusServiceUnavailable}
 
 // DoRequestWithRetries calls the specified function while it returns error with
-// error code 429 Too Many Requests, and tries again after some time.
+// error code listed in httpStatusesToRetry, and tries again after some time.
 func DoRequestWithRetries(call apiCall) {
 	sleepTime := 1 * time.Second
 	maxSleepTime := 1 * time.Minute // maximum time we'll try to wait for
