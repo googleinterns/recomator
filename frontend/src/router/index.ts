@@ -49,8 +49,7 @@ const routes: Array<RouteConfig> = [
     name: "Home",
     component: Home,
     async beforeEnter(_, __, next): Promise<void> {
-      if (!await authorized(next, "HomeWithInit"))
-        return;
+      if (!(await authorized(next, "HomeWithInit"))) return;
       next();
     }
   },
@@ -98,17 +97,17 @@ const routes: Array<RouteConfig> = [
       const token = responseJson.token;
 
       store.commit("authStore/setIDToken", token);
-      const redirect = window.sessionStorage.getItem("redirectName")
-      window.sessionStorage.removeItem("redirectName")
+      const redirect = window.sessionStorage.getItem("redirectName");
+      window.sessionStorage.removeItem("redirectName");
       const projectString = readProjectList();
       if (projectString === null) {
-        console.log("ProjectsWithInit")
+        console.log("ProjectsWithInit");
         next({ name: "ProjectsWithInit" });
         return;
       }
       store.commit("projectsStore/setSelected", JSON.parse(projectString));
-      console.log(redirect)
-      next({ name: redirect == undefined ? "HomeWithInit" : redirect});
+      console.log(redirect);
+      next({ name: redirect == undefined ? "HomeWithInit" : redirect });
     }
   },
   {
@@ -147,9 +146,8 @@ const routes: Array<RouteConfig> = [
     name: "Requirements",
     component: Requirements,
     async beforeEnter(_, __, next): Promise<void> {
-      if (!await authorized(next, "Requirements"))
-        return;
-      
+      if (!(await authorized(next, "Requirements"))) return;
+
       // Asynchronously request and receive requirements from the middleware
       store.dispatch("requirementsStore/fetchRequirements");
       next();
@@ -161,7 +159,7 @@ const routes: Array<RouteConfig> = [
     name: "ProjectsWithInit",
     component: Projects,
     beforeEnter(_, __, next) {
-      console.log("projectwithinit")
+      console.log("projectwithinit");
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
 
@@ -173,10 +171,9 @@ const routes: Array<RouteConfig> = [
     name: "Projects",
     component: Projects,
     async beforeEnter(_, __, next): Promise<void> {
-      if (!await authorized(next, "ProjectsWithInit"))
-        return;
+      if (!(await authorized(next, "ProjectsWithInit"))) return;
       next();
-  }
+    }
   }
 ];
 
