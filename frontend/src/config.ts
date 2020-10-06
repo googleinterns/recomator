@@ -13,12 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 export class ProjectConfig {
-  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000/api";
-  public static PRODUCTION_BACKEND_ADDRESS = "";
+  public static DEVELOPMENT_BACKEND_ADDRESS = "http://localhost:8000";
+  public static PRODUCTION_BACKEND_ADDRESS =
+    process.env.VUE_APP_BACKEND_ADDRESS;
 }
 
 export function getBackendAddress(): string {
   return process.env.NODE_ENV === "development"
     ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
+    : ProjectConfig.PRODUCTION_BACKEND_ADDRESS === undefined
+    ? ""
     : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;
 }
