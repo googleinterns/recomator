@@ -19,6 +19,7 @@ export interface IRecommendationsStoreState {
   failedProjects: string[];
   recommendationsByName: Map<string, RecommendationExtra>;
   requestId: string;
+  cancel: boolean; // if we want to cancel fetching
   progress: number | null; // % recommendations loaded, null if no fetching is happening
   centralStatusWatcherRunning: boolean;
 }
@@ -29,6 +30,7 @@ export function recommendationsStoreStateFactory(): IRecommendationsStoreState {
     failedProjects: [],
     recommendationsByName: new Map<string, RecommendationExtra>(),
     requestId: "null",
+    cancel: false,
     progress: null,
     centralStatusWatcherRunning: false
   };
