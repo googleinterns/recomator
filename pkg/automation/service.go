@@ -18,11 +18,13 @@ package automation
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/recommender/v1"
 	"google.golang.org/api/serviceusage/v1"
@@ -146,5 +148,34 @@ func AwaitCompletion(gen operationGenerator, sleepTime time.Duration) error {
 			return nil
 		}
 		time.Sleep(sleepTime)
+	}
+}
+
+// anonymous function passed to DoRequestWithRetries
+type apiCall func() error
+
+var httpStatusesToRetry = []int{http.StatusTooManyRequests, http.StatusBadGateway, http.StatusServiceUnavailable}
+
+// DoRequestWithRetries calls the specified function while it returns error with
+// error code 429 Too Many Requests, and tries again after some time.
+func DoRequestWithRetries(call apiCall) {
+	sleepTime := 1 * time.Second
+	maxSleepTime := 1 * time.Minute // maximum time we'll try to wait for
+	for {
+		err := call()
+		if gErr, ok := err.(*googleapi.Error); ok {
+			retry := false
+			for _, status := range httpStatusesToRetry {
+				if gErr.Code == status {
+					retry = true
+				}
+			}
+			if retry && sleepTime <= maxSleepTime {
+				time.Sleep(sleepTime)
+				sleepTime *= 2
+				continue
+			}
+		}
+		break
 	}
 }

@@ -29,7 +29,13 @@ type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 // GetRecommendation implements projects.locations.recommenders.recommendations/get method
 func (s *googleService) GetRecommendation(name string) (*gcloudRecommendation, error) {
 	service := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
-	return service.Get(name).Do()
+	var rec *gcloudRecommendation
+	var err error
+	DoRequestWithRetries(func() error {
+		rec, err = service.Get(name).Do()
+		return err
+	})
+	return rec, err
 }
 
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
@@ -43,12 +49,13 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 		recommendations = append(recommendations, response.Recommendations...)
 		return nil
 	}
-
-	err := listCall.Pages(s.ctx, addRecommendations)
-	if err != nil {
-		return nil, err
-	}
-	return recommendations, nil
+	var err error
+	DoRequestWithRetries(func() error {
+		recommendations = nil
+		err = listCall.Pages(s.ctx, addRecommendations)
+		return err
+	})
+	return recommendations, err
 }
 
 // ListZonesNames returns list of zone names for the specified project.
@@ -65,11 +72,13 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 		}
 		return nil
 	}
-	err := listCall.Pages(s.ctx, addZones)
-	if err != nil {
-		return nil, err
-	}
-	return zones, nil
+	var err error
+	DoRequestWithRetries(func() error {
+		zones = nil
+		err = listCall.Pages(s.ctx, addZones)
+		return err
+	})
+	return zones, err
 }
 
 // ListRegionsNames returns list of region names for the specified project.
@@ -86,11 +95,13 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 		}
 		return nil
 	}
-	err := listCall.Pages(s.ctx, addRegions)
-	if err != nil {
-		return []string{}, err
-	}
-	return regions, nil
+	var err error
+	DoRequestWithRetries(func() error {
+		regions = nil
+		err = listCall.Pages(s.ctx, addRegions)
+		return err
+	})
+	return regions, err
 }
 
 // ListLocations return the list of all locations per project(zones and regions).
