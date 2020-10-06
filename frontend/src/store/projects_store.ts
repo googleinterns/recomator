@@ -81,7 +81,7 @@ const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
     }
 
     // If there are selected projects in local storage, load them
-    context.commit("loadSelectedProjects");
+    context.dispatch("loadSelectedProjects");
     context.commit("sortProjects");
 
     context.commit("endFetch");

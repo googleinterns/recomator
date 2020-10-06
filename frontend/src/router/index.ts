@@ -26,32 +26,31 @@ import Projects from "../views/Projects.vue";
 
 Vue.use(VueRouter);
 
+async function authorized(next: any, redirectName: string): Promise<boolean> {
+  if (!(await isBackendResponsive())) {
+    await showError("Recomator backend not responsive.", {}, true);
+    return false;
+  }
+
+  const token = (store.state as IRootStoreState).authStore!.idToken;
+  // redirect to google sign in if we don't have a token
+  if (token === undefined) {
+    window.sessionStorage.setItem("redirectName", redirectName);
+    next({ name: "GoogleSignIn" });
+    return false;
+  }
+
+  return true;
+}
+
 const routes: Array<RouteConfig> = [
   {
     path: "/",
     name: "Home",
     component: Home,
     async beforeEnter(_, __, next): Promise<void> {
-      if (!(await isBackendResponsive())) {
-        await showError("Recomator backend not responsive.", {}, true);
+      if (!await authorized(next, "HomeWithInit"))
         return;
-      }
-
-      const token = (store.state as IRootStoreState).authStore!.idToken;
-      // redirect to google sign in if we don't have a token
-      if (token === undefined) {
-        next({ name: "GoogleSignIn" });
-        return;
-      }
-
-      const projectString = readProjectList();
-      if (projectString === null) {
-        next({ name: "ProjectsWithInit" });
-        return;
-      }
-
-      store.commit("projectsStore/setSelected", JSON.parse(projectString));
-
       next();
     }
   },
@@ -99,7 +98,17 @@ const routes: Array<RouteConfig> = [
       const token = responseJson.token;
 
       store.commit("authStore/setIDToken", token);
-      next({ name: "HomeWithInit" });
+      const redirect = window.sessionStorage.getItem("redirectName")
+      window.sessionStorage.removeItem("redirectName")
+      const projectString = readProjectList();
+      if (projectString === null) {
+        console.log("ProjectsWithInit")
+        next({ name: "ProjectsWithInit" });
+        return;
+      }
+      store.commit("projectsStore/setSelected", JSON.parse(projectString));
+      console.log(redirect)
+      next({ name: redirect == undefined ? "HomeWithInit" : redirect});
     }
   },
   {
@@ -107,14 +116,6 @@ const routes: Array<RouteConfig> = [
     path: "/homeWithInit",
     name: "HomeWithInit",
     beforeEnter(_, __, next) {
-      const projectString = readProjectList();
-      if (projectString === null) {
-        next({ name: "ProjectsWithInit" });
-        return;
-      }
-
-      store.commit("projectsStore/setSelected", JSON.parse(projectString));
-
       // The following will return nearly immediately and work in the background:
       // Get recommendations from the backend
       store.dispatch("recommendationsStore/fetchRecommendations");
@@ -145,7 +146,10 @@ const routes: Array<RouteConfig> = [
     path: "/requirements",
     name: "Requirements",
     component: Requirements,
-    beforeEnter(_, __, next) {
+    async beforeEnter(_, __, next): Promise<void> {
+      if (!await authorized(next, "Requirements"))
+        return;
+      
       // Asynchronously request and receive requirements from the middleware
       store.dispatch("requirementsStore/fetchRequirements");
       next();
@@ -157,6 +161,7 @@ const routes: Array<RouteConfig> = [
     name: "ProjectsWithInit",
     component: Projects,
     beforeEnter(_, __, next) {
+      console.log("projectwithinit")
       // Asynchronously request and receive projects from the middleware
       store.dispatch("projectsStore/fetchProjects");
 
@@ -166,7 +171,12 @@ const routes: Array<RouteConfig> = [
   {
     path: "/projects",
     name: "Projects",
-    component: Projects
+    component: Projects,
+    async beforeEnter(_, __, next): Promise<void> {
+      if (!await authorized(next, "ProjectsWithInit"))
+        return;
+      next();
+  }
   }
 ];
 
