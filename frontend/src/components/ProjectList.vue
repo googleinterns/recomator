@@ -55,7 +55,7 @@ limitations under the License. -->
     </v-toolbar>
     <v-data-table
       v-model="selectedRows"
-      :items="this.allRows"
+      :items="this.showSelected ? selectedRows : allRows"
       :hide-default-header="true"
       :headers="headers"
       :search="search"
@@ -67,6 +67,21 @@ limitations under the License. -->
     </v-data-table>
 
     <v-toolbar color="primary" dark>
+      <v-spacer />
+      <v-btn
+        color="secondary"
+        style="font-weight: bold"
+        class="white--text ma-2"
+        rounded
+        depressed
+        small
+        @click="changeShowSelected"
+      >
+        {{ showSelected ? "Show all" : "Show selected" }}
+        <v-icon>{{
+          !showSelected ? "mdi-checkbox-marked" : "mdi-checkbox-intermediate"
+        }}</v-icon>
+      </v-btn>
       <v-spacer />
       <v-tooltip top transition="none">
         <template v-slot:activator="{ on, attrs }">
@@ -127,6 +142,8 @@ export default class ProjectList extends Vue {
   searchEnabled = false;
   search = "";
 
+  showSelected = false;
+
   page = 1;
 
   // Sync selected with the store
@@ -167,6 +184,11 @@ export default class ProjectList extends Vue {
   getRecommendations() {
     this.$store.dispatch("projectsStore/saveSelectedProjects");
     betterPush(this.$router, "HomeWithInit");
+  }
+
+  changeShowSelected() {
+    this.showSelected = !this.showSelected;
+    this.resetPage();
   }
 
   // we want to make sure we are at the first page once there is a new search
