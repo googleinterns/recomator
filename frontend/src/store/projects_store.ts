@@ -39,6 +39,7 @@ const mutations: MutationTree<IProjectsStoreState> = {
   },
 
   endFetch(state): void {
+    state.loading = false;
     state.loaded = true;
   },
 
@@ -63,10 +64,11 @@ const mutations: MutationTree<IProjectsStoreState> = {
 
 const actions: ActionTree<IProjectsStoreState, IRootStoreState> = {
   async fetchProjects(context) {
-    // one fetch at a time only
-    if (context.state.loading === true) {
+    // one fetch at a time only, if already loaded not fetch
+    if (context.state.loading === true || context.state.loaded === true) {
       return;
     }
+
     context.commit("resetProjects");
     context.commit("startFetch");
 
