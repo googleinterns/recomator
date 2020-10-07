@@ -137,7 +137,7 @@ const routes: Array<RouteConfig> = [
     path: "/requirements",
     name: "Requirements",
     component: Requirements,
-    async beforeEnter(_, __, next): Promise<void> {
+    beforeEnter(_, __, next) {
       if (!authorized(next, "Requirements")) return;
 
       // Asynchronously request and receive requirements from the middleware
@@ -161,7 +161,7 @@ const routes: Array<RouteConfig> = [
     path: "/projects",
     name: "Projects",
     component: Projects,
-    async beforeEnter(_, __, next): Promise<void> {
+    beforeEnter(_, __, next) {
       if (!authorized(next, "ProjectsWithInit")) return;
       next();
     }
