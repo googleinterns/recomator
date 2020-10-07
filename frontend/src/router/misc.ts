@@ -12,18 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-import { getBackendAddress } from "@/config";
-
-export async function isBackendResponsive(): Promise<boolean> {
-  // Let's ping /recommendations without an auth header to make sure that the backend exists
-  try {
-    await fetch(`${getBackendAddress()}/recommendations`);
-  } catch (error) {
-    return false;
-  }
-  return true;
-}
-
 // Remember last selected project list in localStorage
 export function readProjectList() {
   return window.localStorage.getItem("project_list");
