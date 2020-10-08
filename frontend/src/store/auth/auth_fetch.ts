@@ -1,6 +1,6 @@
 import { IRootStoreState } from "./../root_state";
-import { showError } from "@/router/show_error";
 import { delay, infiniteDurationMs } from "../utils/misc";
+import { showError } from "../../router/show_error";
 
 function addAuth(
   init: RequestInit | undefined,
@@ -72,7 +72,6 @@ export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
         // make sure we don't ever return from here
         await delay(infiniteDurationMs);
       }
-
       // server responsive, failed not because of auth
       const responseJSON = await response.json();
       await showError(
@@ -85,6 +84,7 @@ export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
         },
         true
       );
+      throw Error("Unreachable");
     }
     return response!;
   };
