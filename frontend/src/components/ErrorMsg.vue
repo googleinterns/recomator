@@ -11,11 +11,10 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
+
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <h1>Recomator</h1>
-    </v-app-bar>
+    <AppBar/>
     <v-main>
       <v-card id="errorCard" persistent max-width="700">
         <v-card-title id="elem" class="justify-center">
@@ -38,6 +37,7 @@ limitations under the License. -->
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
+import AppBar from "./AppBar.vue"
 
 const ErrorMsgProps = Vue.extend({
   props: {
@@ -52,7 +52,11 @@ const ErrorMsgProps = Vue.extend({
   }
 });
 
-@Component
+@Component({
+   components: {
+     AppBar
+   }
+})
 export default class ErrorMsg extends ErrorMsgProps {
   openedIndices: number[] = [];
   mounted() {
