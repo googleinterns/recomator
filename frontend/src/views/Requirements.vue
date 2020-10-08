@@ -62,7 +62,7 @@ import { betterPush } from "./../router/better_push";
 })
 export default class Requirements extends Vue {
   getProjectSelection() {
-    betterPush(this.$router, "Projects");
+    betterPush(this.$router, "ProjectsWithInit");
   }
 }
 </script>
