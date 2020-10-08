@@ -158,7 +158,9 @@ var httpStatusesToRetry = []int{http.StatusTooManyRequests, http.StatusBadGatewa
 
 // DoRequestWithRetries calls the specified function while it returns error with
 // error code listed in httpStatusesToRetry, and tries again after some time.
-func DoRequestWithRetries(call apiCall) {
+// Stops, when maxSleepTime is reached or code not in in httpStatusesToRetry.
+// Returns the last received result from apiCall.
+func DoRequestWithRetries(call apiCall) error {
 	sleepTime := 1 * time.Second
 	maxSleepTime := 1 * time.Minute // maximum time we'll try to wait for
 	for {
@@ -176,6 +178,6 @@ func DoRequestWithRetries(call apiCall) {
 				continue
 			}
 		}
-		break
+		return err
 	}
 }

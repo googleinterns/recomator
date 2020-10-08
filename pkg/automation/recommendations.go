@@ -1,12 +1,9 @@
 /*
 Copyright 2020 Google LLC
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     https://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,13 +26,13 @@ type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 // GetRecommendation implements projects.locations.recommenders.recommendations/get method
 func (s *googleService) GetRecommendation(name string) (*gcloudRecommendation, error) {
 	service := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
-	var rec *gcloudRecommendation
-	var err error
-	DoRequestWithRetries(func() error {
-		rec, err = service.Get(name).Do()
+	var recommendation *gcloudRecommendation
+	err := DoRequestWithRetries(func() error {
+		rec, err := service.Get(name).Do()
+		recommendation = rec
 		return err
 	})
-	return rec, err
+	return recommendation, err
 }
 
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
@@ -49,11 +46,9 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 		recommendations = append(recommendations, response.Recommendations...)
 		return nil
 	}
-	var err error
-	DoRequestWithRetries(func() error {
+	err := DoRequestWithRetries(func() error {
 		recommendations = nil
-		err = listCall.Pages(s.ctx, addRecommendations)
-		return err
+		return listCall.Pages(s.ctx, addRecommendations)
 	})
 	return recommendations, err
 }
@@ -72,11 +67,9 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 		}
 		return nil
 	}
-	var err error
-	DoRequestWithRetries(func() error {
+	err := DoRequestWithRetries(func() error {
 		zones = nil
-		err = listCall.Pages(s.ctx, addZones)
-		return err
+		return listCall.Pages(s.ctx, addZones)
 	})
 	return zones, err
 }
@@ -95,11 +88,9 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 		}
 		return nil
 	}
-	var err error
-	DoRequestWithRetries(func() error {
+	err := DoRequestWithRetries(func() error {
 		regions = nil
-		err = listCall.Pages(s.ctx, addRegions)
-		return err
+		return listCall.Pages(s.ctx, addRegions)
 	})
 	return regions, err
 }

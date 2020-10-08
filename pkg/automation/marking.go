@@ -32,13 +32,13 @@ func (s *googleService) MarkRecommendationClaimed(name, etag string) (*gcloudRec
 	}
 
 	markClaimedCall := r.MarkClaimed(name, &request)
-	var rec *gcloudRecommendation
-	var err error
-	DoRequestWithRetries(func() error {
-		rec, err = markClaimedCall.Do()
+	var recommendation *gcloudRecommendation
+	err := DoRequestWithRetries(func() error {
+		rec, err := markClaimedCall.Do()
+		recommendation = rec
 		return err
 	})
-	return rec, err
+	return recommendation, err
 }
 
 // Marks the recommendation defined by the given name and etag as failed
@@ -48,13 +48,13 @@ func (s *googleService) MarkRecommendationFailed(name, etag string) (*gcloudReco
 		Etag: etag,
 	}
 	markFailedCall := r.MarkFailed(name, &request)
-	var rec *gcloudRecommendation
-	var err error
-	DoRequestWithRetries(func() error {
-		rec, err = markFailedCall.Do()
+	var recommendation *gcloudRecommendation
+	err := DoRequestWithRetries(func() error {
+		rec, err := markFailedCall.Do()
+		recommendation = rec
 		return err
 	})
-	return rec, err
+	return recommendation, err
 }
 
 // Marks the recommendation defined by the given name and etag as succeeded
@@ -65,11 +65,11 @@ func (s *googleService) MarkRecommendationSucceeded(name, etag string) (*gcloudR
 	}
 
 	markSucceededCall := r.MarkSucceeded(name, &request)
-	var rec *gcloudRecommendation
-	var err error
-	DoRequestWithRetries(func() error {
-		rec, err = markSucceededCall.Do()
+	var recommendation *gcloudRecommendation
+	err := DoRequestWithRetries(func() error {
+		rec, err := markSucceededCall.Do()
+		recommendation = rec
 		return err
 	})
-	return rec, err
+	return recommendation, err
 }

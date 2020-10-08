@@ -48,9 +48,9 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*R
 	result := []*Requirement{}
 	for _, api := range apis {
 		var response *serviceusage.GoogleApiServiceusageV1Service
-		var err error
-		DoRequestWithRetries(func() error {
-			response, err = servicesService.Get("projects/" + project + "/services/" + api).Do()
+		err := DoRequestWithRetries(func() error {
+			resp, err := servicesService.Get("projects/" + project + "/services/" + api).Do()
+			response = resp
 			return err
 		})
 		if len(result) == 0 { // If it's the first request we also check implicitly if Service Usage API is enabled.
@@ -128,9 +128,9 @@ func (s *googleService) ListPermissionRequirements(project string, permissions [
 	request := cloudresourcemanager.TestIamPermissionsRequest{Permissions: allPermissions}
 	projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
 	var response *cloudresourcemanager.TestIamPermissionsResponse
-	var err error
-	DoRequestWithRetries(func() error {
-		response, err = projectsService.TestIamPermissions(project, &request).Do()
+	err := DoRequestWithRetries(func() error {
+		resp, err := projectsService.TestIamPermissions(project, &request).Do()
+		response = resp
 		return err
 	})
 	if err != nil {
