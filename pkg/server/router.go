@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,7 @@ const defaultErrorCode = http.StatusInternalServerError
 // If the code is not specified in err, errorCode will be used.
 // If errorCode is not specified, defaultErrorCode will be used.
 func sendError(c *gin.Context, err error, errorCode ...int) {
+	log.Printf("Error happened while processing request: %s: %s", c.Request.URL, err)
 	googleErr, ok := err.(*googleapi.Error)
 	if ok {
 		c.JSON(googleErr.Code, ErrorResponse{googleErr.Message})

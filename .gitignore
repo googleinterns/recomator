@@ -2,4 +2,4 @@
 # configs
 config.json
 # binary
-server
+./server

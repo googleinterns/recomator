@@ -74,11 +74,12 @@ export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
       }
 
       // server responsive, failed not because of auth
-      const isCriticalError = requestsLeft === 0;
+      const responseJSON = await response.json();
       await showError(
         `Network request failed: ${response!.status}(${response!.statusText})`,
-        { URL: input, Init: JSON.stringify(init) },
-        isCriticalError
+        { URL: input, Init: JSON.stringify(init),
+           ErrorMessage: responseJSON == null ? response.body : responseJSON.errorMessage},
+        true
       );
     }
     return response!;
