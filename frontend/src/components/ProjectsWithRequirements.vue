@@ -85,7 +85,6 @@ table th + th {
 import { Component, Vue } from "vue-property-decorator";
 import { IRootStoreState } from "../store/root_state";
 import { ProjectRequirement } from "../store/data_model/project_with_requirements";
-import { betterPush } from "./../router/better_push";
 
 @Component({})
 export default class ProjectList extends Vue {
@@ -123,10 +122,6 @@ export default class ProjectList extends Vue {
 
   get allRows(): ProjectRequirement[] {
     return (this.$store.state as IRootStoreState).requirementsStore!.projects;
-  }
-
-  getProjects() {
-    betterPush(this.$router, "Projects");
   }
 }
 </script>

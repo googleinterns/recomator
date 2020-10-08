@@ -28,7 +28,8 @@ import { betterPush } from "./../router/better_push";
 @Component({})
 export default class AppBar extends Vue {
   getHomePage() {
-    betterPush(this.$router, "Home");
+    this.$store.dispatch("projectsStore/saveSelectedProjects");
+    betterPush(this.$router, "HomeWithInit");
   }
 }
 </script>
