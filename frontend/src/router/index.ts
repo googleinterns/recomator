@@ -17,7 +17,8 @@ import VueRouter, { RouteConfig } from "vue-router";
 import store from "../store/root_store";
 import { IRootStoreState } from "../store/root_state";
 import { getBackendAddress } from "../config";
-import { readProjectList } from "./misc";
+import { isBackendResponsive, readProjectList } from "./misc";
+import { showError } from "./show_error";
 import Home from "../views/Home.vue";
 import ErrorMsg from "../components/ErrorMsg.vue";
 import Requirements from "../views/Requirements.vue";
@@ -42,7 +43,7 @@ const routes: Array<RouteConfig> = [
     path: "/",
     name: "Home",
     component: Home,
-    async beforeEnter(_, __, next): Promise<void> {
+    beforeEnter(_, __, next) {
       if (!authorized(next, "HomeWithInit")) return;
       next();
     }
@@ -53,7 +54,11 @@ const routes: Array<RouteConfig> = [
     // shuts the app down
     path: "/googleSignIn",
     name: "GoogleSignIn",
-    beforeEnter() {
+    async beforeEnter() {
+      if (!(await isBackendResponsive())) {
+        await showError("Recomator backend not responsive.", {}, true);
+        return;
+      }
       window.location.href = `${getBackendAddress()}/redirect`;
     }
   },
