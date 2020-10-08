@@ -30,6 +30,7 @@ limitations under the License. -->
         single-line
         hide-details
         v-on:input="resetPage()"
+        autofocus
       >
         <template v-slot:append>
           <v-btn
