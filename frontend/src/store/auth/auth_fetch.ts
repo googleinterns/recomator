@@ -77,8 +77,12 @@ export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
       const responseJSON = await response.json();
       await showError(
         `Network request failed: ${response!.status}(${response!.statusText})`,
-        { URL: input, Init: JSON.stringify(init),
-           ErrorMessage: responseJSON == null ? response.body : responseJSON.errorMessage},
+        {
+          URL: input,
+          Init: JSON.stringify(init),
+          ErrorMessage:
+            responseJSON == null ? response.body : responseJSON.errorMessage
+        },
         true
       );
     }

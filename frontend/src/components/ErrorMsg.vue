@@ -14,7 +14,7 @@ limitations under the License. -->
 
 <template>
   <v-app>
-    <AppBar/>
+    <AppBar />
     <v-main>
       <v-card id="errorCard" persistent max-width="700">
         <v-card-title id="elem" class="justify-center">
@@ -37,7 +37,7 @@ limitations under the License. -->
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { Component } from "vue-property-decorator";
-import AppBar from "./AppBar.vue"
+import AppBar from "./AppBar.vue";
 
 const ErrorMsgProps = Vue.extend({
   props: {
@@ -53,9 +53,9 @@ const ErrorMsgProps = Vue.extend({
 });
 
 @Component({
-   components: {
-     AppBar
-   }
+  components: {
+    AppBar
+  }
 })
 export default class ErrorMsg extends ErrorMsgProps {
   openedIndices: number[] = [];
