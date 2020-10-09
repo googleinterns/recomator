@@ -25,6 +25,11 @@ limitations under the License. -->
     item-key="name"
     :footer-props="{ itemsPerPageOptions: [10, 100, -1] }"
   >
+    <template slot="no-data">
+      <v-alert dense type="info">
+        {{ noDataMessage() }}
+      </v-alert>
+    </template>
     <!-- ^customFilter prop is not used, because its implementation executes it for each property -->
     <template v-slot:header.data-table-select="{}">
       <v-simple-checkbox
@@ -185,6 +190,21 @@ export default class CoreTable extends Vue {
     unselect
       ? this.$store.commit("coreTableStore/unselect", row)
       : this.$store.commit("coreTableStore/select", row);
+  }
+
+  noDataMessage(): string {
+    const processed = this.$store.getters["selectedProjects"].length;
+    const failed = this.$store.getters["failedProjects"].length;
+    return (
+      processed +
+      " project" +
+      (failed == 1 ? "" : "s") +
+      " processed. " +
+      failed +
+      " project" +
+      (failed == 1 ? "" : "s") +
+      " failed requirements check. No recommendations found in remaining projects."
+    );
   }
 }
 </script>
