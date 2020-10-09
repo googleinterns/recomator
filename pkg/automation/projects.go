@@ -24,11 +24,16 @@ import (
 func (s *googleService) ListProjects() ([]string, error) {
 	projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
 	var projects []string
-	err := projectsService.List().Pages(s.ctx, func(r *cloudresourcemanager.ListProjectsResponse) error {
-		for _, project := range r.Projects {
-			projects = append(projects, project.ProjectId)
-		}
-		return nil
+	var err error
+	DoRequestWithRetries(func() error {
+		projects = nil
+		err = projectsService.List().Pages(s.ctx, func(r *cloudresourcemanager.ListProjectsResponse) error {
+			for _, project := range r.Projects {
+				projects = append(projects, project.ProjectId)
+			}
+			return nil
+		})
+		return err
 	})
 	if err != nil {
 		return nil, err
