@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/googleapi"
 )
 
 type MockService struct {
@@ -341,4 +342,48 @@ func TestListProjectsRecommendations(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestNilError(t *testing.T) {
+	var err error
+	assert.False(t, isInvalidArgumentError(err), "Nil error is not of *googleapi.Error type")
+}
+
+func TestErrorFailParsing(t *testing.T) {
+	err := &googleapi.Error{Body: "{not a valid JSON"}
+	assert.False(t, isInvalidArgumentError(err), "Should fail parsing body")
+}
+
+func TestErrorNoStatusField(t *testing.T) {
+	err := &googleapi.Error{Body: `
+	{
+		"error": {
+			"someField": 1238,
+			"otherField": "text"
+		 }
+	}
+	`}
+	assert.False(t, isInvalidArgumentError(err), "Doesn't have status, should return false")
+}
+
+func TestErrorInvalidArgument(t *testing.T) {
+	err := &googleapi.Error{Body: `
+	{
+		"error": {
+			"status":"INVALID_ARGUMENT"
+		 }
+	}
+	`}
+	assert.True(t, isInvalidArgumentError(err), "Should return true")
+}
+
+func TestErrorWrongStatus(t *testing.T) {
+	err := &googleapi.Error{Body: `
+	{
+		"error": {
+			"status":"UNAUTHENTICATED"
+		 }
+	}
+	`}
+	assert.False(t, isInvalidArgumentError(err), "Should return false, expected INVALID_ARGUMENT status")
 }
