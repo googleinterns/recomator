@@ -75,8 +75,8 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - Make sure that the APIs listed below are **Enabled**:
   - [Cloud Resource Manager API](https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com), 
   - [Recommender API](https://console.cloud.google.com/apis/library/recommender.googleapis.com),
-  - [Service Usage API](https://pantheon.corp.google.com/apis/library/serviceusage.googleapis.com), 
-  - [Compute Engine API](https://pantheon.corp.google.com/apis/library/compute.googleapis.com).
+  - [Service Usage API](https://console.cloud.google.com/apis/library/serviceusage.googleapis.com), 
+  - [Compute Engine API](https://console.cloud.google.com/apis/library/compute.googleapis.com).
   
 - Go to [App Engine](http://console.cloud.google.com/appengine) page.
 
@@ -114,9 +114,7 @@ You will see the value of defaultHosthame (your future app address).
 Copy it, you’ll need it in the next step.
 
 ### Create credentials
- - Go to APIs & Services -> OAuth consent screen.
- 
- ![](docs/consent-screen.png)
+ - Go to APIs & Services -> [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent).
  
  - Choose your app’s name, support email.
  
@@ -132,9 +130,7 @@ Copy it, you’ll need it in the next step.
 
 - Click `Save`, then `Back to dashboard`.
 
-- Go to Credentials-> Create Credentials -> OAuth client ID
-
-![](docs/oauth-client.png)
+- Go to Credentials-> Create Credentials -> [OAuth client ID](https://console.cloud.google.com/apis/credentials/oauthclient)
 
 - Choose `Web application`
 
