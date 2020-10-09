@@ -41,7 +41,7 @@ const getters: GetterTree<IRootStoreState, IRootStoreState> = {
   },
 
   failedProjects(state): string[] {
-    return state.recommendationsStore!.failedProjects.map(elt => elt);
+    return state.recommendationsStore!.failedProjects;
   }
 };
 
