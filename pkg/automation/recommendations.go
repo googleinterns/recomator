@@ -1,12 +1,9 @@
 /*
 Copyright 2020 Google LLC
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     https://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +14,12 @@ limitations under the License.
 package automation
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
 )
 
@@ -29,7 +29,30 @@ type gcloudRecommendation = recommender.GoogleCloudRecommenderV1Recommendation
 // GetRecommendation implements projects.locations.recommenders.recommendations/get method
 func (s *googleService) GetRecommendation(name string) (*gcloudRecommendation, error) {
 	service := recommender.NewProjectsLocationsRecommendersRecommendationsService(s.recommenderService)
-	return service.Get(name).Do()
+	var recommendation *gcloudRecommendation
+	err := DoRequestWithRetries(func() error {
+		rec, err := service.Get(name).Do()
+		recommendation = rec
+		return err
+	})
+	return recommendation, err
+}
+
+// returns whether the received error is *googleapi.Error with status INVALID_ARGUMENT
+func isInvalidArgumentError(err error) bool {
+	if googleErr, ok := err.(*googleapi.Error); ok {
+		body := googleErr.Body
+		var fields map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(body), &fields); parseErr != nil {
+			return false
+		}
+
+		if errorJSON, ok := fields["error"].(map[string]interface{}); ok {
+			status, ok := errorJSON["status"].(string)
+			return ok && status == "INVALID_ARGUMENT"
+		}
+	}
+	return false
 }
 
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
@@ -43,12 +66,19 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 		recommendations = append(recommendations, response.Recommendations...)
 		return nil
 	}
-
-	err := listCall.Pages(s.ctx, addRecommendations)
-	if err != nil {
-		return nil, err
-	}
-	return recommendations, nil
+	err := DoRequestWithRetries(func() error {
+		recommendations = nil
+		err := listCall.Pages(s.ctx, addRecommendations)
+		// Check if error is because current location is not available for getting recommendations.
+		if isInvalidArgumentError(err) {
+			log.Printf("Invalid location error: %v received while getting recommendations for %s %s %s",
+				err, project, location, recommenderID)
+			recommendations = nil
+			return nil
+		}
+		return err
+	})
+	return recommendations, err
 }
 
 // ListZonesNames returns list of zone names for the specified project.
@@ -65,11 +95,11 @@ func (s *googleService) ListZonesNames(project string) ([]string, error) {
 		}
 		return nil
 	}
-	err := listCall.Pages(s.ctx, addZones)
-	if err != nil {
-		return nil, err
-	}
-	return zones, nil
+	err := DoRequestWithRetries(func() error {
+		zones = nil
+		return listCall.Pages(s.ctx, addZones)
+	})
+	return zones, err
 }
 
 // ListRegionsNames returns list of region names for the specified project.
@@ -86,11 +116,11 @@ func (s *googleService) ListRegionsNames(project string) ([]string, error) {
 		}
 		return nil
 	}
-	err := listCall.Pages(s.ctx, addRegions)
-	if err != nil {
-		return []string{}, err
-	}
-	return regions, nil
+	err := DoRequestWithRetries(func() error {
+		regions = nil
+		return listCall.Pages(s.ctx, addRegions)
+	})
+	return regions, err
 }
 
 // ListLocations return the list of all locations per project(zones and regions).

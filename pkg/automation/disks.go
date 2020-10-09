@@ -62,10 +62,11 @@ func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
 	disksService := compute.NewDisksService(s.computeService)
 	snapshot := &compute.Snapshot{Name: name}
 	requestID := uuid.New().String()
-	err := AwaitCompletion(func() (*compute.Operation, error) {
-		return disksService.CreateSnapshot(project, zone, disk, snapshot).RequestId(requestID).Do()
-	}, sleepTimeCreatingSnapshots)
-	return err
+	return DoRequestWithRetries(func() error {
+		return AwaitCompletion(func() (*compute.Operation, error) {
+			return disksService.CreateSnapshot(project, zone, disk, snapshot).RequestId(requestID).Do()
+		}, sleepTimeCreatingSnapshots)
+	})
 }
 
 // DeleteDisk calls the disks.delete method.
@@ -73,8 +74,9 @@ func (s *googleService) CreateSnapshot(project, zone, disk, name string) error {
 func (s *googleService) DeleteDisk(project, zone, disk string) error {
 	disksService := compute.NewDisksService(s.computeService)
 	requestID := uuid.New().String()
-	err := AwaitCompletion(func() (*compute.Operation, error) {
-		return disksService.Delete(project, zone, disk).RequestId(requestID).Do()
-	}, sleepTimeDeletingDisks)
-	return err
+	return DoRequestWithRetries(func() error {
+		return AwaitCompletion(func() (*compute.Operation, error) {
+			return disksService.Delete(project, zone, disk).RequestId(requestID).Do()
+		}, sleepTimeDeletingDisks)
+	})
 }
