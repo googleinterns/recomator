@@ -24,10 +24,17 @@ limitations under the License. -->
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { betterPush } from "./../router/better_push";
+import { IRootStoreState } from "../store/root_state";
 
 @Component({})
 export default class AppBar extends Vue {
   getHomePage() {
+    const token = (this.$store.state as IRootStoreState).authStore!.idToken;
+    // redirect to google sign in if we don't have a token
+    if (token === undefined) {
+      betterPush(this.$router, "GoogleSignIn");
+      return;
+    }
     this.$store.dispatch("projectsStore/saveSelectedProjects");
     betterPush(this.$router, "HomeWithInit");
   }
