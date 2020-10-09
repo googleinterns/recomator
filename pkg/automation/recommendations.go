@@ -38,6 +38,23 @@ func (s *googleService) GetRecommendation(name string) (*gcloudRecommendation, e
 	return recommendation, err
 }
 
+// returns whether the received error is *googleapi.Error with status INVALID_ARGUMENT
+func isInvalidArgumentError(err error) bool {
+	if googleErr, ok := err.(*googleapi.Error); ok {
+		body := googleErr.Body
+		var fields map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(body), &fields); parseErr != nil {
+			return false
+		}
+
+		if errorJSON, ok := fields["error"].(map[string]interface{}); ok {
+			status, ok := errorJSON["status"].(string)
+			return ok && status == "INVALID_ARGUMENT"
+		}
+	}
+	return false
+}
+
 // ListRecommendations returns the list of recommendations for specified project, zone, recommender.
 // projects.locations.recommenders.recommendations/list method from Recommender API is used.
 // If the error occurred the returned error is not nil.
@@ -53,19 +70,11 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 		recommendations = nil
 		err := listCall.Pages(s.ctx, addRecommendations)
 		// Check if error is because current location is not available for getting recommendations.
-		if googleErr, ok := err.(*googleapi.Error); ok {
-			body := googleErr.Body
-			var fields map[string]interface{}
-			if parseErr := json.Unmarshal([]byte(body), &fields); parseErr != nil {
-				return err
-			}
-			if errorJSON, ok := fields["error"].(map[string]interface{}); ok {
-				if status, ok := errorJSON["status"].(string); ok && status == "INVALID_ARGUMENT" {
-					log.Printf("Invalid location error: %v received while getting recommendations for %s %s %s",
-						body, project, location, recommenderID)
-					return nil
-				}
-			}
+		if isInvalidArgumentError(err) {
+			log.Printf("Invalid location error: %v received while getting recommendations for %s %s %s",
+				err, project, location, recommenderID)
+			recommendations = nil
+			return nil
 		}
 		return err
 	})
