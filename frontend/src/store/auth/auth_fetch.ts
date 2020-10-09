@@ -1,6 +1,6 @@
 import { IRootStoreState } from "./../root_state";
-import { showError } from "@/router/show_error";
 import { delay, infiniteDurationMs } from "../utils/misc";
+import { showError } from "../../router/show_error";
 
 function addAuth(
   init: RequestInit | undefined,
@@ -72,14 +72,19 @@ export function getAuthFetch(rootState: IRootStoreState, maxRetries = 0) {
         // make sure we don't ever return from here
         await delay(infiniteDurationMs);
       }
-
       // server responsive, failed not because of auth
-      const isCriticalError = requestsLeft === 0;
+      const responseJSON = await response.json();
       await showError(
         `Network request failed: ${response!.status}(${response!.statusText})`,
-        { URL: input, Init: JSON.stringify(init) },
-        isCriticalError
+        {
+          URL: input,
+          Init: JSON.stringify(init),
+          ErrorMessage:
+            responseJSON == null ? response.body : responseJSON.errorMessage
+        },
+        true
       );
+      throw Error("Unreachable");
     }
     return response!;
   };

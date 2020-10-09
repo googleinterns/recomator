@@ -11,6 +11,9 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
+jest.mock("@/router/show_error");
+
+import { showError } from "@/router/show_error";
 
 import { enableFetchMocks } from "jest-fetch-mock";
 enableFetchMocks(); // making it possible to mock fetch in this test suite
@@ -167,31 +170,23 @@ describe("Fetching recommendations", () => {
 
     const responses = responsesPrefix.map(r => r);
 
-    // we expect first request + 3 retries
-    for (let i = 0; i < 3; i++) {
-      responses.push(async () => {
-        return {
-          status: [302, 404, 503][i],
-          body: JSON.stringify({ errorMessage: "Something failed" })
-        };
-      });
-    }
-    responses.push(
-      JSON.stringify({
-        recommendations: [freshSampleRawRecommendation()],
-        failedProjects: null
-      })
-    );
+    responses.push(async () => {
+      return {
+        status: 302,
+        body: JSON.stringify({ errorMessage: "Something failed" })
+      };
+    });
     fetchMock.mockResponses(...responses);
+
     const store = rootStoreFactory();
-
     store.commit("recommendationsStore/resetRecommendations");
-    await store.dispatch("recommendationsStore/fetchRecommendations");
-
-    expect(store.state.recommendationsStore!.recommendations[0]).toEqual(
-      new RecommendationExtra(freshSampleRawRecommendation())
-    );
-    expect(store.state.recommendationsStore!.recommendations.length).toEqual(1);
+    expect.assertions(2);
+    try {
+      await store.dispatch("recommendationsStore/fetchRecommendations");
+    } catch (e) {
+      expect(e.toString()).toMatch("Unreachable");
+    }
+    expect(showError).toHaveBeenCalled();
     fetchMock.dontMock();
   });
 });
