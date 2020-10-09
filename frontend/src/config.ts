@@ -22,6 +22,6 @@ export function getBackendAddress(): string {
   return process.env.NODE_ENV === "development"
     ? ProjectConfig.DEVELOPMENT_BACKEND_ADDRESS
     : ProjectConfig.PRODUCTION_BACKEND_ADDRESS === undefined
-    ? ""
+    ? "https://recomator-282910.ey.r.appspot.com"
     : ProjectConfig.PRODUCTION_BACKEND_ADDRESS;
 }
