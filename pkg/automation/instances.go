@@ -31,17 +31,24 @@ func (s *googleService) ChangeMachineType(project string, zone string, instance 
 	instancesService := compute.NewInstancesService(s.computeService)
 
 	requestID := uuid.New().String()
-	err := AwaitCompletion(func() (*compute.Operation, error) {
-		return instancesService.SetMachineType(project, zone, instance, request).RequestId(requestID).Do()
-	}, sleepTimeChangingMachineType)
-	return err
+	return DoRequestWithRetries(func() error {
+		return AwaitCompletion(func() (*compute.Operation, error) {
+			return instancesService.SetMachineType(project, zone, instance, request).RequestId(requestID).Do()
+		}, sleepTimeChangingMachineType)
+	})
 }
 
 // GetInstance gets instance using instances.get method.
 // Requires compute.instances.get permission.
 func (s *googleService) GetInstance(project string, zone string, instance string) (*compute.Instance, error) {
 	instancesService := compute.NewInstancesService(s.computeService)
-	return instancesService.Get(project, zone, instance).Do()
+	var instanceVal *compute.Instance
+	err := DoRequestWithRetries(func() error {
+		inst, err := instancesService.Get(project, zone, instance).Do()
+		instanceVal = inst
+		return err
+	})
+	return instanceVal, err
 }
 
 // StopInstance stops instance using instances.stop method.
@@ -49,10 +56,11 @@ func (s *googleService) GetInstance(project string, zone string, instance string
 func (s *googleService) StopInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
 	requestID := uuid.New().String()
-	err := AwaitCompletion(func() (*compute.Operation, error) {
-		return instancesService.Stop(project, zone, instance).RequestId(requestID).Do()
-	}, sleepTimeStoppingInstance)
-	return err
+	return DoRequestWithRetries(func() error {
+		return AwaitCompletion(func() (*compute.Operation, error) {
+			return instancesService.Stop(project, zone, instance).RequestId(requestID).Do()
+		}, sleepTimeStoppingInstance)
+	})
 }
 
 // StartInstance starts instance using instances.start method.
@@ -60,8 +68,9 @@ func (s *googleService) StopInstance(project string, zone string, instance strin
 func (s *googleService) StartInstance(project string, zone string, instance string) error {
 	instancesService := compute.NewInstancesService(s.computeService)
 	requestID := uuid.New().String()
-	err := AwaitCompletion(func() (*compute.Operation, error) {
-		return instancesService.Start(project, zone, instance).RequestId(requestID).Do()
-	}, sleepTimeStartingInstance)
-	return err
+	return DoRequestWithRetries(func() error {
+		return AwaitCompletion(func() (*compute.Operation, error) {
+			return instancesService.Start(project, zone, instance).RequestId(requestID).Do()
+		}, sleepTimeStartingInstance)
+	})
 }

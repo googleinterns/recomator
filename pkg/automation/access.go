@@ -47,7 +47,12 @@ func (s *googleService) ListAPIRequirements(project string, apis []string) ([]*R
 	serviceUsageName := "Service Usage API"
 	result := []*Requirement{}
 	for _, api := range apis {
-		response, err := servicesService.Get("projects/" + project + "/services/" + api).Do()
+		var response *serviceusage.GoogleApiServiceusageV1Service
+		err := DoRequestWithRetries(func() error {
+			resp, err := servicesService.Get("projects/" + project + "/services/" + api).Do()
+			response = resp
+			return err
+		})
 		if len(result) == 0 { // If it's the first request we also check implicitly if Service Usage API is enabled.
 			if err != nil { // If there is an error because Service Usage API is not enabled, we return failed requirement.
 				googleErr, ok := err.(*googleapi.Error)
@@ -122,7 +127,12 @@ func (s *googleService) ListPermissionRequirements(project string, permissions [
 
 	request := cloudresourcemanager.TestIamPermissionsRequest{Permissions: allPermissions}
 	projectsService := cloudresourcemanager.NewProjectsService(s.resourceManagerService)
-	response, err := projectsService.TestIamPermissions(project, &request).Do()
+	var response *cloudresourcemanager.TestIamPermissionsResponse
+	err := DoRequestWithRetries(func() error {
+		resp, err := projectsService.TestIamPermissions(project, &request).Do()
+		response = resp
+		return err
+	})
 	if err != nil {
 		googleErr, ok := err.(*googleapi.Error)
 		if ok && googleErr.Code == http.StatusForbidden {
