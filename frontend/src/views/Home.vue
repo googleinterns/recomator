@@ -15,15 +15,9 @@ limitations under the License. -->
 <template>
   <v-app>
     <AppBar>
-      <v-btn
+      <EditProjectsButton
         v-if="$store.state.recommendationsStore.progress === null"
-        tile
-        @click="getProjectSelection"
-        color="secondary"
-      >
-        <v-icon left color="white">mdi-pencil</v-icon>
-        Edit projects
-      </v-btn>
+      />
     </AppBar>
     <v-main>
       <ProgressWithHeader
@@ -65,6 +59,7 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import AppBar from "@/components/AppBar.vue";
 import CoreTable from "@/components/CoreTable.vue";
+import EditProjectsButton from "@/components/EditProjectsButton.vue";
 import Footer from "@/components/Footer.vue";
 import PermissionDialog from "@/components/PermissionDialog.vue";
 
@@ -74,6 +69,7 @@ import { betterPush } from "./../router/better_push";
 @Component({
   components: {
     CoreTable,
+    EditProjectsButton,
     Footer,
     ProgressWithHeader,
     AppBar,
@@ -81,10 +77,6 @@ import { betterPush } from "./../router/better_push";
   }
 })
 export default class Home extends Vue {
-  getProjectSelection() {
-    betterPush(this.$router, "ProjectsWithInit");
-  }
-
   cancelFetching() {
     this.$store.commit("recommendationsStore/setCancel", true);
     betterPush(this.$router, "ProjectsWithInit");

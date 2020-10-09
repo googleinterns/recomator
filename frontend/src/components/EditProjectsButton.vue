@@ -12,31 +12,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
-  <v-app-bar app color="primary" dark>
-    <v-btn text color="white" class="text-capitalize" @click="getHomePage()">
-      <h1>Recomator</h1>
-    </v-btn>
-    <v-spacer />
-    <slot />
-  </v-app-bar>
+  <v-btn tile @click="getProjectSelection" color="secondary">
+    <v-icon left color="white">mdi-pencil</v-icon>
+    Edit projects
+  </v-btn>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { betterPush } from "./../router/better_push";
-import { IRootStoreState } from "../store/root_state";
 
 @Component({})
-export default class AppBar extends Vue {
-  getHomePage() {
-    const token = (this.$store.state as IRootStoreState).authStore!.idToken;
-    // redirect to google sign in if we don't have a token
-    if (token === undefined) {
-      betterPush(this.$router, "GoogleSignIn");
-      return;
-    }
-    this.$store.dispatch("projectsStore/saveSelectedProjects");
-    betterPush(this.$router, "HomeWithInit");
+export default class EditProjectsButton extends Vue {
+  getProjectSelection() {
+    betterPush(this.$router, "ProjectsWithInit");
   }
 }
 </script>

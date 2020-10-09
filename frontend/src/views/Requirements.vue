@@ -15,18 +15,9 @@ limitations under the License. -->
 <template>
   <v-app>
     <AppBar>
-      <v-btn
+      <EditProjectsButton
         v-if="$store.state.requirementsStore.progress === null"
-        icon
-        @click="getProjectSelection"
-      >
-        <v-tooltip left transition="none">
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon v-on="on" v-bind="attrs" color="white">mdi-cog</v-icon>
-          </template>
-          Change selected projects
-        </v-tooltip>
-      </v-btn>
+      />
     </AppBar>
     <v-main>
       <ProgressWithHeader
@@ -54,15 +45,16 @@ limitations under the License. -->
 import { Component, Vue } from "vue-property-decorator";
 import ProjectsWithRequirements from "@/components/ProjectsWithRequirements.vue";
 import AppBar from "@/components/AppBar.vue";
+import EditProjectsButton from "@/components/EditProjectsButton.vue";
 import ProgressWithHeader from "@/components/ProgressWithHeader.vue";
-import { betterPush } from "./../router/better_push";
 
 @Component({
-  components: { ProjectsWithRequirements, ProgressWithHeader, AppBar }
-})
-export default class Requirements extends Vue {
-  getProjectSelection() {
-    betterPush(this.$router, "ProjectsWithInit");
+  components: {
+    ProjectsWithRequirements,
+    ProgressWithHeader,
+    AppBar,
+    EditProjectsButton
   }
-}
+})
+export default class Requirements extends Vue {}
 </script>
