@@ -82,7 +82,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 - Click `create application`.
 
-![Image-Create](https://github.com/recomator/docs/create-application.png)
+![](docs/create-application.png)
 
 - Choose preferred region, language - `Go`, environment - `standard`.
 
@@ -116,7 +116,7 @@ Copy it, you’ll need it in the next step.
 ### Create credentials
  - Go to APIs & Services -> OAuth consent screen.
  
- ![Image-Consent-Screen](https://github.com/recomator/docs/consent-screen.png)
+ ![](docs/consent-screen.png)
  
  - Choose your app’s name, support email.
  
@@ -134,7 +134,7 @@ Copy it, you’ll need it in the next step.
 
 - Go to Credentials-> Create Credentials -> OAuth client ID
 
-![Image-OAuth-Client](https://github.com/recomator/docs/oauth-client.png)
+![](docs/oauth-client.png)
 
 - Choose `Web application`
 
