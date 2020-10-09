@@ -31,9 +31,9 @@ export default class AppBar extends Vue {
   getHomePage() {
     const token = (this.$store.state as IRootStoreState).authStore!.idToken;
     // redirect to google sign in if we don't have a token
-    if (token === undefined) { 
-        betterPush(this.$router, "GoogleSignIn");
-        return;
+    if (token === undefined) {
+      betterPush(this.$router, "GoogleSignIn");
+      return;
     }
     this.$store.dispatch("projectsStore/saveSelectedProjects");
     betterPush(this.$router, "HomeWithInit");
