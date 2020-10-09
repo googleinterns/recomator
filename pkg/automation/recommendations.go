@@ -14,9 +14,12 @@ limitations under the License.
 package automation
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/recommender/v1"
 )
 
@@ -48,7 +51,23 @@ func (s *googleService) ListRecommendations(project, location, recommenderID str
 	}
 	err := DoRequestWithRetries(func() error {
 		recommendations = nil
-		return listCall.Pages(s.ctx, addRecommendations)
+		err := listCall.Pages(s.ctx, addRecommendations)
+		// Check if error is because current location is not available for getting recommendations.
+		if googleErr, ok := err.(*googleapi.Error); ok {
+			body := googleErr.Body
+			var fields map[string]interface{}
+			if parseErr := json.Unmarshal([]byte(body), &fields); parseErr != nil {
+				return err
+			}
+			if errorJSON, ok := fields["error"].(map[string]interface{}); ok {
+				if status, ok := errorJSON["status"].(string); ok && status == "INVALID_ARGUMENT" {
+					log.Printf("Invalid location error: %v received while getting recommendations for %s %s %s",
+						body, project, location, recommenderID)
+					return nil
+				}
+			}
+		}
+		return err
 	})
 	return recommendations, err
 }
