@@ -13,7 +13,7 @@
     "@types/testing-library__jest-dom": "^5.9.2",
     "babel-plugin-transform-decorators": "^6.24.1",
     "core-js": "^3.6.5",
-    "vue": "^2.6.11",
+    "vue": "^3.0.0",
     "vue-class-component": "^7.2.5",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0",
